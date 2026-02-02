@@ -5,9 +5,9 @@ Annotations API is an implementation a database and a REST API for dealing with 
 ## Overview
 
 This api follows the database schema defined in the [IFDO-api repo](https://github.com/paidiver/ifdo-api). The database schema is documented in the following links:
-- [DATABASE.md](https://github.com/paidiver/ifdo-api/DATABASE.md): Detailed description of the core data model for image collections and annotations.
+- [DATABASE.md](https://github.com/paidiver/ifdo-api/blob/main/DATABASE.md): Detailed description of the core data model for image collections and annotations.
 - [Schemaspy database docs](https://paidiver.github.io/ifdo-api): Auto-generated database documentation using SchemaSpy.
-- [Schema.sql](https://github.com/paidiver/ifdo-api/docs/schema.sql): SQL script to create the database schema.
+- [Schema.sql](https://github.com/paidiver/ifdo-api/blob/main/docs/schema.sql): SQL script to create the database schema.
 
 
 ## Requirements
