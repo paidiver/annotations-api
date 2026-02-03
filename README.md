@@ -65,7 +65,7 @@ docker compose -f docker/docker-compose.yml up --build
 
 This will:
 
-* Start PostgreSQL
+* Start PostgreSQL/PostgisGIS database
 * Run Django migrations
 * Start the Django development server
 
