@@ -4,8 +4,7 @@ from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from .base import enum_choices
-from .enums import (
+from .base import (
     AcquisitionEnum,
     CaptureModeEnum,
     DeploymentEnum,
@@ -17,6 +16,7 @@ from .enums import (
     QualityEnum,
     ScaleReferenceEnum,
     SpectralResEnum,
+    enum_choices,
 )
 
 

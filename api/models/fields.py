@@ -60,23 +60,25 @@ class PI(NamedURI):
 class License(NamedURI):
     """The license under which images are made available."""
 
-    class Meta:
-        """Meta class for License."""
+    class Meta:  # noqa: D106
 
         db_table = "licenses"
 
 class Event(NamedURI):
-    class Meta:
+    """Represents an event related to image."""
+    class Meta:  # noqa: D106
         db_table = "events"
 
 
 class Platform(NamedURI):
-    class Meta:
+    """Represents a platform on which an image was captured."""
+    class Meta:  # noqa: D106
         db_table = "platforms"
 
 
 class Sensor(NamedURI):
-    class Meta:
+    """Represents a sensor used to capture an image."""
+    class Meta:  # noqa: D106
         db_table = "sensors"
 
 
@@ -87,12 +89,12 @@ class RelatedMaterial(DefaultColumns):
     title = models.CharField(max_length=255, help_text="A name characterising the resource that is pointed to")
     relation = models.TextField(help_text="A textual explanation how this material is related to this image set")
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "related_materials"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # noqa: D105
         return self.title
-    
+
 
 class ImageCameraPose(DefaultColumns):
     """Camera pose information."""
@@ -117,19 +119,36 @@ class ImageCameraPose(DefaultColumns):
         ),
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_camera_poses"
 
 
 class ImageCameraHousingViewport(DefaultColumns):
     """Camera housing viewport parameters."""
 
-    viewport_type = models.CharField(max_length=100, null=True, blank=True, help_text="e.g.: flat port, dome port, other")
-    optical_density = models.FloatField(null=True, blank=True, help_text="Unit-less optical density (1.0=vacuum)")
-    thickness_millimeters = models.FloatField(null=True, blank=True, help_text="Thickness of viewport in millimeters")
-    extra_description = models.TextField(null=True, blank=True, help_text="A textual description of the viewport used")
+    viewport_type = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="e.g.: flat port, dome port, other",
+    )
+    optical_density = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Unit-less optical density (1.0=vacuum)",
+    )
+    thickness_millimeters = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Thickness of viewport in millimeters",
+    )
+    extra_description = models.TextField(
+        null=True,
+        blank=True,
+        help_text="A textual description of the viewport used",
+    )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_camera_housing_viewports"
 
 
@@ -139,19 +158,25 @@ class ImageFlatportParameter(DefaultColumns):
     lens_port_distance_millimeters = models.FloatField(
         null=True,
         blank=True,
-        help_text="Distance between the front of the camera lens and the inner side of the housing viewport in millimeters.",
+        help_text=(
+            "Distance between the front of the camera lens and the inner side "
+            "of the housing viewport in millimeters."
+        ),
     )
 
     interface_normal_direction = ArrayField(
         base_field=models.FloatField(),
         null=True,
         blank=True,
-        help_text="3D direction vector to specify how the view direction of the lens intersects with the viewport (unit-less, (0,0,1) is aligned)",
+        help_text=(
+            "3D direction vector to specify how the view direction of the lens "
+            "intersects with the viewport (unit-less, (0,0,1) is aligned)"
+        ),
     )
 
     extra_description = models.TextField(null=True, blank=True, help_text="A textual description of the flat port used")
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_flatport_parameters"
 
 
@@ -173,7 +198,7 @@ class ImageDomeportParameter(DefaultColumns):
 
     extra_description = models.TextField(null=True, blank=True, help_text="A textual description of the dome port used")
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_domeport_parameters"
 
 
@@ -221,7 +246,7 @@ class ImageCameraCalibrationModel(DefaultColumns):
         help_text="Explain model, or if lens parameters are in mm rather than in pixel",
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_camera_calibration_models"
 
 
@@ -241,7 +266,10 @@ class ImagePhotometricCalibration(DefaultColumns):
         max_length=100,
         null=True,
         blank=True,
-        help_text="e.g. constant artificial, globally adapted artificial, individually varying light sources, sunlight, mixed",
+        help_text=(
+            "e.g. constant artificial, globally adapted artificial, "
+            "individually varying light sources, sunlight, mixed"
+        ),
     )
 
     sequence_illumination_description = models.TextField(
@@ -263,5 +291,5 @@ class ImagePhotometricCalibration(DefaultColumns):
         help_text="Photometric properties of the water within which the images were captured",
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_photometric_calibrations"

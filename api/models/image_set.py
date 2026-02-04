@@ -1,7 +1,6 @@
 """Docstring for api.models.image_set."""
 
 from django.contrib.gis.db import models as gis_models
-from django.contrib.gis.db.models import indexes as gis_indexes
 from django.contrib.gis.geos import Point, Polygon
 
 from .base import DefaultColumns
@@ -9,10 +8,7 @@ from .common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
 
 
 class ImageSetCreator(gis_models.Model):
-    """Through table for ImageSet <-> Creator.
-
-    Mirrors SQLAlchemy: image_set_creators association table.
-    """
+    """Through table for ImageSet Creator."""
 
     image_set = gis_models.ForeignKey(
         "ImageSet",
@@ -25,22 +21,18 @@ class ImageSetCreator(gis_models.Model):
         db_column="creator_id",
     )
 
-    class Meta:
-        """Docstring for Meta."""
+    class Meta:  # noqa: D106
         db_table = "image_set_creators"
         constraints = [
             gis_models.UniqueConstraint(
                 fields=["image_set", "creator"],
-                name="image_set_creators_pkey",
+                name="uq_image_set_creators",
             )
         ]
 
 
 class ImageSetRelatedMaterial(gis_models.Model):
-    """Through table for ImageSet <-> RelatedMaterial.
-
-    Mirrors SQLAlchemy: image_set_related_materials association table.
-    """
+    """Through table for ImageSet RelatedMaterial."""
 
     image_set = gis_models.ForeignKey(
         "ImageSet",
@@ -53,12 +45,12 @@ class ImageSetRelatedMaterial(gis_models.Model):
         db_column="material_id",
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_set_related_materials"
         constraints = [
             gis_models.UniqueConstraint(
                 fields=["image_set", "material"],
-                name="image_set_related_materials_pkey",
+                name="uq_image_set_related_materials",
             )
         ]
 
@@ -73,6 +65,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="context_id",
+        related_name="image_sets",
         help_text="The overarching project context within which the image set was created",
     )
     project = gis_models.ForeignKey(
@@ -81,7 +74,11 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="project_id",
-        help_text="The more specific project or expedition or cruise or experiment or ... within which the image set was created.",
+        related_name="image_sets",
+        help_text=(
+            "The more specific project or expedition or cruise or experiment or ... "
+            "within which the image set was created."
+        ),
     )
     event = gis_models.ForeignKey(
         "Event",
@@ -89,7 +86,11 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="event_id",
-        help_text="One event of a project or expedition or cruise or experiment or ... that led to the creation of this image set.",
+        related_name="image_sets",
+        help_text=(
+            "One event of a project or expedition or cruise or experiment or ... "
+            "that led to the creation of this image set."
+        ),
     )
     platform = gis_models.ForeignKey(
         "Platform",
@@ -97,6 +98,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="platform_id",
+        related_name="image_sets",
         help_text="A URI pointing to a description of the camera platform used to create this image set",
     )
     sensor = gis_models.ForeignKey(
@@ -105,6 +107,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="sensor_id",
+        related_name="image_sets",
         help_text="A URI pointing to a description of the sensor used to create this image set.",
     )
     pi = gis_models.ForeignKey(
@@ -113,6 +116,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="pi_id",
+        related_name="image_sets",
         help_text="A URI pointing to a description of the principal investigator of the image set",
     )
     license = gis_models.ForeignKey(
@@ -121,6 +125,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="license_id",
+        related_name="image_sets",
         help_text="A URI pointing to the license to use the data (should be FAIR, e.g. CC-BY or CC-0)",
     )
 
@@ -138,13 +143,13 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         related_name="image_sets",
     )
 
-    # Camera-related FKs (SQLAlchemy had no ondelete => default NO ACTION; PROTECT matches)
     camera_pose = gis_models.ForeignKey(
         "ImageCameraPose",
         null=True,
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_pose_id",
+        related_name="image_sets",
     )
     camera_housing_viewport = gis_models.ForeignKey(
         "ImageCameraHousingViewport",
@@ -152,6 +157,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_housing_viewport_id",
+        related_name="image_sets",
     )
     flatport_parameter = gis_models.ForeignKey(
         "ImageFlatportParameter",
@@ -159,6 +165,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="flatport_parameter_id",
+        related_name="image_sets",
     )
     domeport_parameter = gis_models.ForeignKey(
         "ImageDomeportParameter",
@@ -166,6 +173,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="domeport_parameter_id",
+        related_name="image_sets",
     )
     photometric_calibration = gis_models.ForeignKey(
         "ImagePhotometricCalibration",
@@ -173,6 +181,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="photometric_calibration_id",
+        related_name="image_sets",
     )
     camera_calibration_model = gis_models.ForeignKey(
         "ImageCameraCalibrationModel",
@@ -180,6 +189,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_calibration_model_id",
+        related_name="image_sets",
     )
 
     # ImageSet-specific fields
@@ -195,10 +205,26 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         ),
     )
 
-    min_latitude_degrees = gis_models.FloatField(null=True, blank=True, help_text="The lower bounding box latitude...")
-    max_latitude_degrees = gis_models.FloatField(null=True, blank=True, help_text="The upper bounding box latitude...")
-    min_longitude_degrees = gis_models.FloatField(null=True, blank=True, help_text="The lower bounding box longitude...")
-    max_longitude_degrees = gis_models.FloatField(null=True, blank=True, help_text="The upper bounding box longitude...")
+    min_latitude_degrees = gis_models.FloatField(
+        null=True,
+        blank=True,
+        help_text="The lower bounding box latitude...",
+    )
+    max_latitude_degrees = gis_models.FloatField(
+        null=True,
+        blank=True,
+        help_text="The upper bounding box latitude...",
+    )
+    min_longitude_degrees = gis_models.FloatField(
+        null=True,
+        blank=True,
+        help_text="The lower bounding box longitude...",
+    )
+    max_longitude_degrees = gis_models.FloatField(
+        null=True,
+        blank=True,
+        help_text="The upper bounding box longitude...",
+    )
 
     limits = gis_models.PolygonField(
         srid=4326,
@@ -207,23 +233,11 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         help_text="Geographic bounding box of the image_set in WGS84 coordinates.",
     )
 
-    # Relationship to AnnotationSet (join table exists elsewhere)
-    annotation_sets = gis_models.ManyToManyField(
-        "AnnotationSet",
-        through="AnnotationSetImageSet",  # name your through model to match the join table
-        related_name="image_sets",
-        help_text="Relationship to annotation sets that include this image_set.",
-    )
-
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_sets"
-        indexes = [
-            gis_indexes.GistIndex(fields=["geom"], name="idx_image_sets_geom"),
-            gis_indexes.GistIndex(fields=["limits"], name="idx_image_sets_limits"),
-        ]
 
     def save(self, *args, **kwargs):
-        # Mirror _update_geom() from SQLAlchemy
+        """Save method to update geom and limits fields."""
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)
 
@@ -236,11 +250,16 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         ):
             # Polygon.from_bbox expects (xmin, ymin, xmax, ymax)
             self.limits = Polygon.from_bbox(
-                (self.min_longitude_degrees, self.min_latitude_degrees, self.max_longitude_degrees, self.max_latitude_degrees)
+                (
+                    self.min_longitude_degrees,
+                    self.min_latitude_degrees,
+                    self.max_longitude_degrees,
+                    self.max_latitude_degrees,
+                )
             )
             self.limits.srid = 4326
 
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # noqa: D105
         return self.name

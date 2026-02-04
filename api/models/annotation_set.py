@@ -6,16 +6,6 @@ from api.models.base import DefaultColumns
 from api.models.common_fields import CommonFieldsAll
 
 
-class ImageSet(DefaultColumns):
-    """Placeholder Image model for ForeignKey reference."""
-
-
-    class Meta:
-        """Meta class for ImageSet."""
-
-        db_table = "image_sets"
-
-
 class AnnotationSetCreator(DefaultColumns):
     """Association table between AnnotationSet and Creator."""
 

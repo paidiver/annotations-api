@@ -1,7 +1,6 @@
 """Models for images."""
 
 from django.contrib.gis.db import models as gis_models
-from django.contrib.gis.db.models import indexes as gis_indexes
 from django.contrib.gis.geos import Point
 
 from .base import DefaultColumns
@@ -9,10 +8,7 @@ from .common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
 
 
 class ImageCreator(gis_models.Model):
-    """Through table for Image <-> Creator.
-
-    Mirrors SQLAlchemy: image_creators association table.
-    """
+    """Through table for Image Creator."""
 
     image = gis_models.ForeignKey(
         "Image",
@@ -25,12 +21,12 @@ class ImageCreator(gis_models.Model):
         db_column="creator_id",
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "image_creators"
         constraints = [
             gis_models.UniqueConstraint(
                 fields=["image", "creator"],
-                name="image_creators_pkey",
+                name="uq_image_creators",
             )
         ]
 
@@ -38,7 +34,6 @@ class ImageCreator(gis_models.Model):
 class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
     """Represents an image in the database."""
 
-    # SET NULL FKs (ondelete="SET NULL")
     context = gis_models.ForeignKey(
         "Context",
         null=True,
@@ -53,7 +48,10 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="project_id",
-        help_text="The more specific project or expedition or cruise or experiment or ... within which the image set was created.",
+        help_text=(
+            "The more specific project or expedition or cruise or experiment or "
+            "... within which the image set was created."
+        ),
     )
     event = gis_models.ForeignKey(
         "Event",
@@ -61,7 +59,10 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.SET_NULL,
         db_column="event_id",
-        help_text="One event of a project or expedition or cruise or experiment or ... that led to the creation of this image set.",
+        help_text=(
+            "One event of a project or expedition or cruise or experiment or ... "
+            "that led to the creation of this image set."
+        ),
     )
     platform = gis_models.ForeignKey(
         "Platform",
@@ -111,6 +112,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_pose_id",
+        related_name="images",
     )
     camera_housing_viewport = gis_models.ForeignKey(
         "ImageCameraHousingViewport",
@@ -118,6 +120,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_housing_viewport_id",
+        related_name="images",
     )
     flatport_parameter = gis_models.ForeignKey(
         "ImageFlatportParameter",
@@ -125,6 +128,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="flatport_parameter_id",
+        related_name="images",
     )
     domeport_parameter = gis_models.ForeignKey(
         "ImageDomeportParameter",
@@ -132,6 +136,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="domeport_parameter_id",
+        related_name="images",
     )
     photometric_calibration = gis_models.ForeignKey(
         "ImagePhotometricCalibration",
@@ -139,6 +144,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="photometric_calibration_id",
+        related_name="images",
     )
     camera_calibration_model = gis_models.ForeignKey(
         "ImageCameraCalibrationModel",
@@ -146,6 +152,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         blank=True,
         on_delete=gis_models.PROTECT,
         db_column="camera_calibration_model_id",
+        related_name="images",
     )
 
     # Required FK to ImageSet (CASCADE)
@@ -157,100 +164,13 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         help_text="The image_set this image belongs to. A image_set can have multiple images.",
     )
 
-    class Meta:
+    class Meta:  # noqa: D106
         db_table = "images"
-        indexes = [
-            gis_indexes.GistIndex(fields=["geom"], name="idx_images_geom"),
-        ]
 
-    def save(self, *args, **kwargs):
-        # Mirror SQLAlchemy _update_geom()
+    def save(self, *args, **kwargs):  # noqa: D102
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # noqa: D105
         return self.name
-
-    # --- Optional: Django versions of the SQLAlchemy helper methods ---
-
-    def get_merged_field(self, field_name: str):
-        """Return self.field or fallback to image_set.field if self.field is empty/None."""
-        value = getattr(self, field_name, None)
-        if value is not None and value not in ([], {}, ""):
-            return value
-        if self.image_set and hasattr(self.image_set, field_name):
-            return getattr(self.image_set, field_name)
-        return value
-
-    def to_merged_dict(self) -> dict:
-        """Return a dict of common fields with fallback to image_set values."""
-        common_fields = [
-            "handle",
-            "context_id",
-            "project_id",
-            "event_id",
-            "platform_id",
-            "sensor_id",
-            "pi_id",
-            "license_id",
-            "creators",
-            "camera_pose_id",
-            "camera_housing_viewport_id",
-            "flatport_parameter_id",
-            "domeport_parameter_id",
-            "camera_calibration_model_id",
-            "photometric_calibration_id",
-            "sha256_hash",
-            "date_time",
-            "geom",
-            "latitude",
-            "longitude",
-            "altitude_meters",
-            "coordinate_uncertainty_meters",
-            "copyright",
-            "abstract",
-            "entropy",
-            "particle_count",
-            "average_color",
-            "mpeg7_color_layout",
-            "mpeg7_color_statistic",
-            "mpeg7_color_structure",
-            "mpeg7_dominant_color",
-            "mpeg7_edge_histogram",
-            "mpeg7_homogeneous_texture",
-            "mpeg7_scalable_color",
-            "acquisition",
-            "quality",
-            "deployment",
-            "navigation",
-            "scale_reference",
-            "illumination",
-            "pixel_magnitude",
-            "marine_zone",
-            "spectral_resolution",
-            "capture_mode",
-            "fauna_attraction",
-            "area_square_meters",
-            "meters_above_ground",
-            "acquisition_settings",
-            "camera_yaw_degrees",
-            "camera_pitch_degrees",
-            "camera_roll_degrees",
-            "overlap_fraction",
-            "objective",
-            "target_environment",
-            "target_timescale",
-            "spatial_constraints",
-            "temporal_constraints",
-            "time_synchronisation",
-            "item_identification_scheme",
-            "curation_protocol",
-            "visual_constraints",
-        ]
-
-        data = {field: self.get_merged_field(field) for field in common_fields}
-        data["id"] = self.id
-        data["name"] = self.name
-        data["image_set_id"] = self.image_set_id
-        return data

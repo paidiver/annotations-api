@@ -5,17 +5,6 @@ from django.db import models
 from api.models.base import DefaultColumns, ShapeEnum, enum_choices
 
 
-class Image(DefaultColumns):
-    """Placeholder Image model for ForeignKey reference."""
-
-
-    class Meta:
-        """Meta class for Image."""
-
-        db_table = "images"
-
-
-
 class Annotator(DefaultColumns):
     """An annotator is a person or machine that creates annotations."""
 
