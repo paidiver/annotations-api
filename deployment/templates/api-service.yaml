@@ -9,5 +9,4 @@ spec:
     app: api
   ports:
     - port: 8000
-      targetPort: 8000
-  type: NodePort
+      targetPort: {{ .Values.api.port }}
