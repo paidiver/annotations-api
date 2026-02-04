@@ -117,8 +117,7 @@ class AnnotationLabel(DefaultColumns):
         help_text="A unique identifier to an annotation creator, e.g. orcid URL or handle to ML model",
     )
 
-    creation_datetime = models.CharField(
-        max_length=255,
+    creation_datetime = models.DateTimeField(
         help_text="The date-time stamp of label creation",
     )
 

@@ -16,7 +16,7 @@
           },
           "b": {
             "name": "creation_datetime",
-            "type": "varchar(255)",
+            "type": "timestamp",
             "nullable": false,
             "default": null,
             "autoincrement": false
