@@ -25,6 +25,9 @@ optional = true
 [tool.poetry.group.lint.dependencies]
 ruff = "^0.4.2"
 
+[tool.poetry.group.dev.dependencies]
+sqlalchemy = "^2.0.46"
+
 [tool.poetry.group.test]
 optional = true
 

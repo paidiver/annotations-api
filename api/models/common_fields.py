@@ -26,9 +26,7 @@ class CommonFieldsAll(models.Model):
     name = models.CharField(
         max_length=255,
         unique=True,
-        help_text=(
-            "A unique name for the image set, image or annotation set."
-        ),
+        help_text=("A unique name for the image set, image or annotation set."),
     )
 
     handle = models.CharField(

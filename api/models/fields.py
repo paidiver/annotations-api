@@ -21,6 +21,7 @@ class NamedURI(DefaultColumns):
         """String representation of the instance."""
         return self.name
 
+
 class Creator(NamedURI):
     """The creator of the images, image_sets or annotation_sets."""
 
