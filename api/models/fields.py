@@ -1,7 +1,7 @@
 """Models for common named URI fields used across multiple models."""
 
+from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
-from django.db import models
 
 from .base import DefaultColumns
 
@@ -10,7 +10,7 @@ class NamedURI(DefaultColumns):
     """Mixin for models that have a name and a URI."""
 
     name = models.CharField(max_length=255, unique=True)
-    uri = models.CharField(max_length=255, null=True, blank=True)
+    uri = models.CharField(max_length=2048, null=True, blank=True)
 
     class Meta:
         """Meta class for NamedURI."""
@@ -62,23 +62,26 @@ class License(NamedURI):
     """The license under which images are made available."""
 
     class Meta:  # noqa: D106
-
         db_table = "licenses"
+
 
 class Event(NamedURI):
     """Represents an event related to image."""
+
     class Meta:  # noqa: D106
         db_table = "events"
 
 
 class Platform(NamedURI):
     """Represents a platform on which an image was captured."""
+
     class Meta:  # noqa: D106
         db_table = "platforms"
 
 
 class Sensor(NamedURI):
     """Represents a sensor used to capture an image."""
+
     class Meta:  # noqa: D106
         db_table = "sensors"
 
@@ -87,8 +90,12 @@ class RelatedMaterial(DefaultColumns):
     """Represents a related material for an image set."""
 
     uri = models.CharField(max_length=255, help_text="The URI pointing to a related resource")
-    title = models.CharField(max_length=255, help_text="A name characterising the resource that is pointed to")
-    relation = models.TextField(help_text="A textual explanation how this material is related to this image set")
+    title = models.CharField(
+        null=True, blank=True, max_length=255, help_text="A name characterising the resource that is pointed to"
+    )
+    relation = models.TextField(
+        null=True, blank=True, help_text="A textual explanation how this material is related to this image set"
+    )
 
     class Meta:  # noqa: D106
         db_table = "related_materials"

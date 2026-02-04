@@ -1,22 +1,10 @@
 """Models for annotations, annotators, and annotation labels."""
 
-from django.db import models
+from django.contrib.gis.db import models
 
 from api.models.base import DefaultColumns, ShapeEnum, enum_choices
 
 
-<<<<<<< HEAD
-=======
-class Image(DefaultColumns):
-    """Placeholder Image model for ForeignKey reference."""
-
-    class Meta:
-        """Meta class for Image."""
-
-        db_table = "images"
-
-
->>>>>>> BODCDMSYS-10150_a
 class Annotator(DefaultColumns):
     """An annotator is a person or machine that creates annotations."""
 

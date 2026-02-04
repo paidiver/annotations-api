@@ -1,12 +1,12 @@
 """AnnotationSet model module."""
 
-from django.db import models
+from django.contrib.gis.db import models
 
 from api.models.base import DefaultColumns
 from api.models.common_fields import CommonFieldsAll
 
 
-class AnnotationSetCreator(DefaultColumns):
+class AnnotationSetCreator(models.Model):
     """Association table between AnnotationSet and Creator."""
 
     annotation_set = models.ForeignKey(
@@ -34,7 +34,7 @@ class AnnotationSetCreator(DefaultColumns):
         ]
 
 
-class AnnotationSetImageSet(DefaultColumns):
+class AnnotationSetImageSet(models.Model):
     """Association table between AnnotationSet and ImageSet."""
 
     annotation_set = models.ForeignKey(

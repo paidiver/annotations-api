@@ -1,54 +1,54 @@
 """Docstring for api.models.image_set."""
 
-from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point, Polygon
 
 from .base import DefaultColumns
 from .common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
 
 
-class ImageSetCreator(gis_models.Model):
+class ImageSetCreator(models.Model):
     """Through table for ImageSet Creator."""
 
-    image_set = gis_models.ForeignKey(
+    image_set = models.ForeignKey(
         "ImageSet",
-        on_delete=gis_models.CASCADE,
+        on_delete=models.CASCADE,
         db_column="image_set_id",
     )
-    creator = gis_models.ForeignKey(
+    creator = models.ForeignKey(
         "Creator",
-        on_delete=gis_models.CASCADE,
+        on_delete=models.CASCADE,
         db_column="creator_id",
     )
 
     class Meta:  # noqa: D106
         db_table = "image_set_creators"
         constraints = [
-            gis_models.UniqueConstraint(
+            models.UniqueConstraint(
                 fields=["image_set", "creator"],
                 name="uq_image_set_creators",
             )
         ]
 
 
-class ImageSetRelatedMaterial(gis_models.Model):
+class ImageSetRelatedMaterial(models.Model):
     """Through table for ImageSet RelatedMaterial."""
 
-    image_set = gis_models.ForeignKey(
+    image_set = models.ForeignKey(
         "ImageSet",
-        on_delete=gis_models.CASCADE,
+        on_delete=models.CASCADE,
         db_column="image_set_id",
     )
-    material = gis_models.ForeignKey(
+    material = models.ForeignKey(
         "RelatedMaterial",
-        on_delete=gis_models.CASCADE,
+        on_delete=models.CASCADE,
         db_column="material_id",
     )
 
     class Meta:  # noqa: D106
         db_table = "image_set_related_materials"
         constraints = [
-            gis_models.UniqueConstraint(
+            models.UniqueConstraint(
                 fields=["image_set", "material"],
                 name="uq_image_set_related_materials",
             )
@@ -59,20 +59,20 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
     """A collection of images, videos, or other media files related to a specific project, event, or context."""
 
     # SET NULL FKs (ondelete="SET NULL")
-    context = gis_models.ForeignKey(
+    context = models.ForeignKey(
         "Context",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="context_id",
         related_name="image_sets",
         help_text="The overarching project context within which the image set was created",
     )
-    project = gis_models.ForeignKey(
+    project = models.ForeignKey(
         "Project",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="project_id",
         related_name="image_sets",
         help_text=(
@@ -80,11 +80,11 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
             "within which the image set was created."
         ),
     )
-    event = gis_models.ForeignKey(
+    event = models.ForeignKey(
         "Event",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="event_id",
         related_name="image_sets",
         help_text=(
@@ -92,108 +92,108 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
             "that led to the creation of this image set."
         ),
     )
-    platform = gis_models.ForeignKey(
+    platform = models.ForeignKey(
         "Platform",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="platform_id",
         related_name="image_sets",
         help_text="A URI pointing to a description of the camera platform used to create this image set",
     )
-    sensor = gis_models.ForeignKey(
+    sensor = models.ForeignKey(
         "Sensor",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="sensor_id",
         related_name="image_sets",
         help_text="A URI pointing to a description of the sensor used to create this image set.",
     )
-    pi = gis_models.ForeignKey(
+    pi = models.ForeignKey(
         "PI",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="pi_id",
         related_name="image_sets",
         help_text="A URI pointing to a description of the principal investigator of the image set",
     )
-    license = gis_models.ForeignKey(
+    license = models.ForeignKey(
         "License",
         null=True,
         blank=True,
-        on_delete=gis_models.SET_NULL,
+        on_delete=models.SET_NULL,
         db_column="license_id",
         related_name="image_sets",
         help_text="A URI pointing to the license to use the data (should be FAIR, e.g. CC-BY or CC-0)",
     )
 
     # Many-to-many creators and related materials
-    creators = gis_models.ManyToManyField(
+    creators = models.ManyToManyField(
         "Creator",
         through=ImageSetCreator,
         related_name="image_sets",
         help_text="Information to identify the creators of the image set",
     )
 
-    related_materials = gis_models.ManyToManyField(
+    related_materials = models.ManyToManyField(
         "RelatedMaterial",
         through=ImageSetRelatedMaterial,
         related_name="image_sets",
     )
 
-    camera_pose = gis_models.ForeignKey(
+    camera_pose = models.ForeignKey(
         "ImageCameraPose",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="camera_pose_id",
         related_name="image_sets",
     )
-    camera_housing_viewport = gis_models.ForeignKey(
+    camera_housing_viewport = models.ForeignKey(
         "ImageCameraHousingViewport",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="camera_housing_viewport_id",
         related_name="image_sets",
     )
-    flatport_parameter = gis_models.ForeignKey(
+    flatport_parameter = models.ForeignKey(
         "ImageFlatportParameter",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="flatport_parameter_id",
         related_name="image_sets",
     )
-    domeport_parameter = gis_models.ForeignKey(
+    domeport_parameter = models.ForeignKey(
         "ImageDomeportParameter",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="domeport_parameter_id",
         related_name="image_sets",
     )
-    photometric_calibration = gis_models.ForeignKey(
+    photometric_calibration = models.ForeignKey(
         "ImagePhotometricCalibration",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="photometric_calibration_id",
         related_name="image_sets",
     )
-    camera_calibration_model = gis_models.ForeignKey(
+    camera_calibration_model = models.ForeignKey(
         "ImageCameraCalibrationModel",
         null=True,
         blank=True,
-        on_delete=gis_models.PROTECT,
+        on_delete=models.PROTECT,
         db_column="camera_calibration_model_id",
         related_name="image_sets",
     )
 
     # ImageSet-specific fields
-    local_path = gis_models.CharField(
+    local_path = models.CharField(
         max_length=500,
         null=True,
         blank=True,
@@ -205,28 +205,28 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         ),
     )
 
-    min_latitude_degrees = gis_models.FloatField(
+    min_latitude_degrees = models.FloatField(
         null=True,
         blank=True,
         help_text="The lower bounding box latitude...",
     )
-    max_latitude_degrees = gis_models.FloatField(
+    max_latitude_degrees = models.FloatField(
         null=True,
         blank=True,
         help_text="The upper bounding box latitude...",
     )
-    min_longitude_degrees = gis_models.FloatField(
+    min_longitude_degrees = models.FloatField(
         null=True,
         blank=True,
         help_text="The lower bounding box longitude...",
     )
-    max_longitude_degrees = gis_models.FloatField(
+    max_longitude_degrees = models.FloatField(
         null=True,
         blank=True,
         help_text="The upper bounding box longitude...",
     )
 
-    limits = gis_models.PolygonField(
+    limits = models.PolygonField(
         srid=4326,
         null=True,
         blank=True,

@@ -1,6 +1,6 @@
 """Model for semantic labels assigned to annotations."""
 
-from django.db import models
+from django.contrib.gis.db import models
 
 from api.models.base import DefaultColumns
 

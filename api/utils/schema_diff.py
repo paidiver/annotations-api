@@ -1,4 +1,24 @@
-"""Utility to compare two database schemas using SQLAlchemy reflection."""
+"""Utility to compare two database schemas using SQLAlchemy reflection.
+
+This can be used to compare the Alembic-migrated schema against the
+Django ORM-generated schema to ensure they are in sync.
+
+To run this script, you need to have SQLAlchemy installed in your
+environment. You can install it via poetry dev:
+    poetry install --with dev
+
+To run the script, use the following command:
+
+    python api/utils/schema_diff.py \
+        --db-a "postgresql+psycopg://myuser:mypassword@localhost:5440/paidiver_st3" \
+        --db-b "postgresql+psycopg://myuser:mypassword@localhost:5435/annotationsdb" \
+        --schema-a public \
+        --schema-b public \
+        --out-json diff.json
+
+This will connect to the two specified databases, compare their schemas,
+and output the differences to the specified JSON file.
+"""
 
 from __future__ import annotations
 
@@ -311,11 +331,3 @@ if __name__ == "__main__":
     args = p.parse_args()
 
     main(args.db_a, args.db_b, args.schema_a, args.schema_b, args.out_json)
-
-
-# python schema_diff.py \
-#   --db-a "postgresql+psycopg2://myuser:mypassword@localhost:5440/paidiver_st3" \
-#   --db-b "postgresql+psycopg2://myuser:mypassword@localhost:5435/annotationsdb" \
-#   --schema-a public \
-#   --schema-b public \
-#   --out-json diff.json
