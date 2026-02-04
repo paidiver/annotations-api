@@ -31,4 +31,4 @@ jobs:
           docker build -t $CI_REGISTRY_IMAGE:develop -f docker/Dockerfile .
           docker tag $CI_REGISTRY_IMAGE:develop $CI_REGISTRY_IMAGE:${{ github.sha }}
           docker push $CI_REGISTRY_IMAGE:develop
-          docker push $CI_REGISTRY_IMAGE:${{ github.sha }
+          docker push $CI_REGISTRY_IMAGE:${{ github.sha }}
