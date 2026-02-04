@@ -8,7 +8,7 @@ replicaCount: 1
 api:
   image:
     repository: ghcr.io/paidiver/annotations-api
-    tag: latest
+    tag: develop
   port: 8000
 
 db:
