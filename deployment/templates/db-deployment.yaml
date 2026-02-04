@@ -17,6 +17,8 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: db
           image: {{ .Values.db.image }}
@@ -36,6 +38,8 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: db-data
+          securityContext:
+          {{- toYaml .Values.containerSecurityContext | nindent 12 }}
       volumes:
         - name: db-data
           persistentVolumeClaim:
