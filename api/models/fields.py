@@ -3,7 +3,7 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
-from api.models.base import DefaultColumns
+from .base import DefaultColumns
 
 
 class NamedURI(DefaultColumns):
