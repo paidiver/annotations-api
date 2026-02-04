@@ -9,7 +9,6 @@ from api.models.common_fields import CommonFieldsAll
 class ImageSet(DefaultColumns):
     """Placeholder Image model for ForeignKey reference."""
 
-
     class Meta:
         """Meta class for ImageSet."""
 
