@@ -17,3 +17,8 @@ class HealthView(APIView):
             Response: JSON response indicating service status
         """
         return Response({"status": "ok"})
+
+class AnnotationsView(APIView):
+    """Annotations view to import image annotation data into the database."""
+    def get(self, request):
+        return Response({"status": "of course!"})
