@@ -1,0 +1,1065 @@
+{
+  "tables_only_in_a": [],
+  "tables_only_in_b": [],
+  "tables_in_both": {
+    "annotation_labels": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "creation_datetime": {
+          "a": {
+            "name": "creation_datetime",
+            "type": "varchar",
+            "nullable": false,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "creation_datetime",
+            "type": "timestamp",
+            "nullable": false,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotation_labels_annotation_id_fb3c88ae",
+        "annotation_labels_annotator_id_8b67ad6f",
+        "annotation_labels_label_id_74b937ae",
+        "uq_annotation_label_annotation_annotator"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'annotation_labels_annotation_id_fkey', ('annotation_id',))",
+        "('fk', 'annotation_labels_annotator_id_fkey', ('annotator_id',))",
+        "('fk', 'annotation_labels_label_id_fkey', ('label_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'annotation_labels_annotation_id_fb3c88ae_fk_annotations_id', ('annotation_id',))",
+        "('fk', 'annotation_labels_annotator_id_8b67ad6f_fk_annotators_id', ('annotator_id',))",
+        "('fk', 'annotation_labels_label_id_74b937ae_fk_labels_id', ('label_id',))",
+        "('unique', 'uq_annotation_label_annotation_annotator', ('label_id', 'annotation_id', 'annotator_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "annotation_set_creators": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [
+        "id"
+      ],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotation_set_creators_annotation_set_id_fa9d5b3c",
+        "annotation_set_creators_creator_id_eaef68cb",
+        "uq_annotation_set_creator"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'annotation_set_creators_annotation_set_id_fkey', ('annotation_set_id',))",
+        "('fk', 'annotation_set_creators_creator_id_fkey', ('creator_id',))",
+        "('pk', 'annotation_set_creators_pkey', ('annotation_set_id', 'creator_id'))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'annotation_set_creat_annotation_set_id_fa9d5b3c_fk_annotatio', ('annotation_set_id',))",
+        "('fk', 'annotation_set_creators_creator_id_eaef68cb_fk_creators_id', ('creator_id',))",
+        "('pk', 'annotation_set_creators_pkey', ('id',))",
+        "('unique', 'uq_annotation_set_creator', ('annotation_set_id', 'creator_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "annotation_set_image_sets": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [
+        "id"
+      ],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotation_set_image_sets_annotation_set_id_7f390f0a",
+        "annotation_set_image_sets_image_set_id_d1c70636",
+        "uq_annotation_set_image_set"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'annotation_set_image_sets_annotation_set_id_fkey', ('annotation_set_id',))",
+        "('fk', 'annotation_set_image_sets_image_set_id_fkey', ('image_set_id',))",
+        "('pk', 'annotation_set_image_sets_pkey', ('annotation_set_id', 'image_set_id'))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'annotation_set_image_annotation_set_id_7f390f0a_fk_annotatio', ('annotation_set_id',))",
+        "('fk', 'annotation_set_image_image_set_id_d1c70636_fk_image_set', ('image_set_id',))",
+        "('pk', 'annotation_set_image_sets_pkey', ('id',))",
+        "('unique', 'uq_annotation_set_image_set', ('annotation_set_id', 'image_set_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "annotation_sets": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "handle": {
+          "a": {
+            "name": "handle",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "handle",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotation_sets_context_id_2977e3b6",
+        "annotation_sets_license_id_009cd245",
+        "annotation_sets_name_8386447c_like",
+        "annotation_sets_pi_id_6bbaab5d",
+        "annotation_sets_project_id_e84bb40d"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'annotation_sets_context_id_fkey', ('context_id',))",
+        "('fk', 'annotation_sets_license_id_fkey', ('license_id',))",
+        "('fk', 'annotation_sets_pi_id_fkey', ('pi_id',))",
+        "('fk', 'annotation_sets_project_id_fkey', ('project_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'annotation_sets_context_id_2977e3b6_fk_contexts_id', ('context_id',))",
+        "('fk', 'annotation_sets_license_id_009cd245_fk_licenses_id', ('license_id',))",
+        "('fk', 'annotation_sets_pi_id_6bbaab5d_fk_pis_id', ('pi_id',))",
+        "('fk', 'annotation_sets_project_id_e84bb40d_fk_projects_id', ('project_id',))"
+      ],
+      "constraints_changed": {}
+    },
+    "annotations": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "shape": {
+          "a": {
+            "name": "shape",
+            "type": "varchar(12)",
+            "nullable": false,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "shape",
+            "type": "varchar(32)",
+            "nullable": false,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotations_annotation_set_id_0c704769",
+        "annotations_image_id_dbc46831"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'annotations_annotation_set_id_fkey', ('annotation_set_id',))",
+        "('fk', 'annotations_image_id_fkey', ('image_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'annotations_annotation_set_id_0c704769_fk_annotation_sets_id', ('annotation_set_id',))",
+        "('fk', 'annotations_image_id_dbc46831_fk_images_id', ('image_id',))"
+      ],
+      "constraints_changed": {}
+    },
+    "annotators": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "annotators_name_4cb94721_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "contexts": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "contexts_name_ec5a2901_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "creators": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "creators_name_0116c576_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "events": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "events_name_316043cc_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "image_creators": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [
+        "id"
+      ],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "image_creators_creator_id_a3ec7299",
+        "image_creators_image_id_9153370e",
+        "uq_image_creators"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'image_creators_creator_id_fkey', ('creator_id',))",
+        "('fk', 'image_creators_image_id_fkey', ('image_id',))",
+        "('pk', 'image_creators_pkey', ('image_id', 'creator_id'))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'image_creators_creator_id_a3ec7299_fk_creators_id', ('creator_id',))",
+        "('fk', 'image_creators_image_id_9153370e_fk_images_id', ('image_id',))",
+        "('pk', 'image_creators_pkey', ('id',))",
+        "('unique', 'uq_image_creators', ('image_id', 'creator_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "image_set_creators": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [
+        "id"
+      ],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "image_set_creators_creator_id_f70e74a5",
+        "image_set_creators_image_set_id_5026a062",
+        "uq_image_set_creators"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'image_set_creators_creator_id_fkey', ('creator_id',))",
+        "('fk', 'image_set_creators_image_set_id_fkey', ('image_set_id',))",
+        "('pk', 'image_set_creators_pkey', ('image_set_id', 'creator_id'))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'image_set_creators_creator_id_f70e74a5_fk_creators_id', ('creator_id',))",
+        "('fk', 'image_set_creators_image_set_id_5026a062_fk_image_sets_id', ('image_set_id',))",
+        "('pk', 'image_set_creators_pkey', ('id',))",
+        "('unique', 'uq_image_set_creators', ('image_set_id', 'creator_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "image_set_related_materials": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [
+        "id"
+      ],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "image_set_related_materials_image_set_id_cc74b98f",
+        "image_set_related_materials_material_id_2cdf4ec6",
+        "uq_image_set_related_materials"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'image_set_related_materials_image_set_id_fkey', ('image_set_id',))",
+        "('fk', 'image_set_related_materials_material_id_fkey', ('material_id',))",
+        "('pk', 'image_set_related_materials_pkey', ('image_set_id', 'material_id'))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'image_set_related_ma_image_set_id_cc74b98f_fk_image_set', ('image_set_id',))",
+        "('fk', 'image_set_related_ma_material_id_2cdf4ec6_fk_related_m', ('material_id',))",
+        "('pk', 'image_set_related_materials_pkey', ('id',))",
+        "('unique', 'uq_image_set_related_materials', ('image_set_id', 'material_id'))"
+      ],
+      "constraints_changed": {}
+    },
+    "image_sets": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "acquisition": {
+          "a": {
+            "name": "acquisition",
+            "type": "varchar(5)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "acquisition",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "capture_mode": {
+          "a": {
+            "name": "capture_mode",
+            "type": "varchar(6)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "capture_mode",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "deployment": {
+          "a": {
+            "name": "deployment",
+            "type": "varchar(11)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "deployment",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "fauna_attraction": {
+          "a": {
+            "name": "fauna_attraction",
+            "type": "varchar(6)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "fauna_attraction",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "handle": {
+          "a": {
+            "name": "handle",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "handle",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "illumination": {
+          "a": {
+            "name": "illumination",
+            "type": "varchar(16)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "illumination",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "marine_zone": {
+          "a": {
+            "name": "marine_zone",
+            "type": "varchar(12)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "marine_zone",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "navigation": {
+          "a": {
+            "name": "navigation",
+            "type": "varchar(13)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "navigation",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "pixel_magnitude": {
+          "a": {
+            "name": "pixel_magnitude",
+            "type": "varchar(3)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "pixel_magnitude",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "quality": {
+          "a": {
+            "name": "quality",
+            "type": "varchar(9)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "quality",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "scale_reference": {
+          "a": {
+            "name": "scale_reference",
+            "type": "varchar(17)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "scale_reference",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "spectral_resolution": {
+          "a": {
+            "name": "spectral_resolution",
+            "type": "varchar(14)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "spectral_resolution",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [
+        "idx_image_sets_geom",
+        "idx_image_sets_limits"
+      ],
+      "indexes_only_in_b": [
+        "image_sets_camera_calibration_model_id_683a2f7c",
+        "image_sets_camera_housing_viewport_id_ed132d55",
+        "image_sets_camera_pose_id_64f2c7df",
+        "image_sets_context_id_09e2d2fb",
+        "image_sets_domeport_parameter_id_c00a680d",
+        "image_sets_event_id_c19e62ca",
+        "image_sets_flatport_parameter_id_d19e5d4e",
+        "image_sets_geom_da2c7336_id",
+        "image_sets_license_id_d6d40d8d",
+        "image_sets_limits_3024dead_id",
+        "image_sets_name_00883313_like",
+        "image_sets_photometric_calibration_id_57ee2998",
+        "image_sets_pi_id_d8be8830",
+        "image_sets_platform_id_0556b0e2",
+        "image_sets_project_id_cb8b25fd",
+        "image_sets_sensor_id_bd85448e",
+        "image_sets_sha256_hash_b65becc4_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'image_sets_camera_calibration_model_id_fkey', ('camera_calibration_model_id',))",
+        "('fk', 'image_sets_camera_housing_viewport_id_fkey', ('camera_housing_viewport_id',))",
+        "('fk', 'image_sets_camera_pose_id_fkey', ('camera_pose_id',))",
+        "('fk', 'image_sets_context_id_fkey', ('context_id',))",
+        "('fk', 'image_sets_domeport_parameter_id_fkey', ('domeport_parameter_id',))",
+        "('fk', 'image_sets_event_id_fkey', ('event_id',))",
+        "('fk', 'image_sets_flatport_parameter_id_fkey', ('flatport_parameter_id',))",
+        "('fk', 'image_sets_license_id_fkey', ('license_id',))",
+        "('fk', 'image_sets_photometric_calibration_id_fkey', ('photometric_calibration_id',))",
+        "('fk', 'image_sets_pi_id_fkey', ('pi_id',))",
+        "('fk', 'image_sets_platform_id_fkey', ('platform_id',))",
+        "('fk', 'image_sets_project_id_fkey', ('project_id',))",
+        "('fk', 'image_sets_sensor_id_fkey', ('sensor_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'image_sets_camera_calibration_m_683a2f7c_fk_image_cam', ('camera_calibration_model_id',))",
+        "('fk', 'image_sets_camera_housing_viewp_ed132d55_fk_image_cam', ('camera_housing_viewport_id',))",
+        "('fk', 'image_sets_camera_pose_id_64f2c7df_fk_image_camera_poses_id', ('camera_pose_id',))",
+        "('fk', 'image_sets_context_id_09e2d2fb_fk_contexts_id', ('context_id',))",
+        "('fk', 'image_sets_domeport_parameter_i_c00a680d_fk_image_dom', ('domeport_parameter_id',))",
+        "('fk', 'image_sets_event_id_c19e62ca_fk_events_id', ('event_id',))",
+        "('fk', 'image_sets_flatport_parameter_i_d19e5d4e_fk_image_fla', ('flatport_parameter_id',))",
+        "('fk', 'image_sets_license_id_d6d40d8d_fk_licenses_id', ('license_id',))",
+        "('fk', 'image_sets_photometric_calibrat_57ee2998_fk_image_pho', ('photometric_calibration_id',))",
+        "('fk', 'image_sets_pi_id_d8be8830_fk_pis_id', ('pi_id',))",
+        "('fk', 'image_sets_platform_id_0556b0e2_fk_platforms_id', ('platform_id',))",
+        "('fk', 'image_sets_project_id_cb8b25fd_fk_projects_id', ('project_id',))",
+        "('fk', 'image_sets_sensor_id_bd85448e_fk_sensors_id', ('sensor_id',))"
+      ],
+      "constraints_changed": {}
+    },
+    "images": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "acquisition": {
+          "a": {
+            "name": "acquisition",
+            "type": "varchar(5)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "acquisition",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "capture_mode": {
+          "a": {
+            "name": "capture_mode",
+            "type": "varchar(6)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "capture_mode",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "deployment": {
+          "a": {
+            "name": "deployment",
+            "type": "varchar(11)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "deployment",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "fauna_attraction": {
+          "a": {
+            "name": "fauna_attraction",
+            "type": "varchar(6)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "fauna_attraction",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "handle": {
+          "a": {
+            "name": "handle",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "handle",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "illumination": {
+          "a": {
+            "name": "illumination",
+            "type": "varchar(16)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "illumination",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "marine_zone": {
+          "a": {
+            "name": "marine_zone",
+            "type": "varchar(12)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "marine_zone",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "navigation": {
+          "a": {
+            "name": "navigation",
+            "type": "varchar(13)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "navigation",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "pixel_magnitude": {
+          "a": {
+            "name": "pixel_magnitude",
+            "type": "varchar(3)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "pixel_magnitude",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "quality": {
+          "a": {
+            "name": "quality",
+            "type": "varchar(9)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "quality",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "scale_reference": {
+          "a": {
+            "name": "scale_reference",
+            "type": "varchar(17)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "scale_reference",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        },
+        "spectral_resolution": {
+          "a": {
+            "name": "spectral_resolution",
+            "type": "varchar(14)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "spectral_resolution",
+            "type": "varchar(50)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [
+        "idx_images_geom"
+      ],
+      "indexes_only_in_b": [
+        "images_camera_calibration_model_id_2d1f8408",
+        "images_camera_housing_viewport_id_e310cd09",
+        "images_camera_pose_id_f5d4a58f",
+        "images_context_id_e3d92780",
+        "images_domeport_parameter_id_96ebc2ed",
+        "images_event_id_689cc90f",
+        "images_flatport_parameter_id_40e6c94c",
+        "images_geom_c39d1dbf_id",
+        "images_image_set_id_3148bfe4",
+        "images_license_id_682d4e9b",
+        "images_name_1314ea73_like",
+        "images_photometric_calibration_id_0c462188",
+        "images_pi_id_17154e55",
+        "images_platform_id_89c897d9",
+        "images_project_id_add1891c",
+        "images_sensor_id_ad53359b",
+        "images_sha256_hash_a1e50003_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'images_camera_calibration_model_id_fkey', ('camera_calibration_model_id',))",
+        "('fk', 'images_camera_housing_viewport_id_fkey', ('camera_housing_viewport_id',))",
+        "('fk', 'images_camera_pose_id_fkey', ('camera_pose_id',))",
+        "('fk', 'images_context_id_fkey', ('context_id',))",
+        "('fk', 'images_domeport_parameter_id_fkey', ('domeport_parameter_id',))",
+        "('fk', 'images_event_id_fkey', ('event_id',))",
+        "('fk', 'images_flatport_parameter_id_fkey', ('flatport_parameter_id',))",
+        "('fk', 'images_image_set_id_fkey', ('image_set_id',))",
+        "('fk', 'images_license_id_fkey', ('license_id',))",
+        "('fk', 'images_photometric_calibration_id_fkey', ('photometric_calibration_id',))",
+        "('fk', 'images_pi_id_fkey', ('pi_id',))",
+        "('fk', 'images_platform_id_fkey', ('platform_id',))",
+        "('fk', 'images_project_id_fkey', ('project_id',))",
+        "('fk', 'images_sensor_id_fkey', ('sensor_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'images_camera_calibration_m_2d1f8408_fk_image_cam', ('camera_calibration_model_id',))",
+        "('fk', 'images_camera_housing_viewp_e310cd09_fk_image_cam', ('camera_housing_viewport_id',))",
+        "('fk', 'images_camera_pose_id_f5d4a58f_fk_image_camera_poses_id', ('camera_pose_id',))",
+        "('fk', 'images_context_id_e3d92780_fk_contexts_id', ('context_id',))",
+        "('fk', 'images_domeport_parameter_i_96ebc2ed_fk_image_dom', ('domeport_parameter_id',))",
+        "('fk', 'images_event_id_689cc90f_fk_events_id', ('event_id',))",
+        "('fk', 'images_flatport_parameter_i_40e6c94c_fk_image_fla', ('flatport_parameter_id',))",
+        "('fk', 'images_image_set_id_3148bfe4_fk_image_sets_id', ('image_set_id',))",
+        "('fk', 'images_license_id_682d4e9b_fk_licenses_id', ('license_id',))",
+        "('fk', 'images_photometric_calibrat_0c462188_fk_image_pho', ('photometric_calibration_id',))",
+        "('fk', 'images_pi_id_17154e55_fk_pis_id', ('pi_id',))",
+        "('fk', 'images_platform_id_89c897d9_fk_platforms_id', ('platform_id',))",
+        "('fk', 'images_project_id_add1891c_fk_projects_id', ('project_id',))",
+        "('fk', 'images_sensor_id_ad53359b_fk_sensors_id', ('sensor_id',))"
+      ],
+      "constraints_changed": {}
+    },
+    "labels": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {},
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "labels_annotation_set_id_c5463aac",
+        "labels_name_f48deff7_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [
+        "('fk', 'labels_annotation_set_id_fkey', ('annotation_set_id',))"
+      ],
+      "constraints_only_in_b": [
+        "('fk', 'labels_annotation_set_id_c5463aac_fk_annotation_sets_id', ('annotation_set_id',))"
+      ],
+      "constraints_changed": {}
+    },
+    "licenses": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "licenses_name_0308e4d2_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "pis": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "pis_name_18c0e180_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "platforms": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "platforms_name_454c90a5_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "projects": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "projects_name_fb20444c_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "related_materials": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(255)",
+            "nullable": false,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    },
+    "sensors": {
+      "columns_only_in_a": [],
+      "columns_only_in_b": [],
+      "columns_changed": {
+        "uri": {
+          "a": {
+            "name": "uri",
+            "type": "varchar",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          },
+          "b": {
+            "name": "uri",
+            "type": "varchar(2048)",
+            "nullable": true,
+            "default": null,
+            "autoincrement": false
+          }
+        }
+      },
+      "indexes_only_in_a": [],
+      "indexes_only_in_b": [
+        "sensors_name_a82641b6_like"
+      ],
+      "indexes_changed": {},
+      "constraints_only_in_a": [],
+      "constraints_only_in_b": [],
+      "constraints_changed": {}
+    }
+  }
+}
