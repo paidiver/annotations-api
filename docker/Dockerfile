@@ -6,6 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 COPY . .
+
+RUN apt-get update && apt-get install -y \
+    gdal-bin \
+    libgdal-dev \
+    libgeos-dev \
+    libproj-dev \
+    && rm -rf /var/lib/apt/lists/*
+    
 RUN pip install 'poetry~=1.8.0' && \
     poetry config virtualenvs.in-project false && \
     poetry config virtualenvs.create false && \
