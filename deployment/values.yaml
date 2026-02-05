@@ -17,9 +17,9 @@ api:
     tag: develop
   port: 8000
 
-db:
-  image: postgis/postgis:16-3.5
-  storage: 1Gi
+persistence:
+  size: 1
+  storageClass: "scale-nocacuk-bodc2"
 
 env:
   POSTGRES_DB: annotationsdb
@@ -38,36 +38,20 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
-# This is for setting Kubernetes Annotations to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-podAnnotations: {}
-# This is for setting Kubernetes Labels to a Pod.
-# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-podLabels: {}
+global:
+  defaultStorageClass: scale-nocacuk-bodc2
+  postgresql:
+    auth:
+      username: myuser
+      password: mypassword
+      database: annotationsdb
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+primary:
+  podSecurityContext:
+    enabled: true
+    fsGroup: 65534
+  containerSecurityContext:
+    runAsUser: 65534
+    runAsGroup: 65534
+  persistence:
+    size: 1

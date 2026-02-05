@@ -7,4 +7,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.db.storage }}
+      storage: {{ .Values.persistence.size }}
