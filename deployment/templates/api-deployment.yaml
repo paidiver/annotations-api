@@ -48,6 +48,23 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ .Values.api.port }}
+          env:
+            - name: POSTGRES_HOST
+              value: {{ printf "%s-postgresql" .Release.Name }}
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: {{ .Values.global.postgresql.auth.database }}
+            - name: POSTGRES_USER
+              value: {{ .Values.global.postgresql.auth.username }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.global.postgresql.auth.password }}
+            - name: DJANGO_SECRET_KEY
+              value: dev-secret-key-change-me
+            - name: DJANGO_DEBUG
+              value: "1"
+            - name: DJANGO_ALLOWED_HOSTS
+              value: localhost,127.0.0.1,0.0.0.0
           command:
             - sh
             - -c
