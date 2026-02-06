@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+from ..models.annotation import Annotator
 from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, Sensor
 
 
@@ -66,3 +67,11 @@ class SensorSerializer(serializers.ModelSerializer):
         """Meta class for SensorSerializer."""
         model = Sensor
         fields = ["id", "name", "uri", "created_at", "updated_at"]
+
+
+class AnnotatorSerializer(serializers.ModelSerializer):
+    """Serializer for Annotator model."""
+    class Meta:
+        """Meta class for AnnotatorSerializer."""
+        model = Annotator
+        fields = ["id", "name", "created_at", "updated_at"]

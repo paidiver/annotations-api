@@ -3,6 +3,7 @@
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    AnnotatorViewSet,
     ContextViewSet,
     CreatorViewSet,
     EventViewSet,
@@ -14,6 +15,7 @@ from .views import (
 )
 
 router = DefaultRouter()
+router.register("annotators", AnnotatorViewSet, basename="annotator")
 router.register("creators", CreatorViewSet, basename="creator")
 router.register("contexts", ContextViewSet, basename="context")
 router.register("pis", PIViewSet, basename="pi")
