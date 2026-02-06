@@ -52,7 +52,13 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Annotations API",
+    "DESCRIPTION": "API for managing annotations and related metadata for images captured in various contexts.",
     "VERSION": "0.1.0",
+    'TAGS': [
+        {'name': 'Field Model API', 'description': 'Endpoints for managing field models'},
+        {'name': 'Image Metadata API', 'description': 'Endpoints for managing image metadata'},
+        {'name': 'Annotations API', 'description': 'Endpoints for managing annotations'},
+    ],
 }
 
 MIDDLEWARE = [
