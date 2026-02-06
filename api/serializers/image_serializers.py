@@ -21,3 +21,13 @@ class ImageCameraCalibrationModelSerializer(serializers.ModelSerializer):
 
         # Set read-only fields
         read_only_fields = ["id", "created_at", "updated_at"]
+
+class ImageCameraHousingViewportSerializer(serializers.ModelSerializer):
+    """Serializer for ImageCameraHousingViewport model."""
+    class Meta:
+        """Meta class for ImageCameraHousingViewportSerializer."""
+        model = ImageCameraHousingViewport
+        fields = "__all__"
+
+        # Set read-only fields
+        read_only_fields = ["id", "created_at", "updated_at"]

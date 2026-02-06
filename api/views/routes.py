@@ -2,7 +2,7 @@
 
 from rest_framework.routers import DefaultRouter
 
-from api.views.image_views import ImageCameraCalibrationModelViewSet
+from api.views.image_views import ImageCameraCalibrationModelViewSet, ImageCameraHousingViewportViewSet
 
 from .annotation_views import AnnotatorViewSet
 from .views import (
@@ -34,3 +34,4 @@ router.register("sensors", SensorViewSet, basename="sensor")
 
 #image related routes
 router.register("image-camera-calibration-models", ImageCameraCalibrationModelViewSet, basename="imagecameracalibrationmodel")  # noqa: E501
+router.register("image-camera-housing-viewports", ImageCameraHousingViewportViewSet, basename="imagecamerahousingviewport")  # noqa: E501
