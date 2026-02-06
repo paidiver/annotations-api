@@ -36,7 +36,7 @@ spec:
               until pg_isready \
                 -h {{ printf "%s-postgresql" .Release.Name }} \
                 -p 5432 \
-                -U {{ .Values.global.postgresql.auth.username }}; do
+                -U {{ .Values.postgresql.auth.username }}; do
                 sleep 2
               done
           securityContext:
@@ -54,11 +54,11 @@ spec:
             - name: POSTGRES_PORT
               value: "5432"
             - name: POSTGRES_DB
-              value: {{ .Values.global.postgresql.auth.database }}
+              value: {{ .Values.postgresql.auth.database }}
             - name: POSTGRES_USER
-              value: {{ .Values.global.postgresql.auth.username }}
+              value: {{ .Values.postgresql.auth.username }}
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.global.postgresql.auth.password }}
+              value: {{ .Values.postgresql.auth.password }}
             - name: DJANGO_SECRET_KEY
               value: dev-secret-key-change-me
             - name: DJANGO_DEBUG

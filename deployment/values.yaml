@@ -29,12 +29,12 @@ fullnameOverride: ""
 
 global:
   defaultStorageClass: scale-nocacuk-bodc2
-  postgresql:
-    auth:
-      username: myuser
-      password: mypassword
-      database: annotationsdb
+
 postgresql:
+  auth:
+    username: myuser
+    password: mypassword
+    database: annotationsdb
   primary:
     podSecurityContext:
       enabled: true
