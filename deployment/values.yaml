@@ -33,8 +33,9 @@ global:
 
 postgresql:
   auth:
+    enablePostgresUser: true
     username: myuser
-    password: mypassword
+    existingSecret: annotations-api-db
     database: annotationsdb
   primary:
     podSecurityContext:
@@ -44,7 +45,8 @@ postgresql:
       runAsUser: 65534
       runAsGroup: 65534
     persistence:
-      enabled: false
+      enabled: true
+      size: 2Gi
     resources:
       limits:
         memory: 128Mi
