@@ -12,6 +12,7 @@ containerSecurityContext:
       - ALL
 
 api:
+  component_name: "annotations_api"
   image:
     repository: ghcr.io/paidiver/annotations-api
     tag: develop

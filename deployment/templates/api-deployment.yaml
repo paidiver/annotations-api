@@ -8,6 +8,8 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
+      app: {{ .Release.Name }}
+      component: {{ .Values.api.component_name }}
       {{- include "paidiver-annotations-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -16,10 +18,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        app: {{ .Release.Name }}
+        component: {{ .Values.api.component_name }}
         {{- include "paidiver-annotations-api.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
     spec:
       securityContext:
         runAsNonRoot: true

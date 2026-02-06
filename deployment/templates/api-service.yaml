@@ -6,7 +6,8 @@ metadata:
     {{- include "paidiver-annotations-api.labels" . | nindent 4 }}
 spec:
   selector:
-    app: api
+    app: {{ .Release.Name }}
+    component: {{ .Values.api.component_name }}
   ports:
     - port: 8000
       targetPort: {{ .Values.api.port }}
