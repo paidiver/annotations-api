@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from ..models.fields import PI, Context, Creator, Event, License
+from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, Sensor
 
 
 class CreatorSerializer(serializers.ModelSerializer):
@@ -41,4 +41,28 @@ class LicenseSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class for LicenseSerializer."""
         model = License
+        fields = ["id", "name", "uri", "created_at", "updated_at"]
+
+
+class PlatformSerializer(serializers.ModelSerializer):
+    """Serializer for Platform model."""
+    class Meta:
+        """Meta class for PlatformSerializer."""
+        model = Platform
+        fields = ["id", "name", "uri", "created_at", "updated_at"]
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    """Serializer for Project model."""
+    class Meta:
+        """Meta class for ProjectSerializer."""
+        model = Project
+        fields = ["id", "name", "uri", "created_at", "updated_at"]
+
+
+class SensorSerializer(serializers.ModelSerializer):
+    """Serializer for Sensor model."""
+    class Meta:
+        """Meta class for SensorSerializer."""
+        model = Sensor
         fields = ["id", "name", "uri", "created_at", "updated_at"]

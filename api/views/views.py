@@ -5,13 +5,16 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from ..models.fields import PI, Context, Creator, Event, License
+from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, Sensor
 from ..serializers.serializers import (
     ContextSerializer,
     CreatorSerializer,
     EventSerializer,
     LicenseSerializer,
     PISerializer,
+    PlatformSerializer,
+    ProjectSerializer,
+    SensorSerializer,
 )
 
 
@@ -85,8 +88,22 @@ class LicenseViewSet(viewsets.ModelViewSet):
     serializer_class = LicenseSerializer
 
 
-# class ContextViewSet(viewsets.ModelViewSet):
-#     """ViewSet for the Context model."""
+class PlatformViewSet(viewsets.ModelViewSet):
+    """ViewSet for the Platform model."""
 
-#     queryset = Context.objects.all()
-#     serializer_class = ContextSerializer
+    queryset = Platform.objects.all()
+    serializer_class = PlatformSerializer
+
+
+class ProjectViewSet(viewsets.ModelViewSet):
+    """ViewSet for the Project model."""
+
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+
+class SensorViewSet(viewsets.ModelViewSet):
+    """ViewSet for the Sensor model."""
+
+    queryset = Sensor.objects.all()
+    serializer_class = SensorSerializer
