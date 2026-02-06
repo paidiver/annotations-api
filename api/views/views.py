@@ -5,8 +5,14 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from ..models.fields import Context, Creator
-from ..serializers.serializers import ContextSerializer, CreatorSerializer
+from ..models.fields import PI, Context, Creator, Event, License
+from ..serializers.serializers import (
+    ContextSerializer,
+    CreatorSerializer,
+    EventSerializer,
+    LicenseSerializer,
+    PISerializer,
+)
 
 
 class CreatorViewSet(viewsets.ViewSet):
@@ -56,3 +62,31 @@ class ContextViewSet(viewsets.ModelViewSet):
 
     queryset = Context.objects.all()
     serializer_class = ContextSerializer
+
+
+class PIViewSet(viewsets.ModelViewSet):
+    """ViewSet for the PI model."""
+
+    queryset = PI.objects.all()
+    serializer_class = PISerializer
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    """ViewSet for the Event model."""
+
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+
+
+class LicenseViewSet(viewsets.ModelViewSet):
+    """ViewSet for the License model."""
+
+    queryset = License.objects.all()
+    serializer_class = LicenseSerializer
+
+
+# class ContextViewSet(viewsets.ModelViewSet):
+#     """ViewSet for the Context model."""
+
+#     queryset = Context.objects.all()
+#     serializer_class = ContextSerializer
