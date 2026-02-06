@@ -1,5 +1,6 @@
 """Image related view endpoints."""
 
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 
 from ..models.fields import (
@@ -20,6 +21,7 @@ from ..serializers.image_serializers import (
 )
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImageCameraCalibrationModelViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageCameraCalibrationModel model."""
 
@@ -27,6 +29,7 @@ class ImageCameraCalibrationModelViewSet(viewsets.ModelViewSet):
     queryset = ImageCameraCalibrationModel.objects.all()
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImageCameraHousingViewportViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageCameraHousingViewport model."""
 
@@ -34,6 +37,7 @@ class ImageCameraHousingViewportViewSet(viewsets.ModelViewSet):
     queryset = ImageCameraHousingViewport.objects.all()
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImageCameraPoseViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageCameraPose model."""
 
@@ -41,6 +45,7 @@ class ImageCameraPoseViewSet(viewsets.ModelViewSet):
     queryset = ImageCameraPose.objects.all()
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImageDomeportParameterViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageDomeportParameter model."""
 
@@ -48,6 +53,7 @@ class ImageDomeportParameterViewSet(viewsets.ModelViewSet):
     queryset = ImageDomeportParameter.objects.all()
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImageFlatportParameterViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageFlatportParameter model."""
 
@@ -55,6 +61,7 @@ class ImageFlatportParameterViewSet(viewsets.ModelViewSet):
     queryset = ImageFlatportParameter.objects.all()
 
 
+@extend_schema(tags=["Image Metadata API"])
 class ImagePhotometricCalibrationViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImagePhotometricCalibration model."""
 

@@ -1,6 +1,7 @@
 """Viewsets classes for the API."""
 
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
@@ -17,8 +18,31 @@ from ..serializers.serializers import (
     RelatedMaterialSerializer,
     SensorSerializer,
 )
+from .base import BaseFieldsViewSets
 
 
+@extend_schema_view(
+    create=extend_schema(
+        summary="Create a new creator",
+        tags=["Field Model API"],
+    ),
+    list=extend_schema(
+        summary="List all creators",
+        tags=["Field Model API"],
+    ),
+    retrieve=extend_schema(
+        summary="Get a specific creator",
+        tags=["Field Model API"],
+    ),
+    update=extend_schema(
+        summary="Update a specific creator",
+        tags=["Field Model API"],
+    ),
+    destroy=extend_schema(
+        summary="Delete a specific creator",
+        tags=["Field Model API"],
+    ),
+)
 class CreatorViewSet(viewsets.ViewSet):
     """ViewSet for the Creator model."""
 
@@ -40,13 +64,13 @@ class CreatorViewSet(viewsets.ViewSet):
         serializer_class = CreatorSerializer(self.get_queryset(), many=True)
         return Response(serializer_class.data, status=HTTP_200_OK)
 
-    def retrieve(self, request, pk: int=None) -> Response:
+    def retrieve(self, request, pk: int = None) -> Response:
         """Get a specific creator by ID."""
         creator = get_object_or_404(self.get_queryset(), pk=pk)
         serializer = CreatorSerializer(creator)
         return Response(serializer.data, status=HTTP_200_OK)
 
-    def update(self, request, pk: int=None) -> Response:
+    def update(self, request, pk: int = None) -> Response:
         """Update specific creator by id."""
         creator = get_object_or_404(self.get_queryset(), pk=pk)
         serializer = CreatorSerializer(creator, data=request.data)
@@ -55,62 +79,63 @@ class CreatorViewSet(viewsets.ViewSet):
             return Response(CreatorSerializer(updated_creator).data, status=HTTP_200_OK)
         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk: int=None) -> Response:
+    def destroy(self, request, pk: int = None) -> Response:
         """Delete creator by id."""
         creator = get_object_or_404(self.get_queryset(), pk=pk)
         creator.delete()
         return Response(status=HTTP_204_NO_CONTENT)
 
-class ContextViewSet(viewsets.ModelViewSet):
+
+class ContextViewSet(BaseFieldsViewSets):
     """ViewSet for the Context model."""
 
     queryset = Context.objects.all()
     serializer_class = ContextSerializer
 
 
-class PIViewSet(viewsets.ModelViewSet):
+class PIViewSet(BaseFieldsViewSets):
     """ViewSet for the PI model."""
 
     queryset = PI.objects.all()
     serializer_class = PISerializer
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(BaseFieldsViewSets):
     """ViewSet for the Event model."""
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
 
-class LicenseViewSet(viewsets.ModelViewSet):
+class LicenseViewSet(BaseFieldsViewSets):
     """ViewSet for the License model."""
 
     queryset = License.objects.all()
     serializer_class = LicenseSerializer
 
 
-class PlatformViewSet(viewsets.ModelViewSet):
+class PlatformViewSet(BaseFieldsViewSets):
     """ViewSet for the Platform model."""
 
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(BaseFieldsViewSets):
     """ViewSet for the Project model."""
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
 
 
-class SensorViewSet(viewsets.ModelViewSet):
+class SensorViewSet(BaseFieldsViewSets):
     """ViewSet for the Sensor model."""
 
     queryset = Sensor.objects.all()
     serializer_class = SensorSerializer
 
 
-class RelatedMaterialViewSet(viewsets.ModelViewSet):
+class RelatedMaterialViewSet(BaseFieldsViewSets):
     """ViewSet for the RelatedMaterial model."""
 
     queryset = RelatedMaterial.objects.all()
