@@ -43,7 +43,7 @@ postgresql:
       runAsUser: 65534
       runAsGroup: 65534
     persistence:
-      size: 1
+      enabled: false
     resources:
       limits:
         memory: 128Mi
