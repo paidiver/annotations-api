@@ -13,10 +13,6 @@ spec:
       {{- include "paidiver-annotations-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
         app: {{ .Release.Name }}
         component: {{ .Values.api.component_name }}
@@ -71,7 +67,7 @@ spec:
             - -c
             - |
               python manage.py migrate &&
-              python manage.py runserver 0.0.0.0:{{ .Values.api.port }}
+              python manage.py runserver 0.0.0.0:{{ .Values.api.port }} --noreload
           securityContext:
             runAsUser: 1000
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
