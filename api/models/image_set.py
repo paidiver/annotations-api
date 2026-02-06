@@ -2,6 +2,8 @@
 
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point, Polygon
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db.models import CheckConstraint, F, Q
 
 from .base import DefaultColumns
 from .common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
@@ -58,7 +60,12 @@ class ImageSetRelatedMaterial(models.Model):
 class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
     """A collection of images, videos, or other media files related to a specific project, event, or context."""
 
-    # SET NULL FKs (ondelete="SET NULL")
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text=("A unique name for the image set."),
+    )
+
     context = models.ForeignKey(
         "Context",
         null=True,
@@ -208,21 +215,25 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
     min_latitude_degrees = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],
         help_text="The lower bounding box latitude...",
     )
     max_latitude_degrees = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],
         help_text="The upper bounding box latitude...",
     )
     min_longitude_degrees = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)],
         help_text="The lower bounding box longitude...",
     )
     max_longitude_degrees = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)],
         help_text="The upper bounding box longitude...",
     )
 
@@ -233,8 +244,24 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         help_text="Geographic bounding box of the image_set in WGS84 coordinates.",
     )
 
-    class Meta:  # noqa: D106
+    class Meta:
+        """Meta class for ImageSet."""
+
         db_table = "image_sets"
+        constraints = [
+            CheckConstraint(
+                check=Q(min_latitude_degrees__isnull=True)
+                | Q(max_latitude_degrees__isnull=True)
+                | Q(min_latitude_degrees__lt=F("max_latitude_degrees")),
+                name="imageset_min_lat_lt_max_lat",
+            ),
+            CheckConstraint(
+                check=Q(min_longitude_degrees__isnull=True)
+                | Q(max_longitude_degrees__isnull=True)
+                | Q(min_longitude_degrees__lt=F("max_longitude_degrees")),
+                name="imageset_min_lon_lt_max_lon",
+            ),
+        ]
 
     def save(self, *args, **kwargs):
         """Save method to update geom and limits fields."""
@@ -261,5 +288,5 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
 
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:  # noqa: D105
+    def __str__(self) -> str:
         return self.name
