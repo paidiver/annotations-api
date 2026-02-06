@@ -5,8 +5,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from ..models.fields import Creator
-from ..serializers.serializers import CreatorSerializer
+from ..models.fields import Context, Creator
+from ..serializers.serializers import ContextSerializer, CreatorSerializer
 
 
 class CreatorViewSet(viewsets.ViewSet):
@@ -50,3 +50,9 @@ class CreatorViewSet(viewsets.ViewSet):
         creator = get_object_or_404(self.get_queryset(), pk=pk)
         creator.delete()
         return Response(status=HTTP_204_NO_CONTENT)
+
+class ContextViewSet(viewsets.ModelViewSet):
+    """ViewSet for the Context model."""
+
+    queryset = Context.objects.all()
+    serializer_class = ContextSerializer
