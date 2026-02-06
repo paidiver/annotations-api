@@ -2,8 +2,7 @@
 
 from rest_framework import serializers
 
-from ..models.annotation import Annotator
-from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, Sensor
+from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, RelatedMaterial, Sensor
 
 
 class CreatorSerializer(serializers.ModelSerializer):
@@ -69,9 +68,9 @@ class SensorSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "uri", "created_at", "updated_at"]
 
 
-class AnnotatorSerializer(serializers.ModelSerializer):
-    """Serializer for Annotator model."""
+class RelatedMaterialSerializer(serializers.ModelSerializer):
+    """Serializer for RelatedMaterial model."""
     class Meta:
-        """Meta class for AnnotatorSerializer."""
-        model = Annotator
-        fields = ["id", "name", "created_at", "updated_at"]
+        """Meta class for RelatedMaterialSerializer."""
+        model = RelatedMaterial
+        fields = ["id", "uri", "title", "relation", "created_at", "updated_at"]

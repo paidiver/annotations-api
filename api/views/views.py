@@ -5,10 +5,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from ..models.annotation import Annotator
-from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, Sensor
+from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, RelatedMaterial, Sensor
 from ..serializers.serializers import (
-    AnnotatorSerializer,
     ContextSerializer,
     CreatorSerializer,
     EventSerializer,
@@ -16,6 +14,7 @@ from ..serializers.serializers import (
     PISerializer,
     PlatformSerializer,
     ProjectSerializer,
+    RelatedMaterialSerializer,
     SensorSerializer,
 )
 
@@ -111,8 +110,8 @@ class SensorViewSet(viewsets.ModelViewSet):
     serializer_class = SensorSerializer
 
 
-class AnnotatorViewSet(viewsets.ModelViewSet):
-    """ViewSet for the Annotator model."""
+class RelatedMaterialViewSet(viewsets.ModelViewSet):
+    """ViewSet for the RelatedMaterial model."""
 
-    queryset = Annotator.objects.all()
-    serializer_class = AnnotatorSerializer
+    queryset = RelatedMaterial.objects.all()
+    serializer_class = RelatedMaterialSerializer

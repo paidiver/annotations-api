@@ -2,8 +2,8 @@
 
 from rest_framework.routers import DefaultRouter
 
+from .annotation_views import AnnotatorViewSet
 from .views import (
-    AnnotatorViewSet,
     ContextViewSet,
     CreatorViewSet,
     EventViewSet,
@@ -11,11 +11,15 @@ from .views import (
     PIViewSet,
     PlatformViewSet,
     ProjectViewSet,
+    RelatedMaterialViewSet,
     SensorViewSet,
 )
 
 router = DefaultRouter()
+#annotation related routes
 router.register("annotators", AnnotatorViewSet, basename="annotator")
+
+#field related routes
 router.register("creators", CreatorViewSet, basename="creator")
 router.register("contexts", ContextViewSet, basename="context")
 router.register("pis", PIViewSet, basename="pi")
@@ -23,4 +27,5 @@ router.register("events", EventViewSet, basename="event")
 router.register("licenses", LicenseViewSet, basename="license")
 router.register("platforms", PlatformViewSet, basename="platform")
 router.register("projects", ProjectViewSet, basename="project")
+router.register("related-materials", RelatedMaterialViewSet, basename="relatedmaterial")
 router.register("sensors", SensorViewSet, basename="sensor")
