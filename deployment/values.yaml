@@ -34,13 +34,18 @@ global:
       username: myuser
       password: mypassword
       database: annotationsdb
-
-primary:
-  podSecurityContext:
-    enabled: true
-    fsGroup: 65534
-  containerSecurityContext:
-    runAsUser: 65534
-    runAsGroup: 65534
-  persistence:
-    size: 1
+postgresql:
+  primary:
+    podSecurityContext:
+      enabled: true
+      fsGroup: 65534
+    containerSecurityContext:
+      runAsUser: 65534
+      runAsGroup: 65534
+    persistence:
+      size: 1
+    resources:
+      limits:
+        memory: 128Mi
+      requests:
+        memory: 64Mi
