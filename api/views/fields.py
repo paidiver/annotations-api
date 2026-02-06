@@ -1,4 +1,4 @@
-"""Viewsets classes for the API."""
+"""Image related view endpoints."""
 
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -6,8 +6,32 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from ..models.fields import PI, Context, Creator, Event, License, Platform, Project, RelatedMaterial, Sensor
-from ..serializers.serializers import (
+from api.models.fields import (
+    PI,
+    Context,
+    Creator,
+    Event,
+    ImageCameraCalibrationModel,
+    ImageCameraHousingViewport,
+    ImageCameraPose,
+    ImageDomeportParameter,
+    ImageFlatportParameter,
+    ImagePhotometricCalibration,
+    License,
+    Platform,
+    Project,
+    RelatedMaterial,
+    Sensor,
+)
+from api.serializers import (
+    ImageCameraCalibrationModelSerializer,
+    ImageCameraHousingViewportSerializer,
+    ImageCameraPoseSerializer,
+    ImageDomeportParameterSerializer,
+    ImageFlatportParameterSerializer,
+    ImagePhotometricCalibrationSerializer,
+)
+from api.serializers.fields import (
     ContextSerializer,
     CreatorSerializer,
     EventSerializer,
@@ -18,7 +42,49 @@ from ..serializers.serializers import (
     RelatedMaterialSerializer,
     SensorSerializer,
 )
-from .base import BaseFieldsViewSets
+from api.views.base import BaseFieldsViewSets
+
+
+class ImageCameraCalibrationModelViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImageCameraCalibrationModel model."""
+
+    serializer_class = ImageCameraCalibrationModelSerializer
+    queryset = ImageCameraCalibrationModel.objects.all()
+
+
+class ImageCameraHousingViewportViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImageCameraHousingViewport model."""
+
+    serializer_class = ImageCameraHousingViewportSerializer
+    queryset = ImageCameraHousingViewport.objects.all()
+
+
+class ImageCameraPoseViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImageCameraPose model."""
+
+    serializer_class = ImageCameraPoseSerializer
+    queryset = ImageCameraPose.objects.all()
+
+
+class ImageDomeportParameterViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImageDomeportParameter model."""
+
+    serializer_class = ImageDomeportParameterSerializer
+    queryset = ImageDomeportParameter.objects.all()
+
+
+class ImageFlatportParameterViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImageFlatportParameter model."""
+
+    serializer_class = ImageFlatportParameterSerializer
+    queryset = ImageFlatportParameter.objects.all()
+
+
+class ImagePhotometricCalibrationViewSet(BaseFieldsViewSets):
+    """ViewSet for the ImagePhotometricCalibration model."""
+
+    serializer_class = ImagePhotometricCalibrationSerializer
+    queryset = ImagePhotometricCalibration.objects.all()
 
 
 @extend_schema_view(

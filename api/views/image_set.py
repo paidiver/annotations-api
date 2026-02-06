@@ -1,12 +1,14 @@
 """ViewSet for the ImageSet model."""
 
 from django.db import transaction
+from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 
 from api.models import ImageSet
 from api.serializers import ImageSetSerializer
 
 
+@extend_schema(tags=["Images API"])
 class ImageSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageSet model."""
 

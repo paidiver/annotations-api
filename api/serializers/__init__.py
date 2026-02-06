@@ -1,7 +1,24 @@
 """__init__.py for the api.serializers package."""
 
-from .annotation import AnnotationSerializer
+from .annotation import AnnotationSerializer, AnnotatorSerializer
 from .annotation_set import AnnotationSetSerializer
+from .fields import (
+    ContextSerializer,
+    CreatorSerializer,
+    EventSerializer,
+    ImageCameraCalibrationModelSerializer,
+    ImageCameraHousingViewportSerializer,
+    ImageCameraPoseSerializer,
+    ImageDomeportParameterSerializer,
+    ImageFlatportParameterSerializer,
+    ImagePhotometricCalibrationSerializer,
+    LicenseSerializer,
+    PISerializer,
+    PlatformSerializer,
+    ProjectSerializer,
+    RelatedMaterialSerializer,
+    SensorSerializer,
+)
 from .image import ImageSerializer
 from .image_set import ImageSetSerializer
 from .label import LabelSerializer
@@ -10,6 +27,22 @@ __all__ = [
     "ImageSetSerializer",
     "ImageSerializer",
     "AnnotationSerializer",
+    "AnnotatorSerializer",
     "AnnotationSetSerializer",
     "LabelSerializer",
+    "ContextSerializer",
+    "CreatorSerializer",
+    "EventSerializer",
+    "ImageCameraCalibrationModelSerializer",
+    "ImageCameraHousingViewportSerializer",
+    "ImageCameraPoseSerializer",
+    "ImageDomeportParameterSerializer",
+    "ImageFlatportParameterSerializer",
+    "ImagePhotometricCalibrationSerializer",
+    "LicenseSerializer",
+    "PISerializer",
+    "PlatformSerializer",
+    "ProjectSerializer",
+    "RelatedMaterialSerializer",
+    "SensorSerializer",
 ]

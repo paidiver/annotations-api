@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
+@extend_schema(tags=["Health Check"])
 class HealthView(APIView):
     """Health check view to verify service status."""
 
@@ -27,12 +28,5 @@ class HealthView(APIView):
 @extend_schema(tags=["Field Model API"])
 class BaseFieldsViewSets(viewsets.ModelViewSet):
     """Base viewset for all field-related models."""
-
-    pass
-
-
-@extend_schema(tags=["Image Metadata API"])
-class BaseImageMetadataViewSets(viewsets.ModelViewSet):
-    """Base viewset for all image metadata-related models."""
 
     pass

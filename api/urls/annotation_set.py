@@ -6,6 +6,6 @@ from api.views import AnnotationSetViewSet
 
 router_annotation_set = DefaultRouter()
 router_annotation_set.register(
-    r"",
+    r"annotation_sets",
     AnnotationSetViewSet,
 )

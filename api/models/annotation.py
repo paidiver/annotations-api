@@ -133,5 +133,4 @@ class AnnotationLabel(DefaultColumns):
         ]
 
     def __str__(self):
-        """String representation of the AnnotationLabel instance."""
         return f"AnnotationLabel(annotation={self.annotation_id}, label={self.label_id})"

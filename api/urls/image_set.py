@@ -6,6 +6,6 @@ from api.views import ImageSetViewSet
 
 router_image_set = DefaultRouter()
 router_image_set.register(
-    r"",
+    r"image_sets",
     ImageSetViewSet,
 )

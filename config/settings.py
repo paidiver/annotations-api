@@ -54,10 +54,15 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Annotations API",
     "DESCRIPTION": "API for managing annotations and related metadata for images captured in various contexts.",
     "VERSION": "0.1.0",
-    'TAGS': [
-        {'name': 'Field Model API', 'description': 'Endpoints for managing field models'},
-        {'name': 'Image Metadata API', 'description': 'Endpoints for managing image metadata'},
-        {'name': 'Annotations API', 'description': 'Endpoints for managing annotations'},
+    "TAGS": [
+        {"name": "Images API", "description": "Endpoints for managing images and image sets"},
+        {"name": "Annotations API", "description": "Endpoints for managing annotations"},
+        {"name": "Labels API", "description": "Endpoints for managing labels"},
+        {
+            "name": "Field Model API",
+            "description": "Endpoints for managing common fields like creator, context, project, event, platform, sensor, pi, license, related material",  # noqa: E501
+        },
+        {"name": "Health Check", "description": "Endpoint for checking service health status"},
     ],
 }
 

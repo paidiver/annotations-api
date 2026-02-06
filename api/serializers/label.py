@@ -1,4 +1,4 @@
-"""Serializers for the Label API endpoints."""
+"""Serializers for the Labels API endpoints."""
 
 from rest_framework import serializers
 
@@ -13,3 +13,5 @@ class LabelSerializer(serializers.ModelSerializer):
 
         model = Label
         fields = "__all__"
+
+        read_only_fields = ["id", "created_at", "updated_at"]

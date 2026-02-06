@@ -1,4 +1,4 @@
-"""Serializers for the Annotation API endpoints."""
+"""Serializers for the Annotations API endpoints."""
 
 from rest_framework import serializers
 
@@ -14,6 +14,8 @@ class AnnotatorSerializer(serializers.ModelSerializer):
         model = Annotator
         fields = "__all__"
 
+        read_only_fields = ["id", "created_at", "updated_at"]
+
 
 class AnnotationSerializer(serializers.ModelSerializer):
     """Serializer for Annotation model."""
@@ -23,3 +25,17 @@ class AnnotationSerializer(serializers.ModelSerializer):
 
         model = Annotation
         fields = "__all__"
+
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class AnnotationLabelSerializer(serializers.ModelSerializer):
+    """Serializer for AnnotationLabel model."""
+
+    class Meta:
+        """Meta class for AnnotationLabelSerializer."""
+
+        model = Annotation.Labels.through
+        fields = "__all__"
+
+        read_only_fields = ["id", "created_at", "updated_at"]

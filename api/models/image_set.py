@@ -136,7 +136,6 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         help_text="A URI pointing to the license to use the data (should be FAIR, e.g. CC-BY or CC-0)",
     )
 
-    # Many-to-many creators and related materials
     creators = models.ManyToManyField(
         "Creator",
         through=ImageSetCreator,
@@ -199,7 +198,6 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         related_name="image_sets",
     )
 
-    # ImageSet-specific fields
     local_path = models.CharField(
         max_length=500,
         null=True,

@@ -99,16 +99,14 @@ class NestedGetOrCreateMixin:
                 return Model.objects.create(**validated_data)
 
         except IntegrityError as err:
-            # Fetch existing by key_field (e.g., name)
             key_value = validated_data.get(self.key_field)
             if key_value is None:
-                raise  # can't recover
+                raise
 
             existing = Model.objects.filter(**{self.key_field: key_value}).first()
             if existing is None:
-                raise  # can't recover
+                raise
 
-            # Compare "all fields except excluded"
             for field, incoming in validated_data.items():
                 if field in self.exclude_compare_fields:
                     continue
@@ -117,7 +115,6 @@ class NestedGetOrCreateMixin:
                         {field: f"{Model.__name__} with {self.key_field}={key_value!r} already exists but differs."}
                     ) from err
 
-            # identical -> reuse
             return existing
 
 
