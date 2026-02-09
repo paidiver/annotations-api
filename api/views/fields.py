@@ -112,8 +112,10 @@ class ImagePhotometricCalibrationViewSet(BaseFieldsViewSets):
 class CreatorViewSet(viewsets.ViewSet):
     """ViewSet for the Creator model."""
 
-    queryset = Creator.objects.all()
-    serializer_class = CreatorSerializer
+    def get_queryset(self):
+        """Get the queryset for the Creator model."""
+        queryset = Creator.objects.all()
+        return queryset
 
     def create(self, request) -> Response:
         """Create new creator object."""
