@@ -19,10 +19,10 @@ from api.models.fields import (
     RelatedMaterial,
     Sensor,
 )
-from api.serializers.base import NestedGetOrCreateMixin
+from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyMixin
 
 
-class CreatorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyMixin, serializers.ModelSerializer):
     """Serializer for the Creator model."""
 
     key_field = "name"
@@ -32,9 +32,6 @@ class CreatorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
 
         model = Creator
         fields = "__all__"
-
-        read_only_fields = ["id", "created_at", "updated_at"]
-
 
 class ContextSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
     """Serializer for the Context model."""

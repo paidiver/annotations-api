@@ -235,3 +235,12 @@ class CreateOnlyRelatedListField(serializers.Field):
     def to_representation(self, value):
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
+
+class ReadOnlyMixin:
+    """Mixin to set all fields of a serializer to read-only."""
+
+    def get_read_only_fields(self):
+        """Override to set all fields to read-only."""
+        read_only_fields = super().get_read_only_fields()
+        common_fields = ["id", "created_at", "updated_at"]
+        return list(set(read_only_fields) | set(common_fields))
