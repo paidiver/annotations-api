@@ -68,7 +68,6 @@ EVENT_HEADER_KEYS = {
 }
 
 
-
 class HealthView(APIView):
     """Health check view to verify service status."""
 
@@ -83,8 +82,10 @@ class HealthView(APIView):
         """
         return Response({"status": "ok"})
 
+
 class AnnotationsView(APIView):
     """Annotations view to import image annotation data into the database."""
+
     def post(self, request: Request) -> Response:
         """Endpoint to receive an XLSX file and import it into the database.
 
@@ -122,11 +123,9 @@ class AnnotationsView(APIView):
             if key in EVENT_HEADER_KEYS and pd.notna(value):
                 event_header[key] = value
 
-
         print("Parsed Event header:")
         for k, v in event_header.items():
             print(f"{k}: {v}")
-
 
         print(df.head())
 
