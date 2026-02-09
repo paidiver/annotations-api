@@ -12,6 +12,7 @@ router_annotation.register(
 router_annotation.register(
     r"annotators",
     AnnotatorViewSet,
+    basename="annotator",
 )
 
 router_annotation.register(

@@ -13,7 +13,7 @@ class AnnotatorSerializer(serializers.ModelSerializer):
         """Meta class for AnnotatorSerializer."""
 
         model = Annotator
-        fields = ["name"]
+        fields = ["name", "id"]
 
         read_only_fields = ["id", "created_at", "updated_at"]
 
