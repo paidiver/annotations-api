@@ -3,6 +3,7 @@
 from rest_framework import serializers
 
 from api.models import Annotation, Annotator
+from api.models.annotation import AnnotationLabel
 
 
 class AnnotatorSerializer(serializers.ModelSerializer):
@@ -35,7 +36,7 @@ class AnnotationLabelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class for AnnotationLabelSerializer."""
 
-        model = Annotation.Labels.through
+        model = AnnotationLabel
         fields = "__all__"
 
         read_only_fields = ["id", "created_at", "updated_at"]

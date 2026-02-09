@@ -27,5 +27,5 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 class AnnotationLabelViewSet(viewsets.ModelViewSet):
     """ViewSet for the AnnotationLabel model."""
 
-    queryset = AnnotationLabel.through.objects.all().order_by("id")
+    queryset = AnnotationLabel.objects.all().order_by("id")
     serializer_class = AnnotationLabelSerializer

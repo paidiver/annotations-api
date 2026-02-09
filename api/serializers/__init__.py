@@ -1,6 +1,6 @@
 """__init__.py for the api.serializers package."""
 
-from .annotation import AnnotationSerializer, AnnotatorSerializer
+from .annotation import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer
 from .annotation_set import AnnotationSetSerializer
 from .fields import (
     ContextSerializer,
@@ -29,6 +29,7 @@ __all__ = [
     "AnnotationSerializer",
     "AnnotatorSerializer",
     "AnnotationSetSerializer",
+    "AnnotationLabelSerializer",
     "LabelSerializer",
     "ContextSerializer",
     "CreatorSerializer",
