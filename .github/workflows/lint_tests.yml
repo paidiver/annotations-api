@@ -32,7 +32,7 @@ jobs:
 
       - name: Install deps
         run: |
-          poetry install --with dev --no-interaction
+          poetry install --with dev,lint,test --no-interaction
 
       - name: Run lint
         run: |
@@ -93,7 +93,7 @@ jobs:
 
       - name: Install deps
         run: |
-          poetry install --with dev --no-interaction
+          poetry install --with dev,lint,test --no-interaction
 
       - name: Run migrations (CI)
         run: |
@@ -101,4 +101,4 @@ jobs:
 
       - name: Run tests
         run: |
-          poetry run tox
+          poetry run tox -e py313
