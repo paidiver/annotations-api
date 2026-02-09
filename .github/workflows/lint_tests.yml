@@ -101,4 +101,4 @@ jobs:
 
       - name: Run tests
         run: |
-          poetry run tox
+          poetry run tox -e py310
