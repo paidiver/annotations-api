@@ -12,11 +12,21 @@ containerSecurityContext:
       - ALL
 
 api:
-  component_name: "annotations_api"
+  component_name: "annotations-api"
   image:
     repository: ghcr.io/paidiver/annotations-api
     tag: develop
   port: 8000
+  service:
+    port: 8000
+
+ingress:
+  enabled: true
+  api:
+    path: /annotations-api
+  ingressClassName: ""
+  host: ""
+
 
 persistence:
   size: 1
