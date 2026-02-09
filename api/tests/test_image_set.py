@@ -112,9 +112,6 @@ class ImageSetViewSetTests(APITestCase):
 
     def test_create_image_set_with_an_wrong_creator_and_project(self):
         """Test creating an ImageSet with an existing creator and project by ID."""
-        existing_project = Project.objects.create(**self.project_payload)
-        existing_creator = Creator.objects.create(**self.creators_payload[0])
-
         wrong_creator_payload = {**self.creators_payload[0], "uri": "https://example.com/people/wrong"}
         wrong_project_payload = {**self.project_payload, "uri": "https://example.com/wrong-project"}
 
