@@ -51,9 +51,31 @@ class ImageCameraCalibrationModelTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data["calibration_model_type"], self.camera_cal.calibration_model_type)
 
-
     def test_delete_camera_cal(self):
         """Test the DELETE endpoint."""
         response = self.client.delete(self.camera_cal_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(ImageCameraCalibrationModel.objects.count(), 0)
+
+    def test_camera_cal_readonly_fields(self):
+        """Test that read-only fields of ImageCameraCalibrationModel cannot be updated."""
+        data = {
+            "id": "12345678-1234-5678-1234-567812345678",  # Attempt to change the ID
+            "calibration_model_type": "Attempted Update",
+        }
+        response = self.client.put(self.camera_cal_detail, data, format="json")
+        self.camera_cal.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(UUID(data["id"]), self.camera_cal_id)
+        self.assertEqual(response.data["id"], str(self.camera_cal_id))  # The ID should remain unchanged
+        self.assertEqual(data["calibration_model_type"], self.camera_cal.calibration_model_type)
+
+    def test_post_camera_cal(self):
+        """Test the POST endpoint."""
+        data = {"calibration_model_type": "New Test record"}
+        response = self.client.post(self.camera_cal_list, data, format="json")
+        camera_cal_id = UUID(response.data.get("id"))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(ImageCameraCalibrationModel.objects.count(), 2)
+        camera_cal_instance = ImageCameraCalibrationModel.objects.get(id=camera_cal_id)
+        self.assertEqual(camera_cal_instance.calibration_model_type, "New Test record")
