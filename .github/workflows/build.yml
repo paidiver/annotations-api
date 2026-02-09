@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - main
-    - feature/BODCDMSYS-10210-deployment
   pull_request:
     branches:
     - main
@@ -28,7 +27,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t $CI_REGISTRY_IMAGE:develop -f docker/Dockerfile .
-          docker tag $CI_REGISTRY_IMAGE:develop $CI_REGISTRY_IMAGE:${{ github.sha }}
-          docker push $CI_REGISTRY_IMAGE:develop
+          docker build -t $CI_REGISTRY_IMAGE:latest -f docker/Dockerfile .
+          docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:${{ github.sha }}
+          docker push $CI_REGISTRY_IMAGE:latest
           docker push $CI_REGISTRY_IMAGE:${{ github.sha }}

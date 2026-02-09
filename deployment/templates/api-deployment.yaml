@@ -6,6 +6,13 @@ metadata:
     {{- include "paidiver-annotations-api.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  {{- if eq .Values.replicaCount 1.0}}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -36,29 +43,24 @@ spec:
                 -U {{ .Values.postgresql.auth.username }}; do
                 sleep 2
               done
+              echo "Waiting for PostGIS extension to exist..."
+              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DATABASE user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
+                sleep 2
+              done
           securityContext:
             runAsUser: 1000
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          env: {{ include "mychart.postgresEnv" . | nindent 12 }}
+          resources:
+            limits:
+              memory: 32Mi
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
           env:
-            - name: POSTGRES_HOST
-              value: {{ printf "%s-postgresql" .Release.Name }}
-            - name: POSTGRES_PORT
-              value: "5432"
-            - name: POSTGRES_DB
-              value: {{ .Values.postgresql.auth.database }}
-            - name: POSTGRES_USER
-              value: {{ .Values.postgresql.auth.username }}
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: annotations-api-db
-                  key: password
             - name: DJANGO_SECRET_KEY
               value: dev-secret-key-change-me
             - name: DJANGO_DEBUG
@@ -67,6 +69,7 @@ spec:
               value: localhost,127.0.0.1,0.0.0.0
             - name: APP_ROOT_PATH
               value: {{ .Values.ingress.api.path }}
+            {{ include "mychart.postgresEnv" . | nindent 12 }}
           command:
             - sh
             - -c
@@ -76,5 +79,8 @@ spec:
           securityContext:
             runAsUser: 1000
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          resources:
+            limits:
+              memory: 32Mi
       imagePullSecrets:
         - name: ghcr-pull-login

@@ -16,6 +16,7 @@ api:
   image:
     repository: ghcr.io/paidiver/annotations-api
     tag: develop
+    pullPolicy: Always
   port: 8000
   timeout: 300
   workers: 4
