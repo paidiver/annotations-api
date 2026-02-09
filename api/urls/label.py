@@ -8,4 +8,5 @@ router_label = DefaultRouter()
 router_label.register(
     r"labels",
     LabelViewSet,
+    basename="label",
 )

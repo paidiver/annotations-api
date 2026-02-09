@@ -51,6 +51,7 @@ class ImageViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(image.pk))
         self.assertEqual(resp.data["filename"], "file_a.jpg")
+        self.assertEqual(image.__str__(), "file_a.jpg")
 
     def test_create_image_with_nested_creators(self):
         """Test creating an Image with nested creators."""

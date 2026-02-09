@@ -49,6 +49,10 @@ class AnnotationSetViewSetTests(APITestCase):
         annotation_set = AnnotationSet.objects.create(name="Set A")
         annotation_set.image_sets.set([self.image_set])
 
+        self.assertEqual(
+            annotation_set.__str__(), f"AnnotationSet(id={annotation_set.pk}, version={annotation_set.version})"
+        )
+
         resp = self.client.get(self.detail_url(annotation_set.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(annotation_set.pk))

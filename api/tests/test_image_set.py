@@ -51,6 +51,7 @@ class ImageSetViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(image_set.pk))
         self.assertEqual(resp.data["name"], "Set A")
+        self.assertEqual(image_set.__str__(), "Set A")
 
     def test_create_image_set_with_nested_creators_and_materials(self):
         """Test creating an ImageSet with nested creators and related materials."""
@@ -58,6 +59,8 @@ class ImageSetViewSetTests(APITestCase):
             "name": "Created Set",
             "creators": self.creators_payload,
             "related_materials": self.materials_payload,
+            "latitude": 5.0,
+            "longitude": 25.0,
             "min_latitude_degrees": -10.0,
             "max_latitude_degrees": 10.0,
             "min_longitude_degrees": 20.0,
@@ -79,6 +82,58 @@ class ImageSetViewSetTests(APITestCase):
 
         # limits is computed in ImageSet.save() when bbox is present
         self.assertIsNotNone(image_set.limits)
+
+    def test_create_image_set_with_an_existing_creator_and_project(self):
+        """Test creating an ImageSet with an existing creator and project by ID."""
+        existing_project = Project.objects.create(**self.project_payload)
+        existing_creator = Creator.objects.create(**self.creators_payload[0])
+
+        payload = {
+            "name": "Created Set",
+            "creators": [self.creators_payload[0]],
+            "related_materials": [],
+            "project": self.project_payload,
+            "min_latitude_degrees": -10.0,
+            "max_latitude_degrees": 10.0,
+            "min_longitude_degrees": 20.0,
+            "max_longitude_degrees": 30.0,
+        }
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        image_set_id = resp.data["id"]
+        image_set = ImageSet.objects.get(pk=image_set_id)
+
+        self.assertEqual(image_set.name, "Created Set")
+        self.assertEqual(image_set.creators.count(), 1)
+        self.assertEqual(image_set.project.pk, existing_project.pk)
+        self.assertEqual(image_set.creators.first().pk, existing_creator.pk)
+
+    def test_create_image_set_with_an_wrong_creator_and_project(self):
+        """Test creating an ImageSet with an existing creator and project by ID."""
+        existing_project = Project.objects.create(**self.project_payload)
+        existing_creator = Creator.objects.create(**self.creators_payload[0])
+
+        wrong_creator_payload = {**self.creators_payload[0], "uri": "https://example.com/people/wrong"}
+        wrong_project_payload = {**self.project_payload, "uri": "https://example.com/wrong-project"}
+
+        payload = {
+            "name": "Created Set",
+            "related_materials": [],
+            "min_latitude_degrees": -10.0,
+            "max_latitude_degrees": 10.0,
+            "min_longitude_degrees": 20.0,
+            "max_longitude_degrees": 30.0,
+        }
+
+        resp = self.client.post(self.list_url(), {**payload, "project": wrong_project_payload}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("uri", resp.data)
+
+        resp = self.client.post(self.list_url(), {**payload, "creators": [wrong_creator_payload]}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("uri", resp.data)
 
     def test_create_image_set_rejects_geom(self):
         """Test that creating an ImageSet with a geom field is rejected, since geom is computed server-side."""
@@ -192,6 +247,14 @@ class ImageSetViewSetTests(APITestCase):
         resp = self.client.patch(self.detail_url(image_set.pk), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("min_latitude_degrees", resp.data)
+
+        payload = {
+            "min_longitude_degrees": 10.0,
+            "max_longitude_degrees": 5.0,
+        }
+        resp = self.client.patch(self.detail_url(image_set.pk), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("min_longitude_degrees", resp.data)
 
     def test_delete_image_set(self):
         """Test deleting an ImageSet."""

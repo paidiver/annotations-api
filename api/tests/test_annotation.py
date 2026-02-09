@@ -59,6 +59,7 @@ class AnnotationViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(annotation.pk))
         self.assertEqual(resp.data["annotation_platform"], "Test Platform")
+        self.assertEqual(annotation.__str__(), f"Annotation({annotation.pk})")
 
     def test_create_annotation_with_image_that_does_not_exist(self):
         """Test that creating an Annotation with an image that does not exist is rejected."""
@@ -68,15 +69,11 @@ class AnnotationViewSetTests(APITestCase):
             "annotation_set_id": str(self.annotation_set.pk),
         }
 
-        print("AAAA")
-        print(payload)
-        print("AAAA")
-
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("image_id", resp.data)
 
-    def test_patch_annotation_replaces_one2m_with_nested_objects(self):
+    def test_patch_annotation(self):
         """Test that PATCHing an Annotation."""
         annotation = Annotation.objects.create(
             image=self.image_a, annotation_set=self.annotation_set, **self.annotation_data
