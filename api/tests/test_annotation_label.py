@@ -1,7 +1,6 @@
 """Tests for AnnotationLabelViewSet."""
 
 import uuid
-from datetime import UTC, datetime
 
 from django.urls import reverse
 from rest_framework import status
@@ -125,9 +124,7 @@ class AnnotationLabelViewSetTests(APITestCase):
 
         resp = self.client.patch(self.detail_url(annotation_label.pk), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
-        annotation_label.refresh_from_db()
-        self.assertEqual(annotation_label.creation_datetime, datetime(2024, 1, 2, 0, 0, tzinfo=UTC))
+        self.assertEqual(resp.data["creation_datetime"], "2024-01-02T00:00:00Z")
 
     def test_delete_annotation_label(self):
         """Test deleting an AnnotationLabel."""
