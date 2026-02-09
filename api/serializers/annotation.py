@@ -6,6 +6,7 @@ from api.models import Annotation, Annotator
 from api.models.annotation import AnnotationLabel
 from api.models.annotation_set import AnnotationSet
 from api.models.image import Image
+from api.models.label import Label
 
 
 class AnnotatorSerializer(serializers.ModelSerializer):
@@ -51,6 +52,40 @@ class AnnotationSerializer(serializers.ModelSerializer):
 
 class AnnotationLabelSerializer(serializers.ModelSerializer):
     """Serializer for AnnotationLabel model."""
+
+    annotation_id = serializers.PrimaryKeyRelatedField(
+        source="annotation",
+        queryset=Annotation.objects.all(),
+    )
+    label_id = serializers.PrimaryKeyRelatedField(
+        source="label",
+        queryset=Label.objects.all(),
+    )
+    annotator_id = serializers.PrimaryKeyRelatedField(
+        source="annotator",
+        queryset=Annotator.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+
+    def validate(self, attrs):
+        """Custom validation to ensure no duplicate AnnotationLabel for the same annotation, label, and annotator."""
+        annotation = attrs.get("annotation")
+        label = attrs.get("label")
+        annotator = attrs.get("annotator")
+
+        if annotation and label and annotator:
+            exists = AnnotationLabel.objects.filter(
+                annotation=annotation,
+                label=label,
+                annotator=annotator,
+            ).exists()
+            if exists:
+                raise serializers.ValidationError(
+                    {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
+                )
+
+        return attrs
 
     class Meta:
         """Meta class for AnnotationLabelSerializer."""
