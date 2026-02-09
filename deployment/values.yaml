@@ -17,6 +17,8 @@ api:
     repository: ghcr.io/paidiver/annotations-api
     tag: develop
   port: 8000
+  timeout: 300
+  workers: 4
   service:
     port: 8000
 
