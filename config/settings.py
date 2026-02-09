@@ -108,7 +108,7 @@ DATABASES = {
         "NAME": os.environ.get("POSTGRES_DB", "annotationsdb"),
         "USER": os.environ.get("POSTGRES_USER", "myuser"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "mypassword"),
-        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
