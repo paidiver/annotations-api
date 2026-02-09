@@ -8,4 +8,5 @@ router_image_set = DefaultRouter()
 router_image_set.register(
     r"image_sets",
     ImageSetViewSet,
+    basename="image_set",
 )

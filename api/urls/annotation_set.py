@@ -8,4 +8,5 @@ router_annotation_set = DefaultRouter()
 router_annotation_set.register(
     r"annotation_sets",
     AnnotationSetViewSet,
+    basename="annotation_set",
 )
