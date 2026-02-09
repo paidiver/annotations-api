@@ -105,7 +105,7 @@ class AnnotationsView(APIView):
             )
 
         # Exit if file not a XLSX (Excel) file.
-        if not str(file).endswith(".xlsx"):
+        if not file.name.endswith(".xlsx"):
             return Response(
                 {"error": "Provided file is not a .xlsx file."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -132,9 +132,6 @@ class AnnotationsView(APIView):
 
         return Response(
             {
-                "filename": file.name,
-                "content_type": file.content_type,
-                "size": file.size,
                 "status": "uploaded",
             },
             status=status.HTTP_201_CREATED,
