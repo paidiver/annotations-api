@@ -81,6 +81,6 @@ spec:
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           resources:
             limits:
-              memory: 32Mi
+              memory: 256Mi
       imagePullSecrets:
         - name: ghcr-pull-login
