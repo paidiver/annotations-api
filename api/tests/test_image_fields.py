@@ -88,7 +88,6 @@ class ImageCameraCalibrationModelTests(APITestCase):
         self.assertEqual(camera_cal_instance.calibration_model_type, "New Test record")
 
 
-
 class ImageCameraPoseTests(APITestCase):
     """Tests for the ImageCameraPose model."""
 
@@ -141,7 +140,7 @@ class ImageCameraPoseTests(APITestCase):
         """Test that read-only fields of ImageCameraPose cannot be updated."""
         data = {
             "id": "12345678-1234-5678-1234-567812345678",  # Attempt to change the ID
-            "utm_east_north_up_meters": [1.0,2.0],
+            "utm_east_north_up_meters": [1.0, 2.0],
         }
         response = self.client.put(self.camera_pose_detail, data, format="json")
         self.camera_pose.refresh_from_db()
@@ -159,7 +158,6 @@ class ImageCameraPoseTests(APITestCase):
         self.assertEqual(ImageCameraPose.objects.count(), 2)
         camera_pose_instance = ImageCameraPose.objects.get(id=camera_pose_id)
         self.assertEqual(camera_pose_instance.utm_east_north_up_meters, [50.0, 60.0])
-
 
 
 class ImageDomeportParameterTests(APITestCase):
@@ -378,14 +376,15 @@ class ImageCameraHousingViewportTests(APITestCase):
         self.assertEqual(housing_param_instance.extra_description, "New housing parameter")
 
 
-
 class ImagePhotometricCalibrationTests(APITestCase):
     """Tests for the ImagePhotometricCalibration model."""
 
     @classmethod
     def setUpTestData(cls):
         """Set up test data."""
-        cls.photometric_cal = ImagePhotometricCalibration.objects.create(sequence_illumination_type="constant artificial")  # noqa: E501
+        cls.photometric_cal = ImagePhotometricCalibration.objects.create(
+            sequence_illumination_type="constant artificial"
+        )
         cls.photometric_cal.save()
         cls.photometric_cal_id = cls.photometric_cal.id
         cls.photometric_cal_detail = reverse(

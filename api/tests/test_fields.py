@@ -641,10 +641,7 @@ class RelatedMaterialTests(APITestCase):
 
     def test_update_related_material(self):
         """Test the PUT /relatedmaterial/{id}/ endpoint."""
-        data = {
-            "title": "Updated Test RelatedMaterial",
-            "uri": "http://test.com/updated-related-material"
-        }
+        data = {"title": "Updated Test RelatedMaterial", "uri": "http://test.com/updated-related-material"}
         response = self.client.put(self.related_material_detail, data, format="json")
         self.related_material.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -655,7 +652,7 @@ class RelatedMaterialTests(APITestCase):
         """Test that read-only fields of RelatedMaterial cannot be updated."""
         data = {
             "id": "12345678-1234-5678-1234-567812345678",  # Attempt to change the ID
-            "uri": "http://test.com/updated-related-material"
+            "uri": "http://test.com/updated-related-material",
         }
         response = self.client.put(self.related_material_detail, data, format="json")
         self.related_material.refresh_from_db()
