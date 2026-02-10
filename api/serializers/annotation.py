@@ -4,9 +4,10 @@ from rest_framework import serializers
 
 from api.models import Annotation, Annotator
 from api.models.annotation import AnnotationLabel
+from api.serializers.base import ReadOnlyFIeldsMixin
 
 
-class AnnotatorSerializer(serializers.ModelSerializer):
+class AnnotatorSerializer(ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for Annotator model."""
 
     class Meta:
@@ -14,8 +15,6 @@ class AnnotatorSerializer(serializers.ModelSerializer):
 
         model = Annotator
         fields = ["name", "id"]
-
-        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class AnnotationSerializer(serializers.ModelSerializer):
