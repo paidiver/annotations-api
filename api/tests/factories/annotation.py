@@ -1,21 +1,20 @@
 """Factory for Annotation and related models."""
 
-from __future__ import annotations
-
 import random
+import uuid
 from datetime import timedelta
-from typing import Any
 
 import factory
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
 from api.models import Annotation, AnnotationLabel, Annotator
+from api.models.base import ShapeEnum
 
 from .annotation_set import AnnotationSetFactory
 from .image import ImageFactory
 from .label import LabelFactory
-from .utils import coords_for_shape, pick_choice
+from .utils import coords_for_shape, enum_choice
 
 
 class AnnotatorFactory(DjangoModelFactory):
@@ -26,22 +25,11 @@ class AnnotatorFactory(DjangoModelFactory):
 
         model = Annotator
 
-    name = factory.Sequence(lambda n: f"Annotator {n:05d}")
+    name = factory.LazyFunction(lambda: f"Annotator {uuid.uuid4().hex[:12]}")
 
 
 class AnnotationFactory(DjangoModelFactory):
-    """Factory for Annotation.
-
-    Relationship behavior:
-      - If `image` provided -> use it
-      - Else if `image_id` provided -> use it (no Image created)
-      - Else -> create Image via ImageFactory
-
-    And similarly for annotation_set / annotation_set_id.
-
-    You can also opt-in to creating labels via:
-      AnnotationFactory(with_labels=3)
-    """
+    """Factory for Annotation."""
 
     class Meta:
         """Meta class for AnnotationFactory."""
@@ -51,19 +39,16 @@ class AnnotationFactory(DjangoModelFactory):
     class Params:
         """Factory params for controlling related object creation and M2M linking."""
 
-        with_labels: int = 0  # create N AnnotationLabel rows
+        with_labels: int = 0
 
     annotation_platform = factory.LazyFunction(lambda: random.choice([None, "BIIGLE", "VARS", "SQUIDLE+", "custom"]))
 
-    # Pick a valid choice from the model's `shape` choices
-    shape = factory.LazyAttribute(lambda o: pick_choice(Annotation, "shape"))
+    shape = factory.LazyFunction(lambda: enum_choice(ShapeEnum)[0])
 
-    # Coordinates consistent with shape
     coordinates = factory.LazyAttribute(lambda o: coords_for_shape(o.shape))
 
     dimension_pixels = factory.LazyFunction(lambda: random.choice([None, random.uniform(1.0, 2000.0)]))
 
-    # Set in _create() to avoid unnecessary subfactory creation
     image = None
     annotation_set = None
 
@@ -96,31 +81,9 @@ class AnnotationFactory(DjangoModelFactory):
 
         return super()._create(model_class, *args, **kwargs)
 
-    @factory.post_generation
-    def labels(self, create: bool, extracted: Any, **kwargs: Any) -> None:
-        """Generate related labels via AnnotationLabelFactory if with_labels > 0."""
-        if not create:
-            return
-
-        n = int(getattr(self, "with_labels", 0) or 0)
-        if n <= 0:
-            return
-
-        # Create labels attached to same annotation_set for consistency
-        labels = [LabelFactory(annotation_set=self.annotation_set) for _ in range(n)]
-        # Annotator optional; often None
-        for lbl in labels:
-            AnnotationLabelFactory(annotation=self, label=lbl)
-
 
 class AnnotationLabelFactory(DjangoModelFactory):
-    """Factory for AnnotationLabel (through table).
-
-    Relationship behavior:
-      - Accepts label or label_id
-      - Accepts annotation or annotation_id
-      - Accepts annotator or annotator_id (optional; if neither provided, defaults to None)
-    """
+    """Factory for AnnotationLabel (through table)."""
 
     class Meta:
         """Meta class for AnnotationLabelFactory."""
@@ -137,6 +100,16 @@ class AnnotationLabelFactory(DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
+        """Override creation to handle label/annotation/annotator logic and uniqueness constraints.
+
+        Args:
+            model_class: The model class being created (AnnotationLabel).
+            *args: Positional arguments (not used here).
+            **kwargs: Keyword arguments for label, annotation, annotator, and their IDs.
+
+        Returns:
+            An instance of AnnotationLabel, with related fields set according to the logic.
+        """
         label = kwargs.pop("label", None)
         label_id = kwargs.pop("label_id", None)
         annotation = kwargs.pop("annotation", None)
@@ -166,7 +139,6 @@ class AnnotationLabelFactory(DjangoModelFactory):
         else:
             kwargs["annotation_id"] = annotation_id
 
-        # annotator is optional: default None unless provided or you want a default
         if annotator is not None:
             kwargs["annotator"] = annotator
         elif annotator_id is not None:

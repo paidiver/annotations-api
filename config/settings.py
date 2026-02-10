@@ -63,6 +63,7 @@ SPECTACULAR_SETTINGS = {
             "description": "Endpoints for managing common fields like creator, context, project, event, platform, sensor, pi, license, related material",  # noqa: E501
         },
         {"name": "Health Check", "description": "Endpoint for checking service health status"},
+        {"name": "Debug", "description": "Endpoints for debugging and development purposes, not exposed in production"},
     ],
 }
 

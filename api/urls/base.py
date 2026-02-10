@@ -2,6 +2,8 @@
 
 from django.urls import include, path
 
+from api.views.debug import DebugDatabaseDumpView
+
 from ..views import HealthView
 from .annotation import router_annotation
 from .annotation_set import router_annotation_set
@@ -18,4 +20,5 @@ urlpatterns = [
     path("annotations/", include(router_annotation_set.urls)),
     path("labels/", include(router_label.urls)),
     path("fields/", include(router_fields.urls)),
+    path("debug/db-dump/", DebugDatabaseDumpView.as_view(), name="debug-db-dump"),
 ]

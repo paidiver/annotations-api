@@ -3,9 +3,24 @@
 import random
 
 import factory
+import faker
 from django.utils import timezone
 from factory import Faker
 from factory.django import DjangoModelFactory
+
+from api.models.base import (
+    AcquisitionEnum,
+    CaptureModeEnum,
+    DeploymentEnum,
+    FaunaAttractionEnum,
+    IlluminationEnum,
+    MarineZoneEnum,
+    NavigationEnum,
+    PixelMagnitudeEnum,
+    QualityEnum,
+    ScaleReferenceEnum,
+    SpectralResEnum,
+)
 
 from .fields import (
     ContextFactory,
@@ -22,14 +37,13 @@ from .fields import (
     ProjectFactory,
     SensorFactory,
 )
-from .utils import rand_lat, rand_lon
+from .utils import enum_choice, rand_lat, rand_lon
 
 
 class CommonFieldsAllFactory(DjangoModelFactory):
     """Common fields used across multiple tables."""
 
-    name = factory.Sequence(lambda n: f"ImageSet {n:05d}")
-    handle = Faker("url")
+    handle = factory.LazyFunction(lambda: f"https://picsum.photos/800/600?random={random.randint(1, 10000)}")
     copyright = Faker("company")
     abstract = Faker("paragraph", nb_sentences=4)
     objective = Faker("paragraph", nb_sentences=2)
@@ -42,11 +56,51 @@ class CommonFieldsAllFactory(DjangoModelFactory):
 
         abstract = True
 
+    @factory.post_generation
+    def creators(self, create: bool, extracted, **kwargs) -> None:
+        """Populate creators M2M via the through model.
+
+        Usage options:
+            ImageSetFactory(creators=[creator1, creator2])
+            ImageSetFactory(with_creators=3)
+
+        Args:
+            create: Whether the instance was actually created (vs just built).
+            extracted: The value passed to creators when the factory is called.
+            **kwargs: Additional keyword arguments (not used here).
+        """
+        if not create:
+            return
+
+        if not hasattr(self, "creators"):
+            return
+
+        through_model = self.creators.through
+
+        fk_to_self_name = None
+        for f in through_model._meta.fields:
+            if getattr(f, "remote_field", None) and f.remote_field.model == self.__class__:
+                fk_to_self_name = f.name
+                break
+        if fk_to_self_name is None:
+            raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
+
+        if extracted:
+            creators_list = list(extracted)
+        else:
+            n = int(getattr(self, "with_creators", 0) or 0)
+            if n <= 0:
+                return
+            creators_list = [CreatorFactory() for _ in range(n)]
+
+        rows = [through_model(**{fk_to_self_name: self, "creator": c}) for c in creators_list]
+        through_model.objects.bulk_create(rows, ignore_conflicts=True)
+
 
 class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     """Common fields for image_sets and images."""
 
-    sha256_hash = factory.LazyFunction(lambda: Faker("sha256").generate({}))
+    sha256_hash = factory.LazyFunction(lambda: faker.Faker().sha256())
     date_time = factory.LazyFunction(lambda: timezone.now() - timezone.timedelta(days=random.randint(0, 3650)))
 
     latitude = factory.LazyFunction(rand_lat)
@@ -67,72 +121,17 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     mpeg7_homogeneous_texture = None
     mpeg7_scalable_color = None
 
-    @factory.lazy_attribute
-    def acquisition(self) -> str | None:
-        """Returns a random acquisition choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("acquisition").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def quality(self) -> str | None:
-        """Returns a random quality choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("quality").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def deployment(self) -> str | None:
-        """Returns a random deployment choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("deployment").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def navigation(self) -> str | None:
-        """Returns a random navigation choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("navigation").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def scale_reference(self) -> str | None:
-        """Returns a random scale_reference choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("scale_reference").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def illumination(self) -> str | None:
-        """Returns a random illumination choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("illumination").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def pixel_magnitude(self) -> str | None:
-        """Returns a random pixel_magnitude choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("pixel_magnitude").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def marine_zone(self) -> str | None:
-        """Returns a random marine_zone choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("marine_zone").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def spectral_resolution(self) -> str | None:
-        """Returns a random spectral_resolution choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("spectral_resolution").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def capture_mode(self) -> str | None:
-        """Returns a random capture_mode choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("capture_mode").choices]
-        return random.choice(choices) if choices else None
-
-    @factory.lazy_attribute
-    def fauna_attraction(self) -> str | None:
-        """Returns a random fauna_attraction choice or None if no choices defined."""
-        choices = [c[0] for c in self._meta.model._meta.get_field("fauna_attraction").choices]
-        return random.choice(choices) if choices else None
-
+    acquisition = factory.LazyFunction(lambda: enum_choice(AcquisitionEnum))
+    quality = factory.LazyFunction(lambda: enum_choice(QualityEnum))
+    deployment = factory.LazyFunction(lambda: enum_choice(DeploymentEnum))
+    navigation = factory.LazyFunction(lambda: enum_choice(NavigationEnum))
+    scale_reference = factory.LazyFunction(lambda: enum_choice(ScaleReferenceEnum))
+    illumination = factory.LazyFunction(lambda: enum_choice(IlluminationEnum))
+    pixel_magnitude = factory.LazyFunction(lambda: enum_choice(PixelMagnitudeEnum))
+    marine_zone = factory.LazyFunction(lambda: enum_choice(MarineZoneEnum))
+    spectral_resolution = factory.LazyFunction(lambda: enum_choice(SpectralResEnum))
+    capture_mode = factory.LazyFunction(lambda: enum_choice(CaptureModeEnum))
+    fauna_attraction = factory.LazyFunction(lambda: enum_choice(FaunaAttractionEnum))
     area_square_meters = factory.LazyFunction(lambda: random.uniform(0.1, 1e6))
     meters_above_ground = factory.LazyFunction(lambda: random.uniform(0.0, 200.0))
     acquisition_settings = factory.LazyFunction(
@@ -167,12 +166,12 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     camera_calibration_model = None
 
     @factory.post_generation
-    def with_relations(self, create: bool, extracted: any, **kwargs: any) -> None:
-        """Generate context/etc related models and assign to FKs if extracted is True (or not provided).
+    def with_relations(self, create: bool, extracted, **kwargs) -> None:
+        """Populate all related fields if with_relations is True.
 
         Usage:
-          ImageSetFactory(with_relations=True)
-          ImageSetFactory(with_relations=False)  # default behavior
+          ImageSetFactory(with_relations=True)  # creates and sets all related fields
+          ImageSetFactory(with_relations=False) # leaves all related fields null
 
         Args:
             create: Whether the instance was actually created (vs just built).
@@ -193,15 +192,15 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
         self.sensor = SensorFactory()
         self.pi = PIFactory()
         self.license = LicenseFactory()
-        self.creators = [CreatorFactory() for _ in range(random.randint(1, 3))]
         self.save(update_fields=["context", "project", "event", "platform", "sensor", "pi", "license"])
 
     @factory.post_generation
-    def with_camera_models(self, create: bool, extracted: any, **kwargs: any) -> None:
-        """Generate camera/sensor related models and assign to FKs if extracted is True (or not provided).
+    def with_camera_models(self, create: bool, extracted, **kwargs) -> None:
+        """Populate camera models if with_camera_models is True.
 
         Usage:
-          ImageSetFactory(with_camera_models=True)
+          ImageSetFactory(with_camera_models=True)  # creates and sets camera models
+          ImageSetFactory(with_camera_models=False) # leaves camera models null
 
         Args:
             create: Whether the instance was actually created (vs just built).
@@ -220,7 +219,6 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
         self.domeport_parameter = ImageDomeportParameterFactory()
         self.photometric_calibration = ImagePhotometricCalibrationFactory()
         self.camera_calibration_model = ImageCameraCalibrationModelFactory()
-
         self.save(
             update_fields=[
                 "camera_housing_viewport",

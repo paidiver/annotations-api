@@ -1,8 +1,6 @@
 """Factory for ImageSet model."""
 
-from __future__ import annotations
-
-import random
+import uuid
 from typing import Any
 
 import factory
@@ -19,30 +17,39 @@ from .utils import bbox_around
 class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory):
     """Creates ImageSet with geo fields."""
 
+    class Params:
+        """Factory params for controlling related object creation and M2M linking."""
+
+        with_limits: bool = True
+        with_related_materials: int = 0
+        with_creators: int = 2
+        with_relations: bool = True
+        with_camera_models: int = 0
+        related_materials_list: list[Any] | None = None
+
     class Meta:
         """Factory meta class."""
 
         model = ImageSet
 
-    # ImageSet-specific
+    name = factory.LazyFunction(lambda: f"ImageSet {uuid.uuid4().hex[:12]}")
+
     local_path = "../raw"
 
-    # BBox fields: default None (since your model allows null/blank). This will be set by with_limits() if enabled.
     min_latitude_degrees = None
     max_latitude_degrees = None
     min_longitude_degrees = None
     max_longitude_degrees = None
 
-    related_materials = None  # M2M, set by with_related_materials() if enabled
+    related_materials = None
 
     @factory.post_generation
-    def with_limits(self, create: bool, extracted: Any, **kwargs: Any) -> None:
-        """Generate bbox limits around the latitude/longitude if extracted is True (or not provided).
+    def with_limits(self, create: bool, extracted, **kwargs) -> None:
+        """Populate bbox fields if with_limits is True.
 
-        If False, leave bbox null.
         Usage:
-          ImageSetFactory(with_limits=True)   # default behavior here
-          ImageSetFactory(with_limits=False)  # leave bbox null
+            ImageSetFactory(with_limits=True)  # sets bbox fields based on latitude/longitude
+            ImageSetFactory(with_limits=False) # leaves bbox fields null
 
         Args:
             create: Whether the instance was actually created (vs just built).
@@ -52,7 +59,7 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
         if not create:
             return
 
-        enabled = True if extracted is None else bool(extracted)
+        enabled = bool(extracted) if extracted is not None else False
         if not enabled:
             return
 
@@ -61,27 +68,51 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
         self.max_latitude_degrees = max_lat
         self.min_longitude_degrees = min_lon
         self.max_longitude_degrees = max_lon
-        self.save()
+        self.save(
+            update_fields=[
+                "min_latitude_degrees",
+                "max_latitude_degrees",
+                "min_longitude_degrees",
+                "max_longitude_degrees",
+            ]
+        )
 
     @factory.post_generation
-    def with_related_materials(self, create: bool, extracted: Any, **kwargs: Any) -> None:
-        """Generate related materials models and assign to FKs if extracted is True (or not provided).
+    def related_materials(self, create: bool, extracted, **kwargs) -> None:
+        """Populate related_materials M2M via the through model.
 
-        Usage:
-          ImageSetFactory(with_related_materials=True)
-          ImageSetFactory(with_related_materials=False)  # default behavior
+        Usage;
+            ImageSetFactory(related_materials=[related_material1, related_material2])
+            ImageSetFactory(with_related_materials=3)
 
         Args:
             create: Whether the instance was actually created (vs just built).
-            extracted: The value passed to with_related_materials when the factory is called.
+            extracted: The value passed to related_materials when the factory is called (list of related materials).
             **kwargs: Additional keyword arguments (not used here).
         """
         if not create:
             return
 
-        enabled = bool(extracted) if extracted is not None else False
-        if not enabled:
+        if not hasattr(self, "related_materials"):
             return
 
-        self.related_materials = [RelatedMaterialFactory() for _ in range(random.randint(1, 3))]
-        self.save(update_fields=["context", "project", "event", "platform", "sensor", "pi", "license"])
+        through_model = self.related_materials.through
+
+        fk_to_self_name = None
+        for f in through_model._meta.fields:
+            if getattr(f, "remote_field", None) and f.remote_field.model == self.__class__:
+                fk_to_self_name = f.name
+                break
+        if fk_to_self_name is None:
+            raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
+
+        if extracted:
+            related_materials_list = list(extracted)
+        else:
+            n = int(getattr(self, "with_related_materials", 0) or 0)
+            if n <= 0:
+                return
+            related_materials_list = [RelatedMaterialFactory() for _ in range(n)]
+
+        rows = [through_model(**{fk_to_self_name: self, "related_material": c}) for c in related_materials_list]
+        through_model.objects.bulk_create(rows, ignore_conflicts=True)

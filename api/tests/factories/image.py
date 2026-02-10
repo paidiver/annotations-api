@@ -1,6 +1,6 @@
 """Factory for Image model."""
 
-from __future__ import annotations
+import uuid
 
 import factory
 
@@ -13,22 +13,31 @@ from .image_set import ImageSetFactory
 class ImageFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory):
     """Factory for Image."""
 
+    class Params:
+        """Factory params for controlling related object creation and M2M linking."""
+
+        with_creators: bool = False
+        with_relations: bool = False
+
     class Meta:
         """Meta class for ImageFactory."""
 
         model = Image
 
-    filename = factory.Sequence(lambda n: f"image_{n:06d}.jpg")
+    filename = factory.LazyFunction(lambda: f"image_{uuid.uuid4().hex[:12]}.jpg")
     image_set = None
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        """Override creation.
+    def _create(cls, model_class: type[Image], *args, **kwargs) -> Image:
+        """Override creation to handle image_set / image_set_id logic.
 
-        Choose between:
-        - image_set (object),
-        - image_set_id (raw FK),
-        - or creating a new ImageSet.
+        Args:
+            model_class: The Image model class.
+            *args: Positional arguments for the model creation.
+            **kwargs: Keyword arguments for the model creation.
+
+        Returns:
+            An instance of the Image model.
         """
         image_set = kwargs.pop("image_set", None)
         image_set_id = kwargs.pop("image_set_id", None)

@@ -1,8 +1,7 @@
 """Factories for models in api.models.fields."""
 
-from __future__ import annotations
-
 import random
+import uuid
 
 import factory
 from factory.django import DjangoModelFactory
@@ -30,7 +29,7 @@ from .utils import vec3
 class NamedURIFactory(DjangoModelFactory):
     """General factory for models with common fields."""
 
-    name = factory.Faker("name")
+    name = factory.LazyFunction(lambda: f"Name {uuid.uuid4().hex[:12]}")
     uri = factory.Faker("url")
 
 
