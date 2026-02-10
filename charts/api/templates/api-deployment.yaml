@@ -16,13 +16,13 @@ spec:
   selector:
     matchLabels:
       app: {{ .Release.Name }}
-      component: {{ .Values.api.component_name }}
+      component: {{ .Values.api.componentName }}
       {{- include "paidiver-annotations-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app: {{ .Release.Name }}
-        component: {{ .Values.api.component_name }}
+        component: {{ .Values.api.componentName }}
         {{- include "paidiver-annotations-api.labels" . | nindent 8 }}
     spec:
       securityContext:
