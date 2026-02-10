@@ -136,7 +136,7 @@ class AnnotationSetSerializer(BaseSerializer):
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
 
         Args:
-            attrs: The dictionary of field values after field-level validation.
+            attrs (dict): The dictionary of field values after field-level validation.
 
         Raise:
             serializers.ValidationError: If any of the cross-field validation rules are violated.
@@ -159,7 +159,7 @@ class AnnotationSetSerializer(BaseSerializer):
         """Override create to handle nested creation of related objects and setting M2M relationships.
 
         Args:
-            validated_data: The validated data from the serializer.
+            validated_data (dict): The validated data from the serializer.
 
         Returns:
             The created AnnotationSet instance.
@@ -180,8 +180,8 @@ class AnnotationSetSerializer(BaseSerializer):
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:
-            instance: The existing AnnotationSet instance.
-            validated_data: The validated data from the serializer.
+            instance (AnnotationSet): The existing AnnotationSet instance.
+            validated_data (dict): The validated data from the serializer.
 
         Returns:
             The updated AnnotationSet instance.

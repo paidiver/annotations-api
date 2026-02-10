@@ -47,7 +47,7 @@ class BaseSerializer(serializers.ModelSerializer):
         Mutates validated_data in-place.
 
         Args:
-            validated_data: The dictionary of validated data from the serializer,
+            validated_data (dict): The dictionary of validated data from the serializer,
         which may contain deferred related payloads.
             fk_pairs: A list of tuples, where each tuple contains the names of the object field and the corresponding id
         field to check for deferred payloads.
@@ -58,6 +58,14 @@ class BaseSerializer(serializers.ModelSerializer):
                 validated_data[obj_field] = val.save(context=self.context)
 
     def _materialize_deferred_list(self, items):
+        """Convert a list of DeferredCreate items into saved model instances.
+
+        Args:
+            items (list): A list of items which may include DeferredCreate instances.
+
+        Return:
+            A list where all DeferredCreate instances have been replaced with their saved model instances.
+        """
         if not items:
             return []
         out = []
@@ -87,7 +95,7 @@ class NestedGetOrCreateMixin:
         """Try to create a new instance. If it violates unique constraint, fetch existing and compare fields.
 
         Args:
-            validated_data: The validated data from the serializer.
+            validated_data (dict): The validated data from the serializer.
 
         Returns:
             The created or existing instance.
