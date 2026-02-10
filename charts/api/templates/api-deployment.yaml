@@ -67,8 +67,6 @@ spec:
               value: "1"
             - name: DJANGO_ALLOWED_HOSTS
               value: localhost,127.0.0.1,0.0.0.0,{{ .Values.ingress.host }}
-            - name: APP_ROOT_PATH
-              value: {{ .Values.ingress.api.path }}
             {{ include "mychart.postgresEnv" . | nindent 12 }}
           command:
             - sh
