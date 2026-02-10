@@ -19,10 +19,10 @@ from api.models.fields import (
     RelatedMaterial,
     Sensor,
 )
-from api.serializers.base import NestedGetOrCreateMixin
+from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFIeldsMixin
 
 
-class CreatorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the Creator model."""
 
     key_field = "name"
@@ -33,10 +33,8 @@ class CreatorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Creator
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ContextSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ContextSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the Context model."""
 
     key_field = "name"
@@ -47,10 +45,8 @@ class ContextSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Context
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ProjectSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ProjectSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for Project instances from object payloads."""
 
     key_field = "name"
@@ -61,10 +57,8 @@ class ProjectSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Project
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class PISerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class PISerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the PI model."""
 
     key_field = "name"
@@ -75,10 +69,8 @@ class PISerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = PI
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class LicenseSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class LicenseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the License model."""
 
     key_field = "name"
@@ -89,10 +81,8 @@ class LicenseSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = License
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class EventSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class EventSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the Event model."""
 
     key_field = "name"
@@ -103,10 +93,8 @@ class EventSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Event
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class PlatformSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class PlatformSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the Platform model."""
 
     key_field = "name"
@@ -117,10 +105,8 @@ class PlatformSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Platform
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class SensorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class SensorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for the Sensor model."""
 
     key_field = "name"
@@ -131,10 +117,8 @@ class SensorSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
         model = Sensor
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class RelatedMaterialSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class RelatedMaterialSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for related material that can be represented by either an ID or an object payload."""
 
     class Meta:
@@ -143,10 +127,8 @@ class RelatedMaterialSerializer(NestedGetOrCreateMixin, serializers.ModelSeriali
         model = RelatedMaterial
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImageCameraPoseSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraPose model."""
 
     class Meta:
@@ -155,10 +137,8 @@ class ImageCameraPoseSerializer(NestedGetOrCreateMixin, serializers.ModelSeriali
         model = ImageCameraPose
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraHousingViewport model."""
 
     class Meta:
@@ -167,10 +147,8 @@ class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, serializers.M
         model = ImageCameraHousingViewport
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImageFlatportParameter model."""
 
     class Meta:
@@ -179,10 +157,8 @@ class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, serializers.Model
         model = ImageFlatportParameter
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImageDomeportParameter model."""
 
     class Meta:
@@ -191,10 +167,8 @@ class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, serializers.Model
         model = ImageDomeportParameter
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraCalibrationModel model."""
 
     class Meta:
@@ -203,10 +177,8 @@ class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, serializers.
         model = ImageCameraCalibrationModel
         fields = "__all__"
 
-        read_only_fields = ["id", "created_at", "updated_at"]
 
-
-class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, serializers.ModelSerializer):
+class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for ImagePhotometricCalibration model."""
 
     class Meta:
@@ -214,5 +186,3 @@ class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, serializers.
 
         model = ImagePhotometricCalibration
         fields = "__all__"
-
-        read_only_fields = ["id", "created_at", "updated_at"]

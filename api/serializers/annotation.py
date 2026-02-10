@@ -7,9 +7,10 @@ from api.models.annotation import AnnotationLabel
 from api.models.annotation_set import AnnotationSet
 from api.models.image import Image
 from api.models.label import Label
+from api.serializers.base import ReadOnlyFIeldsMixin
 
 
-class AnnotatorSerializer(serializers.ModelSerializer):
+class AnnotatorSerializer(ReadOnlyFIeldsMixin, serializers.ModelSerializer):
     """Serializer for Annotator model."""
 
     class Meta:
@@ -17,8 +18,6 @@ class AnnotatorSerializer(serializers.ModelSerializer):
 
         model = Annotator
         fields = ["id", "name"]
-
-        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class AnnotationSerializer(serializers.ModelSerializer):
