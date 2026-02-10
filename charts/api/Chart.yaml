@@ -1,8 +1,8 @@
 apiVersion: v2
-name: paidiver-annotations-api
+name: api
 description: A database and API for imagery metadata and annotations
 type: application
-version: 0.1.1
+version: 0.1.2
 
 appVersion: "1.0"
 
