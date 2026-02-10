@@ -1,4 +1,4 @@
-# api/tests/factories/image.py
+"""Factory for Image model."""
 
 from __future__ import annotations
 

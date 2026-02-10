@@ -1,4 +1,4 @@
-# api/tests/factories/label.py
+"""Factory for Label model."""
 
 from __future__ import annotations
 

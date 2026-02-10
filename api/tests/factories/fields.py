@@ -24,13 +24,7 @@ from api.models import (
 )
 from api.models.fields import RelatedMaterial
 
-
-def _vec3(min_v: float = -1.0, max_v: float = 1.0) -> list[float]:
-    return [random.uniform(min_v, max_v) for _ in range(3)]
-
-
-def _vec2(min_v: float = 0.0, max_v: float = 1.0) -> list[float]:
-    return [random.uniform(min_v, max_v) for _ in range(2)]
+from .utils import vec3
 
 
 class NamedURIFactory(DjangoModelFactory):
@@ -176,7 +170,7 @@ class ImageDomeportParameterFactory(DjangoModelFactory):
     outer_radius_millimeters = factory.LazyFunction(lambda: random.choice([None, random.uniform(10.0, 250.0)]))
 
     decentering_offset_xyz_millimeters = factory.LazyFunction(
-        lambda: random.choice([None, _vec3(min_v=-10.0, max_v=10.0)])
+        lambda: random.choice([None, vec3(min_v=-10.0, max_v=10.0)])
     )
 
     extra_description = factory.Faker("sentence")

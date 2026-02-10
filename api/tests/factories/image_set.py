@@ -1,4 +1,4 @@
-# api/tests/factories/image_set.py
+"""Factory for ImageSet model."""
 
 from __future__ import annotations
 

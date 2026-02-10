@@ -168,7 +168,7 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
 
     @factory.post_generation
     def with_relations(self, create: bool, extracted: any, **kwargs: any) -> None:
-        """Generate context/project/event/platform/sensor/PI/license related models and assign to FKs if extracted is True (or not provided).
+        """Generate context/etc related models and assign to FKs if extracted is True (or not provided).
 
         Usage:
           ImageSetFactory(with_relations=True)
