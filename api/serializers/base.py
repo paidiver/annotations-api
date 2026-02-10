@@ -236,7 +236,7 @@ class CreateOnlyRelatedListField(serializers.Field):
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
 
-class ReadOnlyMixin:
+class ReadOnlyFIeldsMixin:
     """Mixin to set all fields of a serializer to read-only."""
 
     def get_read_only_fields(self):
