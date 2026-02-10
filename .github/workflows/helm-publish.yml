@@ -3,7 +3,7 @@ name: Release Charts
 on:
   push:
     branches:
-      - feature/BODCDMSYS-10210-deployment
+      - main
 
 jobs:
   release:
