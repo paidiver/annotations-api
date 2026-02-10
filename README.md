@@ -78,13 +78,13 @@ If you had already added this repo earlier, run `helm repo update` to retrieve
 the latest versions of the packages.  You can then run `helm search repo
 paidiver-annotations` to see the charts.
 
-To install the <chart-name> chart:
+To install the api chart:
 
-    helm install my-<chart-name> paidiver-annotations/<chart-name>
+    helm install my-api paidiver-annotations/api
 
 To uninstall the chart:
 
-    helm uninstall my-<chart-name>
+    helm uninstall my-api
 
 ## Quick Start (Docker – Recommended)
 
