@@ -110,6 +110,33 @@ class AnnotationLabelViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non_field_errors", resp.data)
 
+    def test_create_annotation_label_rejects_object_and_id_together(self):
+        """Test that providing both nested object and ID for project is rejected."""
+        payload = {
+            "creation_datetime": "2024-01-01T00:00:00Z",
+            "annotation_id": str(self.annotation.pk),
+            "label_id": str(self.label.pk),
+            "annotator_id": str(self.annotator.pk),
+            "annotator": {"name": "New Annotator"},
+        }
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("annotator", resp.data)
+
+    def test_create_annotation_label_with_annotator_object(self):
+        """Test that providing both nested object and ID for project is rejected."""
+        payload = {
+            "creation_datetime": "2024-01-01T00:00:00Z",
+            "annotation_id": str(self.annotation.pk),
+            "label_id": str(self.label.pk),
+            "annotator": {"name": "New Annotator"},
+        }
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Annotator.objects.filter(name="New Annotator").exists())
+
     def test_patch_annotation_label(self):
         """Test that PATCHing an AnnotationLabel."""
         annotation_label = AnnotationLabel.objects.create(

@@ -245,7 +245,7 @@ class CreateOnlyRelatedListField(serializers.Field):
         return None
 
 
-class ReadOnlyFIeldsMixin:
+class ReadOnlyFieldsMixin:
     """Mixin to set all fields of a serializer to read-only."""
 
     def get_read_only_fields(self) -> list[str]:

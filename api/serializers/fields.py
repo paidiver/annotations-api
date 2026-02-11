@@ -19,10 +19,10 @@ from api.models.fields import (
     RelatedMaterial,
     Sensor,
 )
-from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFIeldsMixin
+from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFieldsMixin
 
 
-class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the Creator model."""
 
     key_field = "name"
@@ -34,7 +34,7 @@ class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers
         fields = "__all__"
 
 
-class ContextSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ContextSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the Context model."""
 
     key_field = "name"
@@ -46,7 +46,7 @@ class ContextSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers
         fields = "__all__"
 
 
-class ProjectSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for Project instances from object payloads."""
 
     key_field = "name"
@@ -58,7 +58,7 @@ class ProjectSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers
         fields = "__all__"
 
 
-class PISerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class PISerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the PI model."""
 
     key_field = "name"
@@ -70,7 +70,7 @@ class PISerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.Mode
         fields = "__all__"
 
 
-class LicenseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class LicenseSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the License model."""
 
     key_field = "name"
@@ -82,7 +82,7 @@ class LicenseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers
         fields = "__all__"
 
 
-class EventSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class EventSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the Event model."""
 
     key_field = "name"
@@ -94,7 +94,7 @@ class EventSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.M
         fields = "__all__"
 
 
-class PlatformSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class PlatformSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the Platform model."""
 
     key_field = "name"
@@ -106,7 +106,7 @@ class PlatformSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializer
         fields = "__all__"
 
 
-class SensorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class SensorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for the Sensor model."""
 
     key_field = "name"
@@ -118,7 +118,7 @@ class SensorSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.
         fields = "__all__"
 
 
-class RelatedMaterialSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class RelatedMaterialSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for related material that can be represented by either an ID or an object payload."""
 
     class Meta:
@@ -128,7 +128,7 @@ class RelatedMaterialSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, ser
         fields = "__all__"
 
 
-class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraPose model."""
 
     class Meta:
@@ -138,7 +138,7 @@ class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, ser
         fields = "__all__"
 
 
-class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraHousingViewport model."""
 
     class Meta:
@@ -148,7 +148,7 @@ class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyFIeld
         fields = "__all__"
 
 
-class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImageFlatportParameter model."""
 
     class Meta:
@@ -158,7 +158,7 @@ class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMix
         fields = "__all__"
 
 
-class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImageDomeportParameter model."""
 
     class Meta:
@@ -168,7 +168,7 @@ class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMix
         fields = "__all__"
 
 
-class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImageCameraCalibrationModel model."""
 
     class Meta:
@@ -178,7 +178,7 @@ class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFIel
         fields = "__all__"
 
 
-class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for ImagePhotometricCalibration model."""
 
     class Meta:
