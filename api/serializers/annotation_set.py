@@ -132,11 +132,11 @@ class AnnotationSetSerializer(BaseSerializer):
             "creators",
         ]
 
-    def validate(self, attrs) -> dict:
+    def validate(self, attrs: dict) -> dict:
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
 
         Args:
-            attrs: The dictionary of field values after field-level validation.
+            attrs (dict): The dictionary of field values after field-level validation.
 
         Raise:
             serializers.ValidationError: If any of the cross-field validation rules are violated.
@@ -155,11 +155,11 @@ class AnnotationSetSerializer(BaseSerializer):
         return attrs
 
     @transaction.atomic
-    def create(self, validated_data) -> AnnotationSet:
+    def create(self, validated_data: dict) -> AnnotationSet:
         """Override create to handle nested creation of related objects and setting M2M relationships.
 
         Args:
-            validated_data: The validated data from the serializer.
+            validated_data (dict): The validated data from the serializer.
 
         Returns:
             The created AnnotationSet instance.
@@ -176,12 +176,12 @@ class AnnotationSetSerializer(BaseSerializer):
         return instance
 
     @transaction.atomic
-    def update(self, instance, validated_data) -> AnnotationSet:
+    def update(self, instance, validated_data: dict) -> AnnotationSet:
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:
-            instance: The existing AnnotationSet instance.
-            validated_data: The validated data from the serializer.
+            instance (AnnotationSet): The existing AnnotationSet instance.
+            validated_data (dict): The validated data from the serializer.
 
         Returns:
             The updated AnnotationSet instance.

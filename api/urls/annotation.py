@@ -2,9 +2,11 @@
 
 from rest_framework.routers import DefaultRouter
 
-from api.views import AnnotationLabelViewSet, AnnotationViewSet, AnnotatorViewSet
+from api.views import AnnotationLabelViewSet, AnnotationSetViewSet, AnnotationViewSet, AnnotatorViewSet
 
 router_annotation = DefaultRouter()
+
+# annotation related routes
 router_annotation.register(
     r"annotations",
     AnnotationViewSet,
@@ -20,4 +22,11 @@ router_annotation.register(
     r"annotation_labels",
     AnnotationLabelViewSet,
     basename="annotation_label",
+)
+
+# annotatiion_set endpoints are registered here
+router_annotation.register(
+    r"annotation_sets",
+    AnnotationSetViewSet,
+    basename="annotation_set",
 )

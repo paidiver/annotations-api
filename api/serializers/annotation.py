@@ -67,8 +67,15 @@ class AnnotationLabelSerializer(serializers.ModelSerializer):
         required=False,
     )
 
-    def validate(self, attrs):
-        """Custom validation to ensure no duplicate AnnotationLabel for the same annotation, label, and annotator."""
+    def validate(self, attrs: dict) -> dict:
+        """Custom validation to ensure no duplicate AnnotationLabel for the same annotation, label, and annotator.
+
+        Args:
+            attrs (dict): The attributes to validate.
+
+        Returns:
+            dict: The validated attributes.
+        """
         annotation = attrs.get("annotation")
         label = attrs.get("label")
         annotator = attrs.get("annotator")
