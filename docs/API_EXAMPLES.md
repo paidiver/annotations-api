@@ -41,7 +41,7 @@ curl -sS -X POST "$API_BASE/api/fields/relatedmaterial/" \
   }'
 ```
 
-> Important: you may need to output IDs of created objects (e.g. related materials, creators, projects) to use them in the examples below for creating ImageSets, AnnotationSets, etc. You can do this by running a GET request to the corresponding endpoint (e.g. `GET /api/fields/relatedmaterial/`) and looking for the ID in the response.
+> Important: you may need to output IDs of created objects (e.g. related materials, context, pi) to use them in the examples below for creating ImageSets, AnnotationSets, etc. You can do this by running a GET request to the corresponding endpoint (e.g. `GET /api/fields/relatedmaterial/`) and looking for the ID in the response.
 
 ### ImageSet
 
