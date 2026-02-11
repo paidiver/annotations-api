@@ -1,6 +1,10 @@
 from django.db import migrations, models
 import django.db.models.deletion
-
+"""
+This migration removes the unique constraint on the combination of image_set and material in the ImageSetRelatedMaterial model.
+And also renames the material field to related_material, and updates the corresponding db_column to related_material_id
+and the constraint to uq_image_set_related_materials.
+"""
 
 class Migration(migrations.Migration):
 
@@ -20,7 +24,6 @@ class Migration(migrations.Migration):
             new_name='related_material',
         ),
 
-        # Only needed if you are changing/pinning db_column
         migrations.AlterField(
             model_name='imagesetrelatedmaterial',
             name='related_material',
