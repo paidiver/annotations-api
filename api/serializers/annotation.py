@@ -1,5 +1,6 @@
 """Serializers for the Annotations API endpoints."""
 
+from django.db import IntegrityError, transaction
 from rest_framework import serializers
 
 from api.models import Annotation, Annotator
@@ -7,11 +8,23 @@ from api.models.annotation import AnnotationLabel
 from api.models.annotation_set import AnnotationSet
 from api.models.image import Image
 from api.models.label import Label
-from api.serializers.base import ReadOnlyFIeldsMixin
+from api.serializers.base import (
+    BaseSerializer,
+    CreateOnlyRelatedField,
+    NestedGetOrCreateMixin,
+    ReadOnlyFieldsMixin,
+    StrictPrimaryKeyRelatedField,
+)
+
+FK_PAIRS = [
+    ("annotator", "annotator_id"),
+]
 
 
-class AnnotatorSerializer(ReadOnlyFIeldsMixin, serializers.ModelSerializer):
+class AnnotatorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for Annotator model."""
+
+    key_field = "name"
 
     class Meta:
         """Meta class for AnnotatorSerializer."""
@@ -49,7 +62,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
-class AnnotationLabelSerializer(serializers.ModelSerializer):
+class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
     """Serializer for AnnotationLabel model."""
 
     annotation_id = serializers.PrimaryKeyRelatedField(
@@ -60,12 +73,25 @@ class AnnotationLabelSerializer(serializers.ModelSerializer):
         source="label",
         queryset=Label.objects.all(),
     )
-    annotator_id = serializers.PrimaryKeyRelatedField(
+
+    annotator_id = StrictPrimaryKeyRelatedField(
         source="annotator",
-        queryset=Annotator.objects.all(),
+        queryset=AnnotationLabel._meta.get_field("annotator").remote_field.model.objects.all(),
+        required=False,
         allow_null=True,
+    )
+    annotator = CreateOnlyRelatedField(
+        create_serializer_class=AnnotatorSerializer,
+        write_only=True,
         required=False,
     )
+
+    class Meta:
+        """Meta class for AnnotationLabelSerializer."""
+
+        model = AnnotationLabel
+        fields = ["id", "annotation_id", "label_id", "annotator_id", "annotator", "creation_datetime"]
+        validators = []
 
     def validate(self, attrs: dict) -> dict:
         """Custom validation to ensure no duplicate AnnotationLabel for the same annotation, label, and annotator.
@@ -76,27 +102,78 @@ class AnnotationLabelSerializer(serializers.ModelSerializer):
         Returns:
             dict: The validated attributes.
         """
+        errors = {}
+
+        errors = self._validate_pairs(FK_PAIRS, errors)
+        if errors:
+            raise serializers.ValidationError(errors)
+        self._materialize_deferred_related(attrs, FK_PAIRS)
+
+        errors = self._validate_constraints(attrs, errors)
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
+    def _validate_constraints(self, attrs: dict, errors: dict) -> dict:
+        """Validate that there are no duplicate AnnotationLabel for the same annotation, label, and annotator.
+
+        Args:
+            attrs (dict): The attributes to validate.
+            errors (dict): The dictionary to store validation errors.
+
+        Returns:
+            dict: The updated errors dictionary.
+        """
         annotation = attrs.get("annotation")
         label = attrs.get("label")
         annotator = attrs.get("annotator")
 
-        if annotation and label and annotator:
-            exists = AnnotationLabel.objects.filter(
-                annotation=annotation,
-                label=label,
-                annotator=annotator,
-            ).exists()
-            if exists:
-                raise serializers.ValidationError(
-                    {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
-                )
+        exists = AnnotationLabel.objects.filter(
+            annotation=annotation,
+            label=label,
+            annotator=annotator,
+        ).exists()
+        if exists:
+            errors["non_field_errors"] = ["AnnotationLabel with this annotation, label and annotator already exists."]
+        return errors
 
-        return attrs
+    @transaction.atomic
+    def create(self, validated_data) -> AnnotationLabel:
+        """Override create to handle nested creation of related objects and setting M2M relationships.
 
-    class Meta:
-        """Meta class for AnnotationLabelSerializer."""
+        Args:
+            validated_data: The validated data from the serializer.
 
-        model = AnnotationLabel
-        fields = ["id", "annotation_id", "label_id", "annotator_id", "creation_datetime"]
+        Returns:
+            The created AnnotationLabel instance.
+        """
+        self._materialize_deferred_related(validated_data, FK_PAIRS)
 
-        read_only_fields = ["id", "created_at", "updated_at"]
+        try:
+            return super().create(validated_data)
+        except IntegrityError as exc:
+            raise serializers.ValidationError(
+                {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
+            ) from exc
+
+    @transaction.atomic
+    def update(self, instance, validated_data) -> AnnotationLabel:
+        """Override update to handle nested updates of related objects and setting M2M relationships.
+
+        Args:
+            instance: The existing AnnotationLabel instance.
+            validated_data: The validated data from the serializer.
+
+        Returns:
+            The updated AnnotationLabel instance.
+        """
+        self._materialize_deferred_related(validated_data, FK_PAIRS)
+
+        try:
+            return super().update(instance, validated_data)
+        except IntegrityError as exc:
+            raise serializers.ValidationError(
+                {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
+            ) from exc
