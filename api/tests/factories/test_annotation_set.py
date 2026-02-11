@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image_set import ImageSetFactory
 
 
@@ -25,6 +26,11 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         self.assertIsNotNone(aset.project)
         self.assertIsNotNone(aset.pi)
         self.assertIsNotNone(aset.license)
+
+    def test_creators_when_enabled(self):
+        creator = CreatorFactory()
+        aset = AnnotationSetFactory(creators=[creator])
+        self.assertIn(creator, aset.creators.all())
 
     def test_image_sets_uses_extracted_list(self):
         aset = AnnotationSetFactory()

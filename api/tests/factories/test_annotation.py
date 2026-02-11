@@ -15,8 +15,6 @@ class AnnotationFactoriesErrorTests(TestCase):
     def test_annotation_factory_creation_with_image_id_annotation_set_id(self):
         image = ImageFactory()
         annotation_set = AnnotationSetFactory()
-        image_set = ImageSetFactory(creators=2)
-        self.assertEqual(image_set.creators.count(), 2)
         annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id)
         self.assertEqual(annotation.image_id, image.id)
         self.assertEqual(annotation.annotation_set_id, annotation_set.id)

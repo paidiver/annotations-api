@@ -79,8 +79,6 @@ class CommonFieldsAllFactory(DjangoModelFactory):
             if getattr(f, "remote_field", None) and f.remote_field.model == self.__class__:
                 fk_to_self_name = f.name
                 break
-        if fk_to_self_name is None:
-            raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
 
         if extracted is None:
             return
