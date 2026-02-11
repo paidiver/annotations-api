@@ -16,13 +16,6 @@ from .utils import bbox_around
 class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory):
     """Creates ImageSet with geo fields."""
 
-    class Params:
-        """Factory params for controlling related object creation and M2M linking."""
-
-        with_limits: bool = True
-        with_relations: bool = True
-        with_camera_models: bool = True
-
     class Meta:
         """Factory meta class."""
 
@@ -96,8 +89,6 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
             if getattr(f, "remote_field", None) and f.remote_field.model == self.__class__:
                 fk_to_self_name = f.name
                 break
-        if fk_to_self_name is None:
-            raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
 
         if extracted is None:
             return

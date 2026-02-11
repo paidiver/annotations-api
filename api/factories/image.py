@@ -13,12 +13,6 @@ from .image_set import ImageSetFactory
 class ImageFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory):
     """Factory for Image."""
 
-    class Params:
-        """Factory params for controlling related object creation and M2M linking."""
-
-        with_relations: bool = False
-        with_camera_models: bool = False
-
     class Meta:
         """Meta class for ImageFactory."""
 
