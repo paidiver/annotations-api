@@ -3,6 +3,10 @@ name: api
 description: A database and API for imagery metadata and annotations
 type: application
 version: 0.1.4
+maintainers:
+  - name: Elisabeth Wetchy
+    email: elisabeth.wetchy@noc.ac.uk
+    url: bodc.ac.uk
 
 appVersion: "1.0"
 
