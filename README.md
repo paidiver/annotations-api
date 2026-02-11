@@ -199,6 +199,134 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 
 Coverage reports are written to `coverage_reports/`.
 
+
+## API Examples
+
+Set your API base URL once:
+
+```bash
+export API_BASE="http://localhost:8000"
+```
+
+### Create (POST)
+
+#### AnnotationSet
+
+`AnnotationSet` requires at least `name`. These examples also demonstrate how to create related objects via relationships:
+
+* **Many-to-many (M2M)** (e.g. `creators`):
+
+  * Provide full objects (e.g. `{ "name": "..." }`) → API creates them if needed
+  * OR provide existing IDs via `creators_ids`
+
+* **Foreign keys (FK)** (e.g. `project`):
+
+  * Provide `project_id`
+  * OR provide a full `project` object with required fields
+
+```bash
+curl -sS -X POST "$API_BASE/api/annotations/annotation_sets/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Benthic survey annotations (v1)",
+    "version": "1.0.0",
+    "image_set_ids": [
+      "00000000-0000-0000-0000-000000000010"
+    ],
+    "creators": [
+      {
+        "name": "Dr. Jane Doe",
+        "uri": "https://example.com/creators/jane-doe"
+      }
+    ],
+    "project_id": "00000000-0000-0000-0000-000000000100",
+    "abstract": "Annotation set for the benthic imagery collected during survey XYZ."
+  }'
+```
+
+#### Annotation
+
+* `shape` is required
+* `coordinates` is required and must be a **list of lists**
+
+```bash
+curl -sS -X POST "$API_BASE/api/annotations/annotations/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "annotation_set_id": "00000000-0000-0000-0000-000000000020",
+    "image_id": "00000000-0000-0000-0000-000000000001",
+    "annotation_platform": "SQUIDLE+",
+    "shape": "polygon",
+    "coordinates": [
+      [100.5, 120.0, 180.2, 125.1, 175.0, 210.6, 98.9, 205.3, 100.5, 120.0]
+    ],
+    "dimension_pixels": 92.4
+  }'
+```
+
+### Read (GET)
+
+#### List all Images
+
+```bash
+curl -sS "$API_BASE/api/images/images/"
+```
+
+#### Retrieve a single Image
+
+```bash
+IMAGE_ID="00000000-0000-0000-0000-000000000001"
+
+curl -sS "$API_BASE/api/images/images/$IMAGE_ID/"
+```
+
+### Update (PUT)
+
+#### ImageSet
+
+It replaces the full object. You must include at least `name` and fields you want to update, otherwise they will be set to null/empty. For relationships:
+
+* **M2M fields** (e.g. `related_material_ids`, `creators_ids`):
+  Provide the full updated list of IDs.
+* **FK fields** (e.g. `project`):
+  Provide either `project_id` or a full `project` object.
+
+```bash
+IMAGE_SET_ID="00000000-0000-0000-0000-000000000010"
+
+curl -sS -X PUT "$API_BASE/api/images/image_sets/$IMAGE_SET_ID/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Dive 2026-02-11 (processed)",
+    "handle": "https://handle.example/12345/abc",
+    "copyright": "© NOC",
+    "abstract": "Images collected during dive on 2026-02-11. This record was updated after QC.",
+    "related_material_ids": [
+      "00000000-0000-0000-0000-000000000011",
+      "00000000-0000-0000-0000-000000000012"
+    ],
+    "project": {
+      "name": "Benthic survey 2026",
+      "uri": "https://example.com/projects/benthic-survey-2026"
+    },
+    "min_latitude_degrees": 49.95,
+    "max_latitude_degrees": 50.10,
+    "min_longitude_degrees": -4.20,
+    "max_longitude_degrees": -4.05
+  }'
+```
+
+### Delete (DELETE)
+
+#### Delete a Label
+
+```bash
+LABEL_ID="00000000-0000-0000-0000-000000000002"
+
+curl -sS -X DELETE "$API_BASE/api/labels/labels/$LABEL_ID/"
+```
+
+
 ## Acknowledgements
 
 This project was supported by the UK Natural Environment Research Council (NERC) through the *Tools for automating image analysis for biodiversity monitoring (AIAB)* Funding Opportunity, reference code **UKRI052**.
