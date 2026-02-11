@@ -2,7 +2,7 @@ apiVersion: v2
 name: api
 description: A database and API for imagery metadata and annotations
 type: application
-version: 0.1.4
+version: 0.1.6
 maintainers:
   - name: eawetchy
     email: elisabeth.wetchy@noc.ac.uk
