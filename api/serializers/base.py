@@ -9,7 +9,7 @@ from rest_framework.validators import UniqueValidator
 class BaseSerializer(serializers.ModelSerializer):
     """Base serializer with common validation logic for all serializers."""
 
-    def _validate_pairs(self, pairs, errors):
+    def _validate_pairs(self, pairs: list[tuple], errors: dict) -> dict:
         """Helper function to validate each pair of (object_field, id_field), the client has not provided both fields.
 
         Args:
@@ -26,7 +26,7 @@ class BaseSerializer(serializers.ModelSerializer):
                 errors[obj_field] = msg
         return errors
 
-    def _validate_geom_fields(self, geom_fields, errors):
+    def _validate_geom_fields(self, geom_fields: list, errors: dict) -> dict:
         """Helper function to validate that has not provided any of the geom fields, which are computed server-side.
 
         Args:
@@ -41,7 +41,7 @@ class BaseSerializer(serializers.ModelSerializer):
                 errors[field] = "This field is computed server-side and must not be provided."
         return errors
 
-    def _materialize_deferred_related(self, validated_data, fk_pairs):
+    def _materialize_deferred_related(self, validated_data: dict, fk_pairs: list[tuple]) -> None:
         """Convert deferred related payloads (from CreateOnlyRelatedField) into saved model instances.
 
         Mutates validated_data in-place.
@@ -57,7 +57,7 @@ class BaseSerializer(serializers.ModelSerializer):
             if isinstance(val, DeferredCreate):
                 validated_data[obj_field] = val.save(context=self.context)
 
-    def _materialize_deferred_list(self, items):
+    def _materialize_deferred_list(self, items: list) -> list:
         """Convert a list of DeferredCreate items into saved model instances.
 
         Args:
@@ -91,7 +91,7 @@ class NestedGetOrCreateMixin:
                 f.validators = [v for v in f.validators if not isinstance(v, UniqueValidator)]
         return fields
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict):
         """Try to create a new instance. If it violates unique constraint, fetch existing and compare fields.
 
         Args:
@@ -205,7 +205,7 @@ class CreateOnlyRelatedListField(serializers.Field):
         super().__init__(**kwargs)
         self.create_serializer_class = create_serializer_class
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data) -> list:
         """Create the related object using the provided serializer."""
         if not isinstance(data, list):
             self.fail("invalid")
@@ -248,7 +248,7 @@ class CreateOnlyRelatedListField(serializers.Field):
 class ReadOnlyFIeldsMixin:
     """Mixin to set all fields of a serializer to read-only."""
 
-    def get_read_only_fields(self):
+    def get_read_only_fields(self) -> list[str]:
         """Override to set all fields to read-only."""
         read_only_fields = super().get_read_only_fields()
         common_fields = ["id", "created_at", "updated_at"]
