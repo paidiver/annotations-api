@@ -12,7 +12,6 @@ from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
 
 
-@patch("api.serializers.label._test_cached_and_live_worms_api")
 class LabelViewSetTests(APITestCase):
     """Integration tests for LabelViewSet endpoints."""
 
@@ -22,6 +21,12 @@ class LabelViewSetTests(APITestCase):
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
 
+        self._worms_patcher = patch("api.serializers.label._test_cached_and_live_worms_api")
+        self.mocked_worms = self._worms_patcher.start()
+        self.addCleanup(self._worms_patcher.stop)
+
+        self.mocked_worms.return_value = Mock(status_code=200)
+
     def list_url(self):
         """Helper to get the list URL for LabelViewSet."""
         return reverse("label-list")
@@ -30,13 +35,9 @@ class LabelViewSetTests(APITestCase):
         """Helper to get the detail URL for a specific Label."""
         return reverse("label-detail", kwargs={"pk": pk})
 
-    def test_create_label_rejects_invalid_lowest_aphia_id(self, mocked_worms):
-        """Test that creating a Label with an invalid lowest_aphia_id is rejected.
-
-        Args:
-            mocked_worms (Mock): The mocked _test_cached_and_live_worms_api function.
-        """
-        mocked_worms.return_value = Mock(status_code=404)
+    def test_create_label_rejects_invalid_lowest_aphia_id(self):
+        """Test that creating a Label with an invalid lowest_aphia_id is rejected."""
+        self.mocked_worms.return_value = Mock(status_code=404)
 
         payload = {
             "name": "Label With Aphia",
@@ -49,18 +50,25 @@ class LabelViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("lowest_aphia_id", resp.data)
 
-    def test_create_label_accepts_valid_lowest_aphia_id(self, mocked_worms):
-        """Test that creating a Label with a valid lowest_aphia_id is accepted.
-
-        Args:
-            mocked_worms (Mock): The mocked _test_cached_and_live_worms_api function.
-        """
-        mocked_worms.return_value = Mock(status_code=200)
+    def test_create_label_accepts_valid_lowest_aphia_id(self):
+        """Test that creating a Label with a valid lowest_aphia_id is accepted."""
+        self.mocked_worms.return_value = Mock(status_code=200)
 
         payload = {
             "name": "Valid Aphia Label",
             "annotation_set_id": self.annotation_set.pk,
             "lowest_aphia_id": "12345",
+            "parent_label_name": "Parent Label",
+        }
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+    def test_create_label_with_empty_aphia_id(self):
+        """Test that creating a Label with an empty lowest_aphia_id is accepted."""
+        payload = {
+            "name": "Valid Aphia Label",
+            "annotation_set_id": self.annotation_set.pk,
             "parent_label_name": "Parent Label",
         }
 
@@ -100,13 +108,9 @@ class LabelViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("annotation_set_id", resp.data)
 
-    def test_patch_label(self, mocked_worms):
-        """Test that PATCHing an Label.
-
-        Args:
-            mocked_worms (Mock): The mocked _test_cached_and_live_worms_api function.
-        """
-        mocked_worms.return_value = Mock(status_code=200)
+    def test_patch_label(self):
+        """Test that PATCHing an Label."""
+        self.mocked_worms.return_value = Mock(status_code=200)
 
         label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
         payload = {
