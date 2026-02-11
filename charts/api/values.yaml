@@ -60,4 +60,5 @@ postgresql:
     database: annotationsdb
   primary:
     service:
-      port: 5432
+      ports:
+        postgresql: 5432
