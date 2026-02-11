@@ -1,22 +1,3 @@
-{{- /*
-Return the standard Postgres environment variables.
-*/ -}}
-{{- define "mychart.postgresEnv" -}}
-- name: POSTGRES_HOST
-  value: {{ printf "%s-postgresql" .Release.Name }}
-- name: POSTGRES_PORT
-  value: "5432"
-- name: POSTGRES_DATABASE
-  value: {{ .Values.postgresql.auth.database }}
-- name: POSTGRES_USER
-  value: {{ .Values.postgresql.auth.username }}
-- name: POSTGRES_PASSWORD
-  valueFrom:
-    secretKeyRef:
-      name: annotations-api-db
-      key: password
-{{- end -}}
-
 {{/*
 Expand the name of the chart.
 */}}

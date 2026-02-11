@@ -5,6 +5,11 @@
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
 containerSecurityContext:
   allowPrivilegeEscalation: false
   capabilities:
@@ -15,13 +20,22 @@ api:
   componentName: "annotations-api"
   image:
     repository: ghcr.io/paidiver/annotations-api
-    tag: develop
+    tag: latest
     pullPolicy: Always
+    imagePullSecret: ""
   port: 8000
   timeout: 300
   workers: 1
   service:
     port: 8000
+  env:
+    djangoSecretKey: dev-secret-key-change-me
+    djangoDebug: "1"
+  securityContext:
+    runAsUser: 1000
+  initContainer:
+    securityContext:
+      runAsUser: 1000
 
 ingress:
   enabled: true
@@ -30,13 +44,6 @@ ingress:
   ingressClassName: ""
   host: ""
 
-
-persistence:
-  size: 1
-  storageClass: ""
-
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -48,18 +55,8 @@ postgresql:
   auth:
     enablePostgresUser: true
     username: myuser
-    existingSecret: annotations-api-db
+    password: mypassword
     database: annotationsdb
   primary:
-    podSecurityContext:
-      enabled: true
-      fsGroup: 65534
-    containerSecurityContext:
-      runAsUser: 65534
-      runAsGroup: 65534
-    persistence:
-      enabled: true
-      size: 2Gi
-    resources:
-      limits:
-        memory: 256Mi
+    service:
+      port: 5432

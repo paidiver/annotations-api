@@ -6,13 +6,6 @@ metadata:
     {{- include "paidiver-annotations-api.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
-  {{- if eq .Values.replicaCount 1.0}}
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
-  {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}
@@ -26,9 +19,7 @@ spec:
         {{- include "paidiver-annotations-api.labels" . | nindent 8 }}
     spec:
       securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: wait-for-postgres
           image: bitnami/postgresql:latest
@@ -38,9 +29,9 @@ spec:
             - |
               echo "Waiting for PostgreSQL..."
               until pg_isready \
-                -h {{ printf "%s-postgresql" .Release.Name }} \
-                -p 5432 \
-                -U {{ .Values.postgresql.auth.username }}; do
+                -h $POSTGRES_HOST \
+                -p $POSTGRES_PORT \
+                -U $POSTGRES_USER; do
                 sleep 2
               done
               echo "Waiting for PostGIS extension to exist..."
@@ -48,12 +39,9 @@ spec:
                 sleep 2
               done
           securityContext:
-            runAsUser: 1000
+            {{- toYaml .Values.api.initContainer.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          env: {{ include "mychart.postgresEnv" . | nindent 12 }}
-          resources:
-            limits:
-              memory: 32Mi
+          env: {{ include "api.postgresEnv" . | nindent 12 }}
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
@@ -62,12 +50,12 @@ spec:
             - containerPort: {{ .Values.api.port }}
           env:
             - name: DJANGO_SECRET_KEY
-              value: dev-secret-key-change-me
+              value: {{ .Values.api.env.djangoSecretKey }}
             - name: DJANGO_DEBUG
-              value: "1"
+              value: {{ .Values.api.env.djangoDebug }}
             - name: DJANGO_ALLOWED_HOSTS
               value: localhost,127.0.0.1,0.0.0.0,{{ .Values.ingress.host }}
-            {{ include "mychart.postgresEnv" . | nindent 12 }}
+            {{ include "api.postgresEnv" . | nindent 12 }}
           command:
             - sh
             - -c
@@ -75,10 +63,7 @@ spec:
               python manage.py migrate &&
               poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }}
           securityContext:
-            runAsUser: 1000
+            {{- toYaml .Values.api.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          resources:
-            limits:
-              memory: 256Mi
       imagePullSecrets:
-        - name: ghcr-pull-login
+        - name: {{ .Values.api.image.imagePullSecret }}
