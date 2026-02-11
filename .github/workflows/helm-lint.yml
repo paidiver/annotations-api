@@ -1,4 +1,4 @@
-name: Test and Lint Helm Charts
+name: Lint Helm Charts
 
 on:
   push:

@@ -9,7 +9,7 @@ spec:
       http:
         paths:
           - path: "/{{ .Values.ingress.api.path }}"
-            pathType: Prefix
+            pathType: {{ .Values.ingress.api.pathType }}
             backend:
               service:
                 name: "{{ .Release.Name }}-{{ .Values.api.componentName }}-service"
