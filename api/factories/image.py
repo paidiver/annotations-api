@@ -16,8 +16,8 @@ class ImageFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory):
     class Params:
         """Factory params for controlling related object creation and M2M linking."""
 
-        with_creators: bool = False
         with_relations: bool = False
+        with_camera_models: bool = False
 
     class Meta:
         """Meta class for ImageFactory."""

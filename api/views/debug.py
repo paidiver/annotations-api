@@ -3,6 +3,7 @@
 from urllib.request import Request
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -83,6 +84,7 @@ tables_to_models_and_serializers = {
 }
 
 
+@extend_schema(tags=["Debug"])
 class DebugDatabaseDumpView(APIView):
     """Debug endpoint to dump DB contents as JSON.
 

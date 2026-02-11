@@ -41,17 +41,17 @@ class ImageSetRelatedMaterial(models.Model):
         on_delete=models.CASCADE,
         db_column="image_set_id",
     )
-    material = models.ForeignKey(
+    related_material = models.ForeignKey(
         "RelatedMaterial",
         on_delete=models.CASCADE,
-        db_column="material_id",
+        db_column="related_material_id",
     )
 
     class Meta:  # noqa: D106
         db_table = "image_set_related_materials"
         constraints = [
             models.UniqueConstraint(
-                fields=["image_set", "material"],
+                fields=["image_set", "related_material"],
                 name="uq_image_set_related_materials",
             )
         ]

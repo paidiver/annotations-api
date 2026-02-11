@@ -62,7 +62,7 @@ class CommonFieldsAllFactory(DjangoModelFactory):
 
         Usage options:
             ImageSetFactory(creators=[creator1, creator2])
-            ImageSetFactory(with_creators=3)
+            ImageSetFactory(creators=3)
 
         Args:
             create: Whether the instance was actually created (vs just built).
@@ -70,9 +70,6 @@ class CommonFieldsAllFactory(DjangoModelFactory):
             **kwargs: Additional keyword arguments (not used here).
         """
         if not create:
-            return
-
-        if not hasattr(self, "creators"):
             return
 
         through_model = self.creators.through
@@ -85,14 +82,15 @@ class CommonFieldsAllFactory(DjangoModelFactory):
         if fk_to_self_name is None:
             raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
 
-        if extracted:
-            creators_list = list(extracted)
-        else:
-            n = int(getattr(self, "with_creators", 0) or 0)
-            if n <= 0:
-                return
-            creators_list = [CreatorFactory() for _ in range(n)]
+        if extracted is None:
+            return
 
+        if isinstance(extracted, int):
+            if extracted <= 0:
+                return
+            creators_list = [CreatorFactory() for _ in range(extracted)]
+        else:
+            creators_list = list(extracted)
         rows = [through_model(**{fk_to_self_name: self, "creator": c}) for c in creators_list]
         through_model.objects.bulk_create(rows, ignore_conflicts=True)
 

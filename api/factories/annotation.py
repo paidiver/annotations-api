@@ -128,6 +128,8 @@ class AnnotationLabelFactory(DjangoModelFactory):
             label = LabelFactory()
         if annotation is None and annotation_id is None:
             annotation = AnnotationFactory()
+        if annotator is None and annotator_id is None:
+            annotator = AnnotatorFactory()
 
         if label is not None:
             kwargs["label"] = label
@@ -141,9 +143,7 @@ class AnnotationLabelFactory(DjangoModelFactory):
 
         if annotator is not None:
             kwargs["annotator"] = annotator
-        elif annotator_id is not None:
-            kwargs["annotator_id"] = annotator_id
         else:
-            kwargs["annotator"] = None
+            kwargs["annotator_id"] = annotator_id
 
         return super()._create(model_class, *args, **kwargs)

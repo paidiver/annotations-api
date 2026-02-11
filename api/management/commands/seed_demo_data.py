@@ -6,16 +6,15 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from api.models import AnnotationLabel
-from api.tests.factories.annotation_set import AnnotationSetFactory
-from api.tests.factories.image import ImageFactory
-from api.tests.factories.image_set import ImageSetFactory
-from api.tests.factories.label import LabelFactory
-
-from ...tests.factories.annotation import (
+from api.factories.annotation import (
     AnnotationFactory,
     AnnotatorFactory,
 )
+from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.image import ImageFactory
+from api.factories.image_set import ImageSetFactory
+from api.factories.label import LabelFactory
+from api.models import AnnotationLabel
 
 
 class Command(BaseCommand):
@@ -97,8 +96,8 @@ class Command(BaseCommand):
             image_set = ImageSetFactory(
                 with_relations=True,
                 with_camera_models=True,
-                with_related_materials=3,
-                with_creators=2,
+                related_materials=3,
+                creators=2,
                 with_limits=True,
             )
             image_sets.append(image_set)
@@ -119,13 +118,11 @@ class Command(BaseCommand):
                     ann = AnnotationFactory(image=img, annotation_set=annotation_set)
                     annotations.append(ann)
 
-            #    Ensure label.annotation_set matches annotation.annotation_set to keep data consistent.
-            #    Respect unique constraint (label, annotation, annotator).
             possible = len(annotations) * len(labels) * len(annotators)
             target = min(annotation_labels_per_set, possible)
             created = 0
             attempts = 0
-            max_attempts = annotation_labels_per_set * 50  # give it a bit more room
+            max_attempts = annotation_labels_per_set * 50
 
             while created < target and attempts < max_attempts:
                 attempts += 1

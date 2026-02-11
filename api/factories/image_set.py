@@ -1,7 +1,6 @@
 """Factory for ImageSet model."""
 
 import uuid
-from typing import Any
 
 import factory
 
@@ -21,11 +20,8 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
         """Factory params for controlling related object creation and M2M linking."""
 
         with_limits: bool = True
-        with_related_materials: int = 0
-        with_creators: int = 2
         with_relations: bool = True
-        with_camera_models: int = 0
-        related_materials_list: list[Any] | None = None
+        with_camera_models: bool = True
 
     class Meta:
         """Factory meta class."""
@@ -83,7 +79,7 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
 
         Usage;
             ImageSetFactory(related_materials=[related_material1, related_material2])
-            ImageSetFactory(with_related_materials=3)
+            ImageSetFactory(related_materials=3)
 
         Args:
             create: Whether the instance was actually created (vs just built).
@@ -91,9 +87,6 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
             **kwargs: Additional keyword arguments (not used here).
         """
         if not create:
-            return
-
-        if not hasattr(self, "related_materials"):
             return
 
         through_model = self.related_materials.through
@@ -106,13 +99,14 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
         if fk_to_self_name is None:
             raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
 
-        if extracted:
-            related_materials_list = list(extracted)
-        else:
-            n = int(getattr(self, "with_related_materials", 0) or 0)
-            if n <= 0:
-                return
-            related_materials_list = [RelatedMaterialFactory() for _ in range(n)]
+        if extracted is None:
+            return
 
+        if isinstance(extracted, int):
+            if extracted <= 0:
+                return
+            related_materials_list = [RelatedMaterialFactory() for _ in range(extracted)]
+        else:
+            related_materials_list = list(extracted)
         rows = [through_model(**{fk_to_self_name: self, "related_material": c}) for c in related_materials_list]
         through_model.objects.bulk_create(rows, ignore_conflicts=True)

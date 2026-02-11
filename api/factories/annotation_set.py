@@ -2,7 +2,6 @@
 
 import random
 import uuid
-from typing import Any
 
 import factory
 
@@ -32,12 +31,6 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
     class Params:
         """Factory params for controlling related object creation and M2M linking."""
 
-        with_relations: bool = False
-        with_creators: bool = False
-        creators_list: list[Any] | None = None
-        creators_ids: list[int] | None = None
-        with_image_sets: int = 0
-        image_sets_list: list[Any] | None = None
         image_set_ids: list[int] | None = None
 
     @factory.post_generation
@@ -68,17 +61,14 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
 
     @factory.post_generation
     def image_sets(self, create: bool, extracted, **kwargs) -> None:
-        """Generate related image sets via AnnotationSetImageSet if with_image_sets > 0.
+        """Generate related image sets via AnnotationSetImageSet if image_sets > 0.
 
         Args:
             create: Whether the instance was actually created (vs just built).
-            extracted: The value passed to with_image_sets when the factory is called.
+            extracted: The value passed to image_sets when the factory is called.
             **kwargs: Additional keyword arguments (not used here).
         """
         if not create:
-            return
-
-        if not hasattr(self, "image_sets"):
             return
 
         through_model = self.image_sets.through
@@ -91,13 +81,14 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
         if fk_to_self_name is None:
             raise RuntimeError(f"Could not find FK from {through_model.__name__} to {self.__class__.__name__}")
 
-        if extracted:
-            image_sets_list = list(extracted)
-        else:
-            n = int(getattr(self, "with_image_sets", 0) or 0)
-            if n <= 0:
-                return
-            image_sets_list = [ImageSetFactory() for _ in range(n)]
+        if extracted is None:
+            return
 
+        if isinstance(extracted, int):
+            if extracted <= 0:
+                return
+            image_sets_list = [ImageSetFactory() for _ in range(extracted)]
+        else:
+            image_sets_list = list(extracted)
         rows = [through_model(**{fk_to_self_name: self, "image_set": c}) for c in image_sets_list]
         through_model.objects.bulk_create(rows, ignore_conflicts=True)
