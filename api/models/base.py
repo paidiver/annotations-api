@@ -20,20 +20,6 @@ class DefaultColumns(models.Model):
         abstract = True
 
 
-class DefaultColumnsGis(models.Model):
-    """Abstract base model with default columns."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        """Meta class for DefaultColumns."""
-
-        abstract = True
-
-
 def enum_choices(py_enum: type[enum.Enum]):
     """Convert a Python Enum into Django choices.
 

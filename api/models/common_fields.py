@@ -2,6 +2,7 @@
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from .base import (
     AcquisitionEnum,
@@ -21,12 +22,6 @@ from .base import (
 
 class CommonFieldsAll(models.Model):
     """Common fields used across multiple tables."""
-
-    name = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text=("A unique name for the image set, image or annotation set."),
-    )
 
     handle = models.CharField(
         max_length=2048,
@@ -109,12 +104,14 @@ class CommonFieldsImagesImageSets(models.Model):
     latitude = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-90.0), MaxValueValidator(90.0)],
         help_text="Latitude of the camera center in degrees, WGS84 coordinates (EPSG:4326)",
     )
 
     longitude = models.FloatField(
         null=True,
         blank=True,
+        validators=[MinValueValidator(-180.0), MaxValueValidator(180.0)],
         help_text="Longitude of the camera center in degrees, WGS84 coordinates (EPSG:4326)",
     )
 
