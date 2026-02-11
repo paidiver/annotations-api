@@ -65,6 +65,12 @@ class AnnotationSetImageSet(models.Model):
 class AnnotationSet(CommonFieldsAll, DefaultColumns):
     """A collection of annotations that are related to a specific project, event, or context."""
 
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text=("A unique name for the annotation set."),
+    )
+
     context = models.ForeignKey(
         "Context",
         null=True,

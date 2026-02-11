@@ -153,6 +153,12 @@ Create new migrations after modifying models:
 docker compose -f docker/docker-compose.yml exec api python manage.py makemigrations
 ```
 
+To add some descriptive name to migration file that is going to generate, use `--name` flag while running migration command. And once the migration file is created, make sure to add some descriptive docstring on top of the file as well.
+
+```bash
+docker compose -f docker/docker-compose.yml exec api python manage.py makemigrations --name migration_description
+```
+
 Apply migrations:
 
 ```bash
@@ -188,10 +194,15 @@ tox
 or explicitly:
 
 ```bash
-tox -e py310
+docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 ```
 
 Coverage reports are written to `coverage_reports/`.
+
+
+## API Examples
+
+A collection of example API requests and responses is available in the [API Examples](docs/API_EXAMPLES.md) document.
 
 ## Acknowledgements
 

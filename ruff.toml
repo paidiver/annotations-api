@@ -57,6 +57,7 @@ explicit-preview-rules = true
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 
+ignore = ["D105", "D107"]  # Ignore missing docstring in magic method and missing docstring in __init__
 
 [lint.pydocstyle]
 convention = "google"

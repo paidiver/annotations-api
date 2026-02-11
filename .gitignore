@@ -1,6 +1,9 @@
 .tox
 .venv
 __pycache__
+**/__pycache__/
+**/*__pycache__*
 dist
 coverage_reports
 .env
+data/*
