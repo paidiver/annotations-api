@@ -52,7 +52,7 @@ spec:
             - name: DJANGO_SECRET_KEY
               value: {{ .Values.api.env.djangoSecretKey }}
             - name: DJANGO_DEBUG
-              value: {{ .Values.api.env.djangoDebug }}
+              value: "{{ .Values.api.env.djangoDebug }}"
             - name: DJANGO_ALLOWED_HOSTS
               value: localhost,127.0.0.1,0.0.0.0,{{ .Values.ingress.host }}
             {{ include "api.postgresEnv" . | nindent 12 }}
