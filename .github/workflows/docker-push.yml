@@ -1,12 +1,9 @@
-name: Build and Push Docker Image
+name: Push Docker Image
 
 on:
   push:
     branches:
-    - main
-  pull_request:
-    branches:
-    - main
+      - main
 
 env:
   CI_REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
@@ -27,11 +24,9 @@ jobs:
           docker build -t $CI_REGISTRY_IMAGE:${{ github.sha }} -f docker/Dockerfile .
 
       - name: Log in to GitHub Container Registry
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Push Docker Image
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
           docker tag $CI_REGISTRY_IMAGE:${{ github.sha }} $CI_REGISTRY_IMAGE:latest
           docker push $CI_REGISTRY_IMAGE:latest
