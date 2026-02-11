@@ -340,6 +340,38 @@ curl -sS -X POST "$API_BASE/api/annotations/annotators/" -H "Content-Type: appli
 ```
 
 
+#### Image_Sets
+
+```bash
+curl -sS -X POST "$API_BASE/api/images/image_sets/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test Image Set 001",
+    "handle": "survey_2026_alpha",
+    "copyright": "All rights reserved",
+    "abstract": "Benthic survey of the north shelf",
+    "min_latitude_degrees": -35.5,
+    "max_latitude_degrees": -34.0,
+    "min_longitude_degrees": 150.0,
+    "max_longitude_degrees": 151.5,
+    "context_id": "e3fb46a7-60af-4e64-9f41-39b80736c828",
+    "project_id": "48194498-cfb0-487e-8e34-1e42fbb2853c",
+    "event_id": "2d47a920-8492-43d3-9a10-a8e9f5154c5b",
+    "platform_id": "ad72d6b5-93f6-4db1-9121-8c341c781cb4",
+    "sensor_id": "15d17e9a-0dc9-44ee-9ec6-0e1546e24d99",
+    "pi_id": "eb5365c3-37cf-4cc4-84a8-a2a76b1cdab2",
+    "license_id": "340d67cf-09be-4b3d-93f0-ee3d79a72dbd",
+    "camera_pose_id": "39421fd1-8411-4ab2-808d-3877c448e820",
+    "camera_housing_viewport_id": "783f8dd9-6006-48ba-9069-1e984cc7dc70",
+    "flatport_parameter_id": "bf28c8dc-b4bc-4d9b-9745-f43b6f903dcb",
+    "domeport_parameter_id": "ce77d593-06c7-4cbf-86d9-c033797fb315",
+    "photometric_calibration_id": "9e48bba7-9e52-4c71-8bd2-246c8c5b27d1",
+    "camera_calibration_model_id": "deaeb3ea-f42c-4418-a4eb-b1ba069c0069",
+    "creators_ids": ["45a4a9cc-b854-4add-af22-ae4ab859a6ef"],
+    "related_materials_ids": ["6804191c-c543-4334-b476-8b93a3da8031"]
+  }'
+```
+
 #### AnnotationSet
 
 `AnnotationSet` requires at least `name`. These examples also demonstrate how to create related objects via relationships:
