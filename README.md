@@ -293,6 +293,47 @@ curl -sS -X POST "$API_BASE/api/fields/sensor/" \
 ```
 
 
+### Image Camera Pose
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_camera_pose/" -H "Content-Type: application/json" -d '{"utm_zone": "56H", "utm_epsg": "32756", "utm_east_north_up_meters": [123456.7, 8910111.2, 50.5], "absolute_orientation_utm_matrix": [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]}'
+```
+
+### Image Domeport Parameter
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_domeport_parameter/" -H "Content-Type: application/json" -d '{"outer_radius_millimeters": 150.0, "decentering_offset_xyz_millimeters": [0.0, 0.0, 5.2], "extra_description": "test Domeport"}'
+```
+
+
+### Image Flatport Parameter
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_flatport_parameter/" -H "Content-Type: application/json" -d '{"lens_port_distance_millimeters": 25.5, "interface_normal_direction": [0.0, 0.0, 1.0], "extra_description": "test Flatport"}'
+```
+
+
+### Image Camera Calibration Model
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_camera_calibration_model/" -H "Content-Type: application/json" -d '{"calibration_model_type": "rectilinear water", "focal_length_xy_pixel": [3500.0, 3500.0], "principal_point_xy_pixel": [1920.0, 1080.0], "distortion_coefficients": [-0.2, 0.1, 0.0, 0.0, 0.0], "approximate_field_of_view_water_xy_degree": [70.5, 50.2], "extra_description": "test Calibration"}'
+```
+
+
+### Image Camera Housing Viewport
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_camera_housing_viewport/" -H "Content-Type: application/json" -d '{"viewport_type": "dome port", "optical_density": 1.49, "thickness_millimeters": 10.0, "extra_description": "test Viewport"}'
+```
+
+
+### Image Photometric Calibration
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/image_photometric_calibration/" -H "Content-Type: application/json" -d '{"sequence_white_balancing": "manual preset", "exposure_factor_rgb": [1.2, 1.0, 1.5], "sequence_illumination_type": "artificial", "sequence_illumination_description": "dual strobe", "illumination_factor_rgb": [1.0, 1.0, 1.0], "water_properties_description": "clear oceanic"}'
+```
+
+
 #### AnnotationSet
 
 `AnnotationSet` requires at least `name`. These examples also demonstrate how to create related objects via relationships:
