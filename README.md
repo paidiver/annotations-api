@@ -210,6 +210,89 @@ export API_BASE="http://localhost:8000"
 
 ### Create (POST)
 
+Ensure you run following command in order so to create annotation_sets and annotation record you have required record already created. 
+
+#### Creator
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/creator/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Creator"}'
+```
+
+
+#### Context
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/context/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Context"}'
+  ```
+
+
+#### PI
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/pi/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test PI"}'
+```
+
+
+#### Event
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/event/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Event"}'
+```
+
+
+#### License
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/license/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test License"}'
+```
+
+
+#### Platform
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/platform/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Platform"}'
+```
+
+
+#### Project
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/project/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Project"}'
+```
+
+
+#### RelatedMaterial
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/relatedmaterial/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Related Material"}'
+```
+
+
+#### Sensor
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/sensor/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Sensor"}'
+```
+
+
 #### AnnotationSet
 
 `AnnotationSet` requires at least `name`. These examples also demonstrate how to create related objects via relationships:
