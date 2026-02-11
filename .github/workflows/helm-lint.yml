@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  lint:
+  helm-lint:
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -26,6 +26,10 @@ jobs:
         with:
           python-version: '3.x'
           check-latest: true
+
+      - name: add dependency repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.8.0
