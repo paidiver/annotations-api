@@ -8,6 +8,41 @@ export API_BASE="http://localhost:8000"
 
 ## Create (POST)
 
+### Field endpoints
+
+You can see below some examples of how to create objects through the API for the field endpoints, that only need to provide a `name` field. You can also include `uri` if you want.
+
+#### Context
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/context/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test Context",
+      "uri": "https://example.com/contexts/test-context"
+      }'
+  ```
+
+#### PI
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/pi/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "test PI"}'
+```
+
+### RelatedMaterial
+
+For related material, the `uri` field is required, but you can also include `title` and `relation` if you want.
+
+```bash
+curl -sS -X POST "$API_BASE/api/fields/relatedmaterial/" \
+  -H "Content-Type: application/json" \
+  -d '{"uri": "https://example.com/related-material/12345", "title": "Related material title", "relation": "isSupplementTo"
+  }'
+```
+
+> Important: you may need to output IDs of created objects (e.g. related materials, creators, projects) to use them in the examples below for creating ImageSets, AnnotationSets, etc. You can do this by running a GET request to the corresponding endpoint (e.g. `GET /api/fields/relatedmaterial/`) and looking for the ID in the response.
+
 ### ImageSet
 
 `ImageSet` requires at least a `name`. This examples also demonstrate how to create related objects through relationships:
@@ -22,7 +57,10 @@ export API_BASE="http://localhost:8000"
   * Provide `project_id`
   * OR provide a full `project` object with the required fields
 
+To run the example below, replace `RELATED_MATERIAL_ID` with an existing related material ID from your database, or provide a full `related_material` object instead.
+
 ```bash
+RELATED_MATERIAL_ID="00000000-0000-0000-0000-000000000001"
 curl -sS -X POST "$API_BASE/api/images/image_sets/" \
   -H "Content-Type: application/json" \
   -d '{
@@ -33,6 +71,9 @@ curl -sS -X POST "$API_BASE/api/images/image_sets/" \
         "name": "Dr. Jane Doe",
         "uri": "https://example.com/creators/jane-doe"
       }
+    ],
+    "related_materials_ids": [
+      "'$RELATED_MATERIAL_ID'"
     ],
     "project": {
       "name": "Benthic survey 2026",
@@ -155,6 +196,22 @@ curl -sS -X POST "$API_BASE/api/annotations/annotation_labels/" \
 ```
 
 ## Read (GET)
+
+
+#### List Creator
+```bash
+curl -sS -X GET "$API_BASE/api/fields/creator/" -H "Accept: application/json"
+```
+
+#### List Context
+```bash
+curl -sS -X GET "$API_BASE/api/fields/context/" -H "Accept: application/json"
+```
+
+#### List PI
+```bash
+curl -sS -X GET "$API_BASE/api/fields/pi/" -H "Accept: application/json"
+```
 
 ### List all Images
 

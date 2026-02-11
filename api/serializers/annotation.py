@@ -1,6 +1,6 @@
 """Serializers for the Annotations API endpoints."""
 
-from django.db import IntegrityError, transaction
+from django.db import transaction
 from rest_framework import serializers
 
 from api.models import Annotation, Annotator
@@ -151,12 +151,7 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         """
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
-        try:
-            return super().create(validated_data)
-        except IntegrityError as exc:
-            raise serializers.ValidationError(
-                {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
-            ) from exc
+        return super().create(validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data) -> AnnotationLabel:
@@ -171,9 +166,4 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         """
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
-        try:
-            return super().update(instance, validated_data)
-        except IntegrityError as exc:
-            raise serializers.ValidationError(
-                {"non_field_errors": ["AnnotationLabel with this annotation, label and annotator already exists."]}
-            ) from exc
+        return super().update(instance, validated_data)
