@@ -108,7 +108,7 @@ class DebugDatabaseDumpView(APIView):
         payload = {}
 
         for table_name, (model, serializer) in tables_to_models_and_serializers.items():
-            queryset = model.objects.all()
+            queryset = model.objects.order_by("-created_at")[:5]
             serialized_data = serializer(queryset, many=True).data
             payload[table_name] = serialized_data
 
