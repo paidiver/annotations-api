@@ -2,13 +2,12 @@ apiVersion: v2
 name: api
 description: A database and API for imagery metadata and annotations
 type: application
-version: 0.1.7
+version: 0.0.0-dev
+appVersion: 0.0.0-dev
 maintainers:
   - name: eawetchy
     email: elisabeth.wetchy@noc.ac.uk
     url: bodc.ac.uk
-
-appVersion: "1.0"
 
 dependencies:
   - name: postgresql
