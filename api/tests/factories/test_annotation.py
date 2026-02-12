@@ -27,21 +27,10 @@ class AnnotationFactoriesErrorTests(TestCase):
         """Test that AnnotationFactory can create annotations with different shapes."""
         image = ImageFactory()
         annotation_set = AnnotationSetFactory()
-
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape="whole-image")
-        self.assertEqual(annotation.shape, "whole-image")
-
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape="rectangle")
-        self.assertEqual(annotation.shape, "rectangle")
-
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape="single-pixel")
-        self.assertEqual(annotation.shape, "single-pixel")
-
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape="ellipse")
-        self.assertEqual(annotation.shape, "ellipse")
-
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape="polygon")
-        self.assertEqual(annotation.shape, "polygon")
+        shapes = ["whole-image", "rectangle", "single-pixel", "ellipse", "polygon"]
+        for shape in shapes:
+            annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape=shape)
+            self.assertEqual(annotation.shape, shape)
 
     def test_annotation_factory_creation_with_wrong_shape(self):
         """Test that AnnotationFactory raises a ValueError when an invalid shape is provided."""

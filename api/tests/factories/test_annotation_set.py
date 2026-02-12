@@ -47,10 +47,8 @@ class AnnotationSetFactoryCoverageTests(TestCase):
 
     def test_image_sets_uses_extracted_list(self):
         """Test that creating an AnnotationSet with a list of image sets associates the image sets with the instance."""
-        aset = AnnotationSetFactory()
         img1 = ImageSetFactory()
         img2 = ImageSetFactory()
-
         aset = AnnotationSetFactory(image_sets=[img1, img2])
 
         ids = set(aset.image_sets.values_list("id", flat=True))

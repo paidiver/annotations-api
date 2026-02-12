@@ -70,7 +70,7 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
     def related_materials(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate related_materials M2M via the through model.
 
-        Usage;
+        Usage:
             ImageSetFactory(related_materials=[related_material1, related_material2])
             ImageSetFactory(related_materials=3)
 
