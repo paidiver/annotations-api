@@ -33,7 +33,7 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
     related_materials = None
 
     @factory.post_generation
-    def with_limits(self, create: bool, extracted, **kwargs) -> None:
+    def with_limits(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate bbox fields if with_limits is True.
 
         Usage:
@@ -67,7 +67,7 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
         )
 
     @factory.post_generation
-    def related_materials(self, create: bool, extracted, **kwargs) -> None:
+    def related_materials(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate related_materials M2M via the through model.
 
         Usage;

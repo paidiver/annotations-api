@@ -57,7 +57,7 @@ class CommonFieldsAllFactory(DjangoModelFactory):
         abstract = True
 
     @factory.post_generation
-    def creators(self, create: bool, extracted, **kwargs) -> None:
+    def creators(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate creators M2M via the through model.
 
         Usage options:
@@ -162,7 +162,7 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     camera_calibration_model = None
 
     @factory.post_generation
-    def with_relations(self, create: bool, extracted, **kwargs) -> None:
+    def with_relations(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate all related fields if with_relations is True.
 
         Usage:
@@ -191,7 +191,7 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
         self.save(update_fields=["context", "project", "event", "platform", "sensor", "pi", "license"])
 
     @factory.post_generation
-    def with_camera_models(self, create: bool, extracted, **kwargs) -> None:
+    def with_camera_models(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate camera models if with_camera_models is True.
 
         Usage:

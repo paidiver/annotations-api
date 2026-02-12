@@ -34,7 +34,7 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
         image_set_ids: list[int] | None = None
 
     @factory.post_generation
-    def with_relations(self, create: bool, extracted, **kwargs) -> None:
+    def with_relations(self, create: bool, extracted: bool, **kwargs) -> None:
         """Generate related objects and set FKs if with_relations is True.
 
         Usage:
@@ -60,7 +60,7 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
         self.save(update_fields=["context", "project", "pi", "license"])
 
     @factory.post_generation
-    def image_sets(self, create: bool, extracted, **kwargs) -> None:
+    def image_sets(self, create: bool, extracted: bool, **kwargs) -> None:
         """Generate related image sets via AnnotationSetImageSet if image_sets > 0.
 
         Args:
