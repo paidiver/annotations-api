@@ -30,8 +30,6 @@ class ImageSetFactory(CommonFieldsAllFactory, CommonFieldsImagesImageSetsFactory
     min_longitude_degrees = None
     max_longitude_degrees = None
 
-    related_materials = None
-
     @factory.post_generation
     def with_limits(self, create: bool, extracted: bool, **kwargs) -> None:
         """Populate bbox fields if with_limits is True.
