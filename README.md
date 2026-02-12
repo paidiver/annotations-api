@@ -199,6 +199,39 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 
 Coverage reports are written to `coverage_reports/`.
 
+## Fake Data Generation
+
+For development and testing, the project includes a management command that seeds the database with realistic fake data:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm api \
+  python manage.py seed_demo_data
+```
+
+### Customising the amount of data
+
+```bash
+python manage.py seed_demo_data \
+  --image-annotation-sets 3 \
+  --images-per-image-set 15 \
+  --labels-per-annotation-set 25 \
+  --annotators 12 \
+  --annotations-per-image 3 \
+  --annotation-labels 150
+```
+
+⚠️ IMPORTANT: Development use only. Do not run against production databases.
+
+## Dumping All Data (JSON)
+
+To export **all database data as JSON** for inspection or debugging, use the endpoint:
+
+```
+http://localhost:8000/api/debug/db-dump/
+```
+
+This will return a JSON object containing all records from all tables, structured by model name.
+
 
 ## API Examples
 

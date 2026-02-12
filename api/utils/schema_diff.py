@@ -20,8 +20,6 @@ This will connect to the two specified databases, compare their schemas,
 and output the differences to the specified JSON file.
 """
 
-from __future__ import annotations
-
 import json
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
