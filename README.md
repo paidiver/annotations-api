@@ -63,7 +63,30 @@ Key points:
 
 ## Helm Charts
 
-The [charts](charts) directory contains Helm charts that can be used to deploy this app.
+The [charts](charts/api) directory contains Helm charts that can be used to deploy this app.
+
+### Helm Chart Versioning & Release Process
+
+Helm chart releases are automated and driven by Git tags.
+
+To release a new Helm Chart version, create a Git tag in the format:
+
+`vMAJOR.MINOR.PATCH[-PRERELEASE]`
+
+Examples:
+- `v1.2.3` → stable release
+- `v1.3.0-alpha.1` → prerelease
+
+The workflow triggers on tag creation.
+The CI workflow:
+
+- Reads the tag version (1.2.3 from v1.2.3)
+- Patches charts/api/Chart.yaml at package time (does not commit to the repo)
+- Packages the Helm chart with the correct version
+- Publishes the chart via [helm/chart-releaser-action](https://github.com/helm/chart-releaser-action)
+
+The repo itself continues to have 0.0.0-dev in Chart.yaml for development.
+The release version is derived solely from the Git tag.
 
 ### Usage
 
