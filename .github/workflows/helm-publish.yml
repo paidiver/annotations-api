@@ -1,9 +1,10 @@
 name: Release Helm Charts
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -27,6 +28,33 @@ jobs:
       - name: add dependency repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq &&\
+          chmod +x yq
+
+      - name: Extract and validate version
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"   # strips leading "v" if present
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+            echo "Tag is not valid semver: $VERSION"
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update Chart.yaml version
+        run: |
+          yq -i '.version = "${{ steps.version.outputs.version }}"' charts/api/Chart.yaml
+          yq -i '.appVersion = "${{ steps.version.outputs.version }}"' charts/api/Chart.yaml
+
+      - name: Commit Chart.yaml
+        uses: stefanzweifel/git-auto-commit-action@v7.1.0
+        with:
+          commit_message: 'chore(release) bump Helm chart version to ${{ steps.get_version.outputs.VERSION }}'
+          file_pattern: 'charts/api/Chart.yaml'
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
