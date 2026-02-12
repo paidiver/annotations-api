@@ -266,7 +266,6 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)
 
-        # Mirror _update_limits() using a bbox polygon
         if (
             self.min_latitude_degrees is not None
             and self.max_latitude_degrees is not None
