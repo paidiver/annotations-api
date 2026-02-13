@@ -167,3 +167,9 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
         return super().update(instance, validated_data)
+
+
+
+class FileUploadSerializer(serializers.Serializer):
+    """Serializer for file upload, for uploading annotations data using XLSX file."""
+    file = serializers.FileField()
