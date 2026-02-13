@@ -11,7 +11,11 @@ class IFDOAdaptError(ValueError):
 
 
 def _is_blank(v: Any) -> bool:
-    return v is None or v in {"", "null"}
+    if v is None:
+        return True
+    if isinstance(v, str):
+        return v.strip() in {"", "null"}
+    return False
 
 
 def _require_str(v: Any, path: str) -> str:

@@ -56,56 +56,50 @@ def ingest_ifdo_image_set(request) -> Response:
     if not isinstance(items, list):
         return Response({"detail": "ifdo.image-set-items must be a list"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # --- 1) Validate ImageSet (no save yet)
-    image_set_ser = ImageSetSerializer(data=image_set_payload)
-    if not image_set_ser.is_valid():
-        return Response({"image_set": image_set_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-    # --- 2) Validate all items (no save yet)
-    item_errors: dict[str, Any] = {}
-    validated_item_payloads: list[dict[str, Any]] = []
-
-    for idx, item in enumerate(items, start=1):
-        if not isinstance(item, dict):
-            item_errors[str(idx)] = {"detail": "Item must be an object"}
-            continue
-
-        try:
-            img_payload = adapt_ifdo_item_to_image_serializer_payload(item, image_set_id=None)
-        except IFDOAdaptError as exc:
-            item_errors[str(idx)] = {"detail": str(exc)}
-            continue
-
-        img_ser = ImageSerializer(data=img_payload)
-        if not img_ser.is_valid():
-            item_errors[str(idx)] = img_ser.errors
-            continue
-
-        # keep validated serializer data (or just keep payload and revalidate later)
-        validated_item_payloads.append(img_payload)
-
-    if item_errors:
-        return Response(
-            {
-                "detail": "One or more image items failed validation",
-                "image_set": {"name": image_set_payload.get("name")},
-                "items": item_errors,
-            },
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    # --- 3) Save everything atomically now we know it all validates
     with transaction.atomic():
+        # 1) create ImageSet first (now we have an id)
+        image_set_ser = ImageSetSerializer(data=image_set_payload)
+        if not image_set_ser.is_valid():
+            return Response({"image_set": image_set_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
+
         image_set = image_set_ser.save()
 
+        # 2) create Images
         created_image_ids: list[int] = []
-        for img_payload in validated_item_payloads:
-            # inject the created FK now
-            img_payload["image_set_id"] = image_set.id
+        item_errors: dict[str, Any] = {}
+
+        for idx, item in enumerate(items, start=1):
+            if not isinstance(item, dict):
+                item_errors[str(idx)] = {"detail": "Item must be an object"}
+                continue
+
+            try:
+                # don't pass image_set_id at all; we force FK at save time
+                img_payload = adapt_ifdo_item_to_image_serializer_payload(item, image_set_id=image_set.id)
+            except IFDOAdaptError as exc:
+                item_errors[str(idx)] = {"detail": str(exc)}
+                continue
+
+            # If your serializer expects image_set_id, keep it in payload.
+            # If not, it’s still safe because we inject image_set on save().
             img_ser = ImageSerializer(data=img_payload)
-            img_ser.is_valid(raise_exception=True)
-            img = img_ser.save()
+            if not img_ser.is_valid():
+                item_errors[str(idx)] = img_ser.errors
+                continue
+
+            img = img_ser.save(image_set=image_set)  # ✅ guarantees FK
             created_image_ids.append(img.id)
+
+        if item_errors:
+            transaction.set_rollback(True)
+            return Response(
+                {
+                    "detail": "One or more image items failed validation",
+                    "image_set": {"name": image_set_payload.get("name")},
+                    "items": item_errors,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
     return Response(
         {
