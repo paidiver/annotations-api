@@ -9,8 +9,8 @@ env:
   CI_REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
-  build-api:
-    name: Build API Image
+  build-and-push-api:
+    name: Build and push API Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
