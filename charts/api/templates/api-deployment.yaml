@@ -67,7 +67,7 @@ spec:
               poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }}
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: {{ .Values.ingress.host }}/api/health
               port: {{ .Values.api.port }}
             initialDelaySeconds: 10
             periodSeconds: 10
