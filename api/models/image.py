@@ -36,6 +36,14 @@ class ImageCreator(models.Model):
 class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
     """Represents an image in the database."""
 
+    filename = models.CharField(
+        max_length=255,
+        unique=False,
+        null=False,
+        blank=False,
+        help_text=("A unique name for the image filename."),
+    )
+
     context = models.ForeignKey(
         "Context",
         null=True,
@@ -166,13 +174,21 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
         help_text="The image_set this image belongs to. A image_set can have multiple images.",
     )
 
-    class Meta:  # noqa: D106
+    class Meta:
+        """Meta class for Image."""
+
         db_table = "images"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["filename", "image_set"],
+                name="uq_image_filename_image_set",
+            )
+        ]
 
     def save(self, *args, **kwargs):  # noqa: D102
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:  # noqa: D105
-        return self.name
+    def __str__(self) -> str:
+        return self.filename

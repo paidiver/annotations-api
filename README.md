@@ -153,6 +153,12 @@ Create new migrations after modifying models:
 docker compose -f docker/docker-compose.yml exec api python manage.py makemigrations
 ```
 
+To add some descriptive name to migration file that is going to generate, use `--name` flag while running migration command. And once the migration file is created, make sure to add some descriptive docstring on top of the file as well.
+
+```bash
+docker compose -f docker/docker-compose.yml exec api python manage.py makemigrations --name migration_description
+```
+
 Apply migrations:
 
 ```bash
@@ -188,10 +194,48 @@ tox
 or explicitly:
 
 ```bash
-tox -e py310
+docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 ```
 
 Coverage reports are written to `coverage_reports/`.
+
+## Fake Data Generation
+
+For development and testing, the project includes a management command that seeds the database with realistic fake data:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm api \
+  python manage.py seed_demo_data
+```
+
+### Customising the amount of data
+
+```bash
+python manage.py seed_demo_data \
+  --image-annotation-sets 3 \
+  --images-per-image-set 15 \
+  --labels-per-annotation-set 25 \
+  --annotators 12 \
+  --annotations-per-image 3 \
+  --annotation-labels 150
+```
+
+⚠️ IMPORTANT: Development use only. Do not run against production databases.
+
+## Dumping All Data (JSON)
+
+To export **all database data as JSON** for inspection or debugging, use the endpoint:
+
+```
+http://localhost:8000/api/debug/db-dump/
+```
+
+This will return a JSON object containing all records from all tables, structured by model name.
+
+
+## API Examples
+
+A collection of example API requests and responses is available in the [API Examples](docs/API_EXAMPLES.md) document.
 
 ## Acknowledgements
 

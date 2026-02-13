@@ -11,7 +11,7 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "~3.13"
 Django = "4.2.3"
 djangorestframework = "3.15.2"
 psycopg = { extras = ["binary"], version = "^3.1" }
@@ -37,6 +37,8 @@ optional = true
 pytest = "^7.3.0"
 pytest-cov = "^4.0.0"
 tox = "^4.0.0"
+faker = "^40.0.0"
+factory-boy = "^3.2.0"
 
 [tool.poetry.group.build]
 optional = true

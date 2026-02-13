@@ -1,5 +1,7 @@
 """API views module."""
 
+from drf_spectacular.utils import extend_schema
+from rest_framework import viewsets
 import pandas as pd
 from rest_framework import status
 from rest_framework.request import Request
@@ -67,10 +69,13 @@ EVENT_HEADER_KEYS = {
     "image-fauna-attraction",
 }
 
-
+@extend_schema(tags=["Health Check"])
 class HealthView(APIView):
     """Health check view to verify service status."""
 
+    @extend_schema(
+        responses={200: {"type": "object", "properties": {"status": {"type": "string"}}}},
+    )
     def get(self, request):
         """Health check endpoint.
 
@@ -81,6 +86,13 @@ class HealthView(APIView):
             Response: JSON response indicating service status
         """
         return Response({"status": "ok"})
+
+
+@extend_schema(tags=["Field Model API"])
+class BaseFieldsViewSets(viewsets.ModelViewSet):
+    """Base viewset for all field-related models."""
+
+    pass
 
 
 class AnnotationsView(APIView):

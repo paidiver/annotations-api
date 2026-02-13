@@ -55,7 +55,19 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Annotations API",
+    "DESCRIPTION": "API for managing annotations and related metadata for images captured in various contexts.",
     "VERSION": "0.1.0",
+    "TAGS": [
+        {"name": "Images API", "description": "Endpoints for managing images and image sets"},
+        {"name": "Annotations API", "description": "Endpoints for managing annotations"},
+        {"name": "Labels API", "description": "Endpoints for managing labels"},
+        {
+            "name": "Field Model API",
+            "description": "Endpoints for managing common fields like creator, context, project, event, platform, sensor, pi, license, related material",  # noqa: E501
+        },
+        {"name": "Health Check", "description": "Endpoint for checking service health status"},
+        {"name": "Debug", "description": "Endpoints for debugging and development purposes, not exposed in production"},
+    ],
 }
 
 MIDDLEWARE = [
@@ -100,7 +112,7 @@ DATABASES = {
         "NAME": os.environ.get("POSTGRES_DB", "annotationsdb"),
         "USER": os.environ.get("POSTGRES_USER", "myuser"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "mypassword"),
-        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
         "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
