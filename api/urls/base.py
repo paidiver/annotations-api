@@ -14,4 +14,5 @@ urlpatterns = [
     path("annotations/", include(router_annotation.urls)),
     path("labels/", include(router_label.urls)),
     path("fields/", include(router_fields.urls)),
+    path("ingest/", include("api.urls.ingest")),
 ]
