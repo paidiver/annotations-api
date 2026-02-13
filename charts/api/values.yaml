@@ -29,7 +29,9 @@ api:
   service:
     port: 8000
   env:
-    djangoSecretKey: dev-secret-key-change-me
+    djangoSecretKey:
+      secretName: my-app-secrets
+      secretKey: django-secret-key
     djangoDebug: "1"
   securityContext:
     runAsUser: 1000

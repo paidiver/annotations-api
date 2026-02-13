@@ -50,7 +50,10 @@ spec:
             - containerPort: {{ .Values.api.port }}
           env:
             - name: DJANGO_SECRET_KEY
-              value: {{ .Values.api.env.djangoSecretKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.api.env.djangoSecretKey.secretName }}
+                  key: {{ .Values.api.env.djangoSecretKey.secretKey }}
             - name: DJANGO_DEBUG
               value: "{{ .Values.api.env.djangoDebug }}"
             - name: DJANGO_ALLOWED_HOSTS
