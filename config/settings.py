@@ -63,6 +63,7 @@ SPECTACULAR_SETTINGS = {
             "description": "Endpoints for managing common fields like creator, context, project, event, platform, sensor, pi, license, related material",  # noqa: E501
         },
         {"name": "Health Check", "description": "Endpoint for checking service health status"},
+        {"name": "Debug", "description": "Endpoints for debugging and development purposes, not exposed in production"},
     ],
 }
 
@@ -113,6 +114,8 @@ DATABASES = {
     }
 }
 
+CACHED_WORMS_API_BASE_URL = os.environ.get("CACHED_WORMS_API_BASE_URL", "https://marinespecies.org/rest")
+WORMS_API_BASE_URL = os.environ.get("WORMS_API_BASE_URL", "https://marinespecies.org/rest")
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
