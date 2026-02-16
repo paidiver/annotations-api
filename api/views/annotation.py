@@ -11,18 +11,23 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from api.models import Annotation, AnnotationLabel, Annotator
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
 
-EVENT_HEADER_KEYS = {
+ANNOTATION_KEYS = {
     "annotation-set-name",
-    "annotation-project",
-    "annotation-context",
+    "annotation-project-name",
+    "annotation-project-uri",
+    "annotation-context-name",
+    "annotation-context-uri",
     "annotation-abstract",
     "annotation-objective",
     "annotation-target-environment",
     "annotation-target-timescale",
     "annotation-curation-protocol",
-    "annotation-creators",
-    "annotation-pi",
-    "annotation-license",
+    "annotation-creators-names",
+    "annotation-creators-uris",
+    "annotation-pi-name",
+    "annotation-pi-uri",
+    "annotation-license-name",
+    "annotation-license-uri",
     "annotation-copyright",
     "annotation-set-uuid",
     "annotation-set-handle",
@@ -102,8 +107,6 @@ class UploadAnnotationsView(viewsets.ViewSet):
         current_main_key = None
 
         for main_key, sub_key, value in df.itertuples(index=False, name=None):
-            print(f'main_key = {main_key}, sub_key = {sub_key}, value= {value}')
-
             # Update main key if valid
             if pd.notna(main_key) and str(main_key).strip():
                 current_main_key = str(main_key).strip()
@@ -111,19 +114,14 @@ class UploadAnnotationsView(viewsets.ViewSet):
             # Skip if no main key yet
             if not current_main_key:
                 continue
-            print(f'current_main_key = {current_main_key}')
 
             sub_key_clean = str(sub_key).strip() if pd.notna(sub_key) else ""
 
             final_key = f"{current_main_key}-{sub_key_clean}" if sub_key_clean else current_main_key
 
             # Store only if value exists
-            if pd.notna(value):
+            if pd.notna(value) and final_key in ANNOTATION_KEYS:
                 annotation_data[final_key] = value
-
-        print("Parsed Annotation set metadata:")
-        for k, v in annotation_data.items():
-            print(f"{k}: {v}")
 
         return Response(
             {"status": "uploaded", "data": annotation_data},
