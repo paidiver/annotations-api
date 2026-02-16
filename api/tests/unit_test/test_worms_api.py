@@ -34,7 +34,7 @@ class TestWormsAPI(TestCase):
         response = _test_cached_and_live_worms_api("123")
 
         self.assertEqual(response, cached_response)
-        self.mock_get.assert_called_once_with("http://cached/AphiaRecordByAphiaID/123")
+        self.mock_get.assert_called_once_with("http://cached/AphiaRecordByAphiaID/123", timeout=20)
 
     def test_falls_back_to_live_if_cached_not_200(self):
         """If cached fails, live API should be called."""
@@ -49,7 +49,7 @@ class TestWormsAPI(TestCase):
         self.assertEqual(self.mock_get.call_count, 2)
 
         expected_calls = ["http://cached/AphiaRecordByAphiaID/456", "http://live/AphiaRecordByAphiaID/456"]
-        self.mock_get.assert_has_calls([call(url) for url in expected_calls])
+        self.mock_get.assert_has_calls([call(url, timeout=20) for url in expected_calls])
 
     def test_returns_live_error_if_both_fail(self):
         """If both cached and live fail, return the live response."""

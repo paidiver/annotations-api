@@ -2,11 +2,17 @@
 
 import requests
 from django.conf import settings
+from requests import RequestException
 from rest_framework import serializers
 
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.serializers.base import ReadOnlyFieldsMixin
+
+OK_STATUS_CODE = 200
+NO_CONTENT_STATUS_CODE = 204
+ERROR_STATUS_CODE = 400
+API_ERROR_STATUS_CODES = range(500, 600)
 
 
 class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
@@ -45,9 +51,31 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
         aphia_id = attrs.get("lowest_aphia_id")
         if aphia_id is None:
             return errors
-        response = _test_cached_and_live_worms_api(aphia_id)
-        if response.status_code != 200:  # noqa: PLR2004
+
+        try:
+            response = _test_cached_and_live_worms_api(aphia_id)
+        except RequestException:
+            errors["lowest_aphia_id"] = "WoRMS API is currently unavailable. Please try again later."
+            return errors
+
+        if response.status_code == OK_STATUS_CODE:
+            # TODO - consider caching this result in our DB for future requests to avoid hitting the live WoRMS API
+            # repeatedly for the same AphiaIDs
+            return errors
+
+        if response.status_code in [NO_CONTENT_STATUS_CODE, ERROR_STATUS_CODE]:
             errors["lowest_aphia_id"] = f"Invalid lowest_aphia_id: {aphia_id} does not exist in WoRMS API."
+            return errors
+
+        if response.status_code in API_ERROR_STATUS_CODES:
+            errors["lowest_aphia_id"] = (
+                f"Unable to validate lowest_aphia_id right now (status {response.status_code}). Please try again later."
+            )
+            return errors
+
+        errors["lowest_aphia_id"] = (
+            f"Unable to validate lowest_aphia_id right now (status {response.status_code}). Please try again later."
+        )
         return errors
 
     def validate(self, attrs: dict) -> dict:
@@ -60,30 +88,29 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             dict: The validated attributes.
         """
         errors = {}
-
         errors = self._validate_aphia_id(attrs, errors)
-
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
 
 
 def _test_cached_and_live_worms_api(aphia_id: str) -> requests.Response:
-    """Test the provided aphia_id against the cached WoRMS API first, then the live WoRMS API if not found in cache.
+    """Helper function to test both the cached and live WoRMS API for a given aphia_id.
 
     Args:
-        aphia_id (str): The AphiaID to test.
+        aphia_id (str): The aphia_id to test.
 
     Returns:
-        requests.Response: The response from the WoRMS API containing the AphiaRecord for the provided AphiaID,
-    or an error if not found.
+        requests.Response: The response from the WoRMS API.
     """
-    cached_response = requests.get(f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}", timeout=20)
-    if cached_response.status_code == 200:  # noqa: PLR2004
+    cached_response = requests.get(
+        f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}",
+        timeout=20,
+    )
+    if cached_response.status_code == OK_STATUS_CODE:
         return cached_response
-    response = requests.get(f"{settings.WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}", timeout=20)
-    if response.status_code == 200:  # noqa: PLR2004
-        # TODO - consider caching this result in our DB for future requests to avoid hitting the live WoRMS API
-        # repeatedly for the same AphiaIDs
-        pass
-    return response
+
+    return requests.get(
+        f"{settings.WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}",
+        timeout=20,
+    )
