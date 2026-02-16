@@ -178,9 +178,11 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
         "item_identification_scheme": _maybe_str(header.get("image-item-identification-scheme")),
         "visual_constraints": _maybe_str(header.get("image-visual-constraints")),
         "spatial_constraints": _maybe_str(header.get("image-spatial-constraints"))
-        if "image-spatial-constraints" in header else None,
+        if "image-spatial-constraints" in header
+        else None,
         "temporal_constraints": _maybe_str(header.get("image-temporal-constraints"))
-        if "image-temporal-constraints" in header else None,
+        if "image-temporal-constraints" in header
+        else None,
         "local_path": _maybe_str(header.get("image-set-local-path")) if "image-set-local-path" in header else None,
         "min_latitude_degrees": _maybe_float(header.get("image-set-min-latitude-degrees")),
         "max_latitude_degrees": _maybe_float(header.get("image-set-max-latitude-degrees")),
