@@ -1,4 +1,4 @@
-# api/views/ingest_ifdo.py
+"""View for ingesting imagery via iFDO payloads."""
 from __future__ import annotations
 
 from typing import Any
@@ -42,6 +42,7 @@ IngestIFDOResponseSerializer = inline_serializer(
 )
 @api_view(["POST"])
 def ingest_ifdo_image_set(request) -> Response:
+    """Ingest an iFDO image set payload, creating ImageSet and related Images."""
     body: dict[str, Any] = request.data if isinstance(request.data, dict) else {}
 
     ifdo = body.get("ifdo")
@@ -58,14 +59,14 @@ def ingest_ifdo_image_set(request) -> Response:
         return Response({"detail": "ifdo.image-set-items must be a list"}, status=status.HTTP_400_BAD_REQUEST)
 
     with transaction.atomic():
-        # 1) create ImageSet first (now we have an id)
+        # create ImageSet first
         image_set_ser = ImageSetSerializer(data=image_set_payload)
         if not image_set_ser.is_valid():
             return Response({"image_set": image_set_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         image_set = image_set_ser.save()
 
-        # 2) create Images
+        # create Images
         created_image_ids: list[int] = []
         item_errors: dict[str, Any] = {}
 
@@ -75,20 +76,17 @@ def ingest_ifdo_image_set(request) -> Response:
                 continue
 
             try:
-                # don't pass image_set_id at all; we force FK at save time
                 img_payload = adapt_ifdo_item_to_image_serializer_payload(item, image_set_id=image_set.id)
             except IFDOAdaptError as exc:
                 item_errors[str(idx)] = {"detail": str(exc)}
                 continue
 
-            # If your serializer expects image_set_id, keep it in payload.
-            # If not, it’s still safe because we inject image_set on save().
             img_ser = ImageSerializer(data=img_payload)
             if not img_ser.is_valid():
                 item_errors[str(idx)] = img_ser.errors
                 continue
 
-            img = img_ser.save(image_set=image_set)  # ✅ guarantees FK
+            img = img_ser.save(image_set=image_set)
             created_image_ids.append(img.id)
 
         if item_errors:

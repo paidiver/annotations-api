@@ -137,11 +137,7 @@ def _creator_list(v: Any, path: str) -> list[dict[str, Any]] | None:
 
 
 def _related_materials(v: Any, path: str) -> list[dict[str, Any]] | None:
-    """
-    iFDO image-set-related-material is likely list-ish.
-    Your serializer expects related_materials list of objects.
-    We’ll pass through as-is if already list[dict], otherwise coerce list[str] -> [{name: str}].
-    """
+    """Image-set-related-material should become nested related_materials list with name/uri if present."""
     if _is_blank(v):
         return None
     if not isinstance(v, list):
@@ -151,7 +147,7 @@ def _related_materials(v: Any, path: str) -> list[dict[str, Any]] | None:
     for idx, item in enumerate(v):
         p = f"{path}[{idx}]"
         if isinstance(item, dict):
-            # best-effort: require at least name if present, else reject
+            # require at least name if present, else reject
             name = item.get("name")
             if name is None:
                 raise IFDOAdaptError(f"{p}.name is required")
@@ -165,12 +161,7 @@ def _related_materials(v: Any, path: str) -> list[dict[str, Any]] | None:
 
 
 def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str, Any]:
-    """
-    Convert incoming iFDO (image-set-header) into ImageSetSerializer input.
-
-    This intentionally only maps what we know and what ImageSet model supports.
-    Anything unknown is ignored (MVP).
-    """
+    """Convert incoming iFDO (image-set-header) into ImageSetSerializer input."""
     header = _maybe_dict(ifdo.get("image-set-header")) or {}
     if not header:
         raise IFDOAdaptError("ifdo.image-set-header is required")
@@ -196,12 +187,12 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
         else None,
         "local_path": _maybe_str(header.get("image-set-local-path"))
         if "image-set-local-path" in header
-        else None,  # optional if you ever add it
+        else None,
         "min_latitude_degrees": _maybe_float(header.get("image-set-min-latitude-degrees")),
         "max_latitude_degrees": _maybe_float(header.get("image-set-max-latitude-degrees")),
         "min_longitude_degrees": _maybe_float(header.get("image-set-min-longitude-degrees")),
         "max_longitude_degrees": _maybe_float(header.get("image-set-max-longitude-degrees")),
-        "date_time": _maybe_datetime(header.get("image-set-start-datetime")),  # DRF DateTimeField can parse ISO strings
+        "date_time": _maybe_datetime(header.get("image-set-start-datetime")),
         "latitude": _maybe_float(header.get("image-latitude")),
         "longitude": _maybe_float(header.get("image-longitude")),
         "altitude_meters": _maybe_float(header.get("image-altitude-meters")),
@@ -256,14 +247,7 @@ def adapt_ifdo_item_to_image_serializer_payload(
     *,
     image_set_id: int,
 ) -> dict[str, Any]:
-    """
-    Convert one iFDO image-set-item dict into ImageSerializer input.
-
-    We are intentionally MVP:
-    - filename required
-    - map shared fields where keys match our existing iFDO naming
-    - attach image_set_id
-    """
+    """Convert one iFDO image-set-item dict into ImageSerializer input."""
     filename = _require_str(item.get("image-filename"), "ifdo.image-set-items[].image-filename")
 
     payload: dict[str, Any] = {
@@ -322,8 +306,6 @@ def adapt_ifdo_item_to_image_serializer_payload(
             item.get("image-camera-calibration-model"), "ifdo.image-set-items[].image-camera-calibration-model"
         ),
     }
-
-    # Optional nested objects if you ever include them per-image (most likely you won't, but allowed)
     payload["context"] = _named_uri_obj(item.get("image-context"), "ifdo.image-set-items[].image-context")
     payload["project"] = _named_uri_obj(item.get("image-project"), "ifdo.image-set-items[].image-project")
     payload["event"] = _named_uri_obj(item.get("image-event"), "ifdo.image-set-items[].image-event")
