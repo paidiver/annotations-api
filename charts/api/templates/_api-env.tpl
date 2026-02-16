@@ -6,7 +6,7 @@ Return the standard Postgres environment variables.
   value: {{ printf "%s-postgresql" .Release.Name }}
 - name: POSTGRES_PORT
   value: "{{ .Values.postgresql.primary.service.port }}"
-- name: POSTGRES_DATABASE
+- name: POSTGRES_DB
   value: {{ .Values.postgresql.auth.database }}
 - name: POSTGRES_USER
   value: {{ .Values.postgresql.auth.username }}

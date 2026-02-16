@@ -35,7 +35,7 @@ spec:
                 sleep 2
               done
               echo "Waiting for PostGIS extension to exist..."
-              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DATABASE user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
+              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
                 sleep 2
               done
           securityContext:
