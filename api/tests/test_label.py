@@ -4,6 +4,7 @@ import uuid
 from unittest.mock import Mock, patch
 
 from django.urls import reverse
+from requests.exceptions import Timeout
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -37,18 +38,65 @@ class LabelViewSetTests(APITestCase):
 
     def test_create_label_rejects_invalid_lowest_aphia_id(self):
         """Test that creating a Label with an invalid lowest_aphia_id is rejected."""
-        self.mocked_worms.return_value = Mock(status_code=404)
-
         payload = {
             "name": "Label With Aphia",
             "annotation_set_id": self.annotation_set.pk,
             "lowest_aphia_id": "999999999",
             "parent_label_name": "Parent Label",
         }
-
+        self.mocked_worms.return_value = Mock(status_code=400)
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("lowest_aphia_id", resp.data)
+        self.assertIn(
+            resp.data["lowest_aphia_id"][0],
+            [
+                "WoRMS API is currently unavailable. Please try again later.",
+                "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
+            ],
+        )
+
+        self.mocked_worms.return_value = Mock(status_code=500)
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("lowest_aphia_id", resp.data)
+        self.assertIn(
+            resp.data["lowest_aphia_id"][0],
+            ["Unable to validate lowest_aphia_id right now (status 500). Please try again later."],
+        )
+
+    def test_create_label_rejects_timeout(self):
+        """Test that creating a Label when the WoRMS API times out is rejected."""
+        self.mocked_worms.side_effect = Timeout()
+        payload = {
+            "name": "Label With Aphia",
+            "annotation_set_id": self.annotation_set.pk,
+            "lowest_aphia_id": "12345",
+            "parent_label_name": "Parent Label",
+        }
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("lowest_aphia_id", resp.data)
+        self.assertIn(resp.data["lowest_aphia_id"][0], ["WoRMS API is currently unavailable. Please try again later."])
+
+    def test_create_label_rejects_different_error(self):
+        """Test that creating a Label when the WoRMS API returns a different error is rejected."""
+        self.mocked_worms.return_value = Mock(status_code=418)
+        payload = {
+            "name": "Label With Aphia",
+            "annotation_set_id": self.annotation_set.pk,
+            "lowest_aphia_id": "12345",
+            "parent_label_name": "Parent Label",
+        }
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("lowest_aphia_id", resp.data)
+
+        expected_msg = (
+            f"Unable to validate lowest_aphia_id right now (status {self.mocked_worms.return_value.status_code}). "
+            "Please try again later."
+        )
+        self.assertEqual(str(resp.data["lowest_aphia_id"][0]), expected_msg)
 
     def test_create_label_accepts_valid_lowest_aphia_id(self):
         """Test that creating a Label with a valid lowest_aphia_id is accepted."""
