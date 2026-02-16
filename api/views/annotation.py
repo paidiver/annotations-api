@@ -96,17 +96,28 @@ class UploadAnnotationsView(viewsets.ViewSet):
 
         print(df)
         df = df.iloc[:, :3]
+        df.iloc[:, 2] = df.iloc[:, 2].fillna("")
+
         annotation_data = {}
+        current_main_key = None
+
         for main_key, sub_key, value in df.itertuples(index=False, name=None):
-            if pd.notna(main_key):
+            print(f'main_key = {main_key}, sub_key = {sub_key}, value= {value}')
+
+            # Update main key if valid
+            if pd.notna(main_key) and str(main_key).strip():
                 current_main_key = str(main_key).strip()
 
+            # Skip if no main key yet
             if not current_main_key:
                 continue
+            print(f'current_main_key = {current_main_key}')
 
-            final_key = f"{current_main_key}-{str(sub_key).strip()}" if pd.notna(sub_key) else current_main_key
+            sub_key_clean = str(sub_key).strip() if pd.notna(sub_key) else ""
 
+            final_key = f"{current_main_key}-{sub_key_clean}" if sub_key_clean else current_main_key
 
+            # Store only if value exists
             if pd.notna(value):
                 annotation_data[final_key] = value
 
