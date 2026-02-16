@@ -78,10 +78,10 @@ def _test_cached_and_live_worms_api(aphia_id: str) -> requests.Response:
         requests.Response: The response from the WoRMS API containing the AphiaRecord for the provided AphiaID,
     or an error if not found.
     """
-    cached_response = requests.get(f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}")
+    cached_response = requests.get(f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}", timeout=20)
     if cached_response.status_code == 200:  # noqa: PLR2004
         return cached_response
-    response = requests.get(f"{settings.WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}")
+    response = requests.get(f"{settings.WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}", timeout=20)
     if response.status_code == 200:  # noqa: PLR2004
         # TODO - consider caching this result in our DB for future requests to avoid hitting the live WoRMS API
         # repeatedly for the same AphiaIDs
