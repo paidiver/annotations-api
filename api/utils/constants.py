@@ -23,5 +23,5 @@ ANNOTATION_KEYS = {
     "annotation-set-version",
     "annotation-image-set-name",
     "annotation-image-set-uuid",
-    "annotation-image-set-handle,"
+    "annotation-image-set-handle",
 }
