@@ -1,0 +1,67 @@
+# Default values for paidiver-annotations-api.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+api:
+  componentName: "annotations-api"
+  image:
+    repository: ghcr.io/paidiver/annotations-api
+    tag: latest
+    pullPolicy: Always
+    imagePullSecret: ""
+  port: 8000
+  timeout: 300
+  workers: 1
+  service:
+    port: 8000
+  env:
+    djangoSecretKey:
+      secretName: my-app-secrets
+      secretKey: django-secret-key
+    djangoDebug: "1"
+  securityContext:
+    runAsUser: 1000
+  initContainer:
+    securityContext:
+      runAsUser: 1000
+
+ingress:
+  enabled: true
+  api:
+    path: annotations
+    pathType: Prefix
+  ingressClassName: ""
+  host: ""
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  defaultStorageClass: ""
+
+postgresql:
+  image:
+    digest: sha256:8c7f26a8ba4257fcbf4445bd50e156cbc7d8114942fb3d6523320c7732781b54
+  auth:
+    enablePostgresUser: true
+    username: ""
+    existingSecret: ""
+    database: ""
+  primary:
+    service:
+      port: "5432"

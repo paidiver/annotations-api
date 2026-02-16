@@ -7,3 +7,5 @@ dist
 coverage_reports
 .env
 data/*
+
+.idea/
