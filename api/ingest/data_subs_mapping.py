@@ -70,6 +70,7 @@ def _maybe_dict(v: Any) -> dict | None:
         return v
     raise IFDOAdaptError(f"Expected an object/dict, got {type(v).__name__}")
 
+
 def _maybe_datetime(v: Any) -> datetime | None:
     if _is_blank(v):
         return None
@@ -87,7 +88,6 @@ def _maybe_datetime(v: Any) -> datetime | None:
         except Exception:
             raise IFDOAdaptError(f"Invalid datetime: {v!r}") from None
     raise IFDOAdaptError(f"Expected datetime-like value, got {type(v).__name__}")
-
 
 
 def _named_uri_obj(v: Any, path: str) -> dict[str, Any] | None:
@@ -188,9 +188,15 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
         "time_synchronisation": _maybe_str(header.get("image-time-synchronisation")),
         "item_identification_scheme": _maybe_str(header.get("image-item-identification-scheme")),
         "visual_constraints": _maybe_str(header.get("image-visual-constraints")),
-        "spatial_constraints": _maybe_str(header.get("image-spatial-constraints")) if "image-spatial-constraints" in header else None,
-        "temporal_constraints": _maybe_str(header.get("image-temporal-constraints")) if "image-temporal-constraints" in header else None,
-        "local_path": _maybe_str(header.get("image-set-local-path")) if "image-set-local-path" in header else None,  # optional if you ever add it
+        "spatial_constraints": _maybe_str(header.get("image-spatial-constraints"))
+        if "image-spatial-constraints" in header
+        else None,
+        "temporal_constraints": _maybe_str(header.get("image-temporal-constraints"))
+        if "image-temporal-constraints" in header
+        else None,
+        "local_path": _maybe_str(header.get("image-set-local-path"))
+        if "image-set-local-path" in header
+        else None,  # optional if you ever add it
         "min_latitude_degrees": _maybe_float(header.get("image-set-min-latitude-degrees")),
         "max_latitude_degrees": _maybe_float(header.get("image-set-max-latitude-degrees")),
         "min_longitude_degrees": _maybe_float(header.get("image-set-min-longitude-degrees")),
@@ -235,7 +241,9 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
     if creators is not None:
         payload["creators"] = creators
 
-    related = _related_materials(header.get("image-set-related-material"), "ifdo.image-set-header.image-set-related-material")
+    related = _related_materials(
+        header.get("image-set-related-material"), "ifdo.image-set-header.image-set-related-material"
+    )
     if related is not None:
         payload["related_materials"] = related
 
@@ -301,8 +309,12 @@ def adapt_ifdo_item_to_image_serializer_payload(
         "camera_housing_viewport": _named_uri_obj(
             item.get("image-camera-housing-viewport"), "ifdo.image-set-items[].image-camera-housing-viewport"
         ),
-        "flatport_parameter": _named_uri_obj(item.get("image-flatport-parameters"), "ifdo.image-set-items[].image-flatport-parameters"),
-        "domeport_parameter": _named_uri_obj(item.get("image-domeport-parameters"), "ifdo.image-set-items[].image-domeport-parameters"),
+        "flatport_parameter": _named_uri_obj(
+            item.get("image-flatport-parameters"), "ifdo.image-set-items[].image-flatport-parameters"
+        ),
+        "domeport_parameter": _named_uri_obj(
+            item.get("image-domeport-parameters"), "ifdo.image-set-items[].image-domeport-parameters"
+        ),
         "photometric_calibration": _named_uri_obj(
             item.get("image-photometric-calibration"), "ifdo.image-set-items[].image-photometric-calibration"
         ),
@@ -320,7 +332,9 @@ def adapt_ifdo_item_to_image_serializer_payload(
     payload["pi"] = _named_uri_obj(item.get("image-pi"), "ifdo.image-set-items[].image-pi")
     payload["license"] = _named_uri_obj(item.get("image-license"), "ifdo.image-set-items[].image-license")
 
-    creators = _creator_list(item.get("image-annotation-creators") or item.get("image-creators"), "ifdo.image-set-items[].image-creators")
+    creators = _creator_list(
+        item.get("image-annotation-creators") or item.get("image-creators"), "ifdo.image-set-items[].image-creators"
+    )
     if creators is not None:
         payload["creators"] = creators
 

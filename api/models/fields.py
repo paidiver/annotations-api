@@ -167,8 +167,7 @@ class ImageFlatportParameter(DefaultColumns):
         null=True,
         blank=True,
         help_text=(
-            "Distance between the front of the camera lens and the inner side "
-            "of the housing viewport in millimeters."
+            "Distance between the front of the camera lens and the inner side of the housing viewport in millimeters."
         ),
     )
 
@@ -275,8 +274,7 @@ class ImagePhotometricCalibration(DefaultColumns):
         null=True,
         blank=True,
         help_text=(
-            "e.g. constant artificial, globally adapted artificial, "
-            "individually varying light sources, sunlight, mixed"
+            "e.g. constant artificial, globally adapted artificial, individually varying light sources, sunlight, mixed"
         ),
     )
 

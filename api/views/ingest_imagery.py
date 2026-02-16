@@ -34,6 +34,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     },
 )
 
+
 @extend_schema(
     tags=["Ingest"],
     request=IngestIFDOSerializer,
