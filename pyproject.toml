@@ -18,6 +18,8 @@ psycopg = { extras = ["binary"], version = "^3.1" }
 drf-spectacular = "^0.27.0"
 drf-yasg = "^1.21.10"
 requests = "^2.31.0"
+pandas = "^3.0.0"
+openpyxl = "^3.1.5"
 gunicorn = "^25.0.3"
 
 [tool.poetry.group.lint]
