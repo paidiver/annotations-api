@@ -10,32 +10,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from api.models import Annotation, AnnotationLabel, Annotator
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
-
-ANNOTATION_KEYS = {
-    "annotation-set-name",
-    "annotation-project-name",
-    "annotation-project-uri",
-    "annotation-context-name",
-    "annotation-context-uri",
-    "annotation-abstract",
-    "annotation-objective",
-    "annotation-target-environment",
-    "annotation-target-timescale",
-    "annotation-curation-protocol",
-    "annotation-creators-names",
-    "annotation-creators-uris",
-    "annotation-pi-name",
-    "annotation-pi-uri",
-    "annotation-license-name",
-    "annotation-license-uri",
-    "annotation-copyright",
-    "annotation-set-uuid",
-    "annotation-set-handle",
-    "annotation-set-version",
-    "annotation-image-set-name",
-    "annotation-image-set-uuid",
-    "annotation-image-set-handle,"
-}
+from api.utils.constants import ANNOTATION_KEYS
 
 
 @extend_schema(tags=["Annotations API"])
