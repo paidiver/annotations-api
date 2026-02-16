@@ -27,7 +27,7 @@ class AnnotationFactoriesErrorTests(TestCase):
         """Test that AnnotationFactory can create annotations with different shapes."""
         image = ImageFactory()
         annotation_set = AnnotationSetFactory()
-        shapes = ["whole-image", "rectangle", "single-pixel", "ellipse", "polygon"]
+        shapes = ["whole-image", "rectangle", "single-pixel", "ellipse", "polygon", "polyline"]
         for shape in shapes:
             annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape=shape)
             self.assertEqual(annotation.shape, shape)
