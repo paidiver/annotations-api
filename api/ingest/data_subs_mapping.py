@@ -33,7 +33,6 @@ def _maybe_str(v: Any) -> str | None:
     if isinstance(v, str):
         s = v.strip()
         return s if s else None
-    # if someone gives us a number etc, coerce to str (MVP-friendly)
     return str(v)
 
 
@@ -130,7 +129,6 @@ def _creator_list(v: Any, path: str) -> list[dict[str, Any]] | None:
         obj = _named_uri_obj(item, p)
         if obj is None:
             raise IFDOAdaptError(f"{p}.name is required")
-        # creators are name-only in your mixin examples; if uri is present it's fine too
         out.append(obj)
 
     return out
@@ -180,14 +178,10 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
         "item_identification_scheme": _maybe_str(header.get("image-item-identification-scheme")),
         "visual_constraints": _maybe_str(header.get("image-visual-constraints")),
         "spatial_constraints": _maybe_str(header.get("image-spatial-constraints"))
-        if "image-spatial-constraints" in header
-        else None,
+        if "image-spatial-constraints" in header else None,
         "temporal_constraints": _maybe_str(header.get("image-temporal-constraints"))
-        if "image-temporal-constraints" in header
-        else None,
-        "local_path": _maybe_str(header.get("image-set-local-path"))
-        if "image-set-local-path" in header
-        else None,
+        if "image-temporal-constraints" in header else None,
+        "local_path": _maybe_str(header.get("image-set-local-path")) if "image-set-local-path" in header else None,
         "min_latitude_degrees": _maybe_float(header.get("image-set-min-latitude-degrees")),
         "max_latitude_degrees": _maybe_float(header.get("image-set-max-latitude-degrees")),
         "min_longitude_degrees": _maybe_float(header.get("image-set-min-longitude-degrees")),
