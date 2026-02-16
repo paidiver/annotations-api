@@ -30,23 +30,11 @@ def insert_annotations_into_tables(data: pd.DataFrame):
             "curation_protocol": data.get("annotation-curation-protocol", ""),
             "handle": data.get("annotation-set-handle", ""),
             "copyright": data.get("annotation-set-copyright", ""),
-            "version": str(data.get("annotation-set-version", '1')),
-            "context": {
-                "name": data.get("annotation-context-name", ""),
-                "uri": data.get("annotation-context-uri", "")
-            },
-            "project": {
-                "name": data.get("annotation-project-name", ""),
-                "uri": data.get("annotation-project-uri", "")
-            },
-            "pi": {
-                "name": data.get("annotation-pi-name", ""),
-                "uri": data.get("annotation-pi-uri", "")
-            },
-            "license": {
-                "name": data.get("annotation-license-name", ""),
-                "uri": data.get("annotation-license-uri", "")
-            }
+            "version": str(data.get("annotation-set-version", "1")),
+            "context": {"name": data.get("annotation-context-name", ""), "uri": data.get("annotation-context-uri", "")},
+            "project": {"name": data.get("annotation-project-name", ""), "uri": data.get("annotation-project-uri", "")},
+            "pi": {"name": data.get("annotation-pi-name", ""), "uri": data.get("annotation-pi-uri", "")},
+            "license": {"name": data.get("annotation-license-name", ""), "uri": data.get("annotation-license-uri", "")},
         }
 
         serializer = AnnotationSetSerializer(data=annotation_set_data)
@@ -54,20 +42,21 @@ def insert_annotations_into_tables(data: pd.DataFrame):
             annotation_set = serializer.save()
 
             # Handle Many-to-Many Creators
-            if data.get('annotation-creators-names'):
-                names_list = [n.strip() for n in data.get('annotation-creators-names', '').split(',') if n.strip()]
-                uris_list  = [u.strip() for u in data.get('annotation-creators-uris', '').split(',') if u.strip()]
+            if data.get("annotation-creators-names"):
+                names_list = [n.strip() for n in data.get("annotation-creators-names", "").split(",") if n.strip()]
+                uris_list = [u.strip() for u in data.get("annotation-creators-uris", "").split(",") if u.strip()]
 
                 for name, uri in zip_longest(names_list, uris_list, fillvalue=None):
                     creator, _ = Creator.objects.get_or_create(name=name, uri=uri)
                     annotation_set.creators.add(creator)
 
             # Handle Many-to-Many image-sets
-            if data.get('annotation-image-set-name'):
+            if data.get("annotation-image-set-name"):
                 image_set, _ = ImageSet.objects.get_or_create(
-                    name=data.get('annotation-image-set-name'),
-                    id=data.get('annotation-image-set-uuid'),
-                    handle=data.get('annotation-image-set-handle'))
+                    name=data.get("annotation-image-set-name"),
+                    id=data.get("annotation-image-set-uuid"),
+                    handle=data.get("annotation-image-set-handle"),
+                )
                 annotation_set.image_sets.add(image_set)
 
         return annotation_set

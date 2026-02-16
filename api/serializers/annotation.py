@@ -169,7 +169,7 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         return super().update(instance, validated_data)
 
 
-
 class FileUploadSerializer(serializers.Serializer):
     """Serializer for file upload, for uploading annotations data using XLSX file."""
+
     file = serializers.FileField()
