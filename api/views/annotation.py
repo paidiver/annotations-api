@@ -10,6 +10,7 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from api.models import Annotation, AnnotationLabel, Annotator
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
+from api.utils.annotation import insert_annotations_into_tables
 from api.utils.constants import ANNOTATION_KEYS
 
 
@@ -97,6 +98,8 @@ class UploadAnnotationsView(viewsets.ViewSet):
             # Store only if value exists
             if pd.notna(value) and final_key in ANNOTATION_KEYS:
                 annotation_data[final_key] = value
+
+        insert_annotations_into_tables(data=annotation_data)
 
         return Response(
             {"status": "uploaded", "data": annotation_data},
