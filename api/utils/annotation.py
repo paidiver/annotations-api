@@ -5,7 +5,7 @@ from itertools import zip_longest
 import pandas as pd
 from django.db import transaction
 
-from api.models.fields import PI, Context, Creator, License, Project
+from api.models.fields import Creator
 from api.models.image_set import ImageSet
 from api.serializers import AnnotationSetSerializer
 
@@ -20,37 +20,9 @@ def insert_annotations_into_tables(data: pd.DataFrame):
         newly created annotation_set object
     """
     with transaction.atomic():
-        # Handle Project
-        project, _ = Project.objects.get_or_create(
-                name=data.get("annotation-project-name", ""),
-                defaults={"uri": data.get("annotation-project-uri", "")}
-            )
-
-        # Handle PI
-        pi, _ = PI.objects.get_or_create(
-            name=data.get("annotation-pi-name", ""),
-            defaults={"uri": data.get("annotation-pi-uri", "")}
-        )
-
-        # Handle Context
-        context, _ = Context.objects.get_or_create(
-            name=data.get("annotation-context-name", ""),
-            defaults={"uri": data.get("annotation-context-uri", "")}
-        )
-
-        # handle License
-        license, _ = License.objects.get_or_create(  # noqa: A001
-            name=data.get("annotation-license-name", ""),
-            defaults={"uri": data.get("annotation-license-uri", "")}
-        )
-
         # Prepare data for AnnotationSet
-        set_data = {
+        annotation_set_data = {
             "name": data.get("annotation-set-name", ""),
-            "project": project.id,
-            "context": context.id,
-            "pi": pi.id,
-            "license": license.id,
             "abstract": data.get("annotation-abstract", ""),
             "objective": data.get("annotation-objective", ""),
             "target_environment": data.get("annotation-target-environment", ""),
@@ -59,9 +31,25 @@ def insert_annotations_into_tables(data: pd.DataFrame):
             "handle": data.get("annotation-set-handle", ""),
             "copyright": data.get("annotation-set-copyright", ""),
             "version": str(data.get("annotation-set-version", '1')),
+            "context": {
+                "name": data.get("annotation-context-name", ""),
+                "uri": data.get("annotation-context-uri", "")
+            },
+            "project": {
+                "name": data.get("annotation-project-name", ""),
+                "uri": data.get("annotation-project-uri", "")
+            },
+            "pi": {
+                "name": data.get("annotation-pi-name", ""),
+                "uri": data.get("annotation-pi-uri", "")
+            },
+            "license": {
+                "name": data.get("annotation-license-name", ""),
+                "uri": data.get("annotation-license-uri", "")
+            }
         }
 
-        serializer = AnnotationSetSerializer(data=set_data)
+        serializer = AnnotationSetSerializer(data=annotation_set_data)
         if serializer.is_valid(raise_exception=True):
             annotation_set = serializer.save()
 

@@ -58,7 +58,6 @@ class UploadAnnotationsView(viewsets.ViewSet):
         # file = request.FILES.get("file")
         serializer.is_valid(raise_exception=True)
         file = serializer.validated_data["file"]
-        print(file)
 
         # Exit if file not a XLSX (Excel) file.
         if not file.name.endswith(".xlsx"):
@@ -75,7 +74,6 @@ class UploadAnnotationsView(viewsets.ViewSet):
                 status=HTTP_400_BAD_REQUEST,
             )
 
-        print(df)
         df = df.iloc[:, :3]
         df.iloc[:, 2] = df.iloc[:, 2].fillna("")
 
