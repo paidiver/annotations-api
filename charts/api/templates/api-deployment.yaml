@@ -65,12 +65,6 @@ spec:
             - |
               python manage.py migrate &&
               poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.ingress.host }}/api/health
-              port: {{ .Values.api.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 10
           securityContext:
             {{- toYaml .Values.api.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
