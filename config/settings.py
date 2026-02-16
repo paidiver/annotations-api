@@ -114,6 +114,8 @@ DATABASES = {
     }
 }
 
+CACHED_WORMS_API_BASE_URL = os.environ.get("CACHED_WORMS_API_BASE_URL", "https://marinespecies.org/rest")
+WORMS_API_BASE_URL = os.environ.get("WORMS_API_BASE_URL", "https://marinespecies.org/rest")
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
