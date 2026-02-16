@@ -1,6 +1,7 @@
 """Serializers for the Labels API endpoints."""
 
 import requests
+from django.conf import settings
 from rest_framework import serializers
 
 from api.models import Label
@@ -77,8 +78,6 @@ def _test_cached_and_live_worms_api(aphia_id: str) -> requests.Response:
         requests.Response: The response from the WoRMS API containing the AphiaRecord for the provided AphiaID,
     or an error if not found.
     """
-    from django.conf import settings
-
     cached_response = requests.get(f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}")
     if cached_response.status_code == 200:  # noqa: PLR2004
         return cached_response
