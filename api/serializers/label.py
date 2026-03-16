@@ -3,16 +3,11 @@
 import requests
 from django.conf import settings
 from requests import RequestException
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.serializers.base import ReadOnlyFieldsMixin
-
-OK_STATUS_CODE = 200
-NO_CONTENT_STATUS_CODE = 204
-ERROR_STATUS_CODE = 400
-API_ERROR_STATUS_CODES = range(500, 600)
 
 
 class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
@@ -50,32 +45,44 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
         """
         aphia_id = attrs.get("lowest_aphia_id")
         if aphia_id is None:
+            errors["lowest_aphia_id"] = "This field is required."
+            return errors
+
+        aphia_cache = self.context.setdefault("aphia_validation_cache", {})
+
+        if aphia_id in aphia_cache:
+            cached_error = aphia_cache[aphia_id]
+            if cached_error:
+                errors["lowest_aphia_id"] = cached_error
             return errors
 
         try:
-            response = _test_cached_and_live_worms_api(aphia_id)
+            response = _ingest_get_aphia_id_cached_worms(aphia_id)
         except RequestException:
-            errors["lowest_aphia_id"] = "WoRMS API is currently unavailable. Please try again later."
+            error_message = "WoRMS API is currently unavailable. Please try again later."
+            aphia_cache[aphia_id] = error_message
+            errors["lowest_aphia_id"] = error_message
             return errors
 
-        if response.status_code == OK_STATUS_CODE:
-            # TODO - consider caching this result in our DB for future requests to avoid hitting the live WoRMS API
-            # repeatedly for the same AphiaIDs
+        if response.status_code in [
+            status.HTTP_200_OK,
+            status.HTTP_201_CREATED,
+            status.HTTP_202_ACCEPTED,
+        ]:
+            aphia_cache[aphia_id] = None
             return errors
 
-        if response.status_code in [NO_CONTENT_STATUS_CODE, ERROR_STATUS_CODE]:
-            errors["lowest_aphia_id"] = f"Invalid lowest_aphia_id: {aphia_id} does not exist in WoRMS API."
+        if response.status_code == status.HTTP_400_BAD_REQUEST:
+            error_message = f"Invalid lowest_aphia_id: {aphia_id} does not exist in WoRMS API."
+            aphia_cache[aphia_id] = error_message
+            errors["lowest_aphia_id"] = error_message
             return errors
 
-        if response.status_code in API_ERROR_STATUS_CODES:
-            errors["lowest_aphia_id"] = (
-                f"Unable to validate lowest_aphia_id right now (status {response.status_code}). Please try again later."
-            )
-            return errors
-
-        errors["lowest_aphia_id"] = (
-            f"Unable to validate lowest_aphia_id right now (status {response.status_code}). Please try again later."
+        error_message = (
+            f"Unable to validate lowest_aphia_id right now " f"(status {response.status_code}). Please try again later."
         )
+        aphia_cache[aphia_id] = error_message
+        errors["lowest_aphia_id"] = error_message
         return errors
 
     def validate(self, attrs: dict) -> dict:
@@ -94,8 +101,12 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
         return attrs
 
 
-def _test_cached_and_live_worms_api(aphia_id: str) -> requests.Response:
-    """Helper function to test both the cached and live WoRMS API for a given aphia_id.
+def _ingest_get_aphia_id_cached_worms(aphia_id: str) -> requests.Response:
+    """Helper function to call the cached WoRMS API to validate an aphia_id.
+
+    This is a POST request to trigger the ingest endpoint, which will return 200 if the aphia_id exists in WoRMS
+    (either in cache or after fetching from live WoRMS), 204 if it does not exist in WoRMS, and 4xx/5xx if there was
+    an error.
 
     Args:
         aphia_id (str): The aphia_id to test.
@@ -103,14 +114,9 @@ def _test_cached_and_live_worms_api(aphia_id: str) -> requests.Response:
     Returns:
         requests.Response: The response from the WoRMS API.
     """
-    cached_response = requests.get(
-        f"{settings.CACHED_WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}",
-        timeout=20,
-    )
-    if cached_response.status_code == OK_STATUS_CODE:
-        return cached_response
-
-    return requests.get(
-        f"{settings.WORMS_API_BASE_URL}/AphiaRecordByAphiaID/{aphia_id}",
+    return requests.post(
+        f"{settings.CACHED_WORMS_API_BASE_URL}/taxa/ingest/",
+        json={"aphia_id": aphia_id},
+        headers={"Authorization": f"Bearer {settings.CACHED_WORMS_API_TOKEN}"},
         timeout=20,
     )
