@@ -100,10 +100,7 @@ def _named_uri_obj(v: Any, path: str) -> dict[str, Any] | None:
         return None
 
     if isinstance(v, str):
-        name = v.strip()
-        if not name:
-            return None
-        return {"name": name}
+        return {"name": v.strip()}
 
     if isinstance(v, dict):
         name = _require_str(v.get("name"), f"{path}.name")

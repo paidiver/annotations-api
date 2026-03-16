@@ -1,6 +1,6 @@
 """Unit tests for iFDO data_subs_mapping adapter functions."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from django.test import TestCase
 
@@ -259,3 +259,23 @@ class TestDataSubsMapping(TestCase):
         payload = adapt_ifdo_item_to_image_serializer_payload(item, image_set_id=1)
 
         self.assertEqual(payload["copyright"], "111111")
+
+    def test_imageset_datetime_accepts_datetime_instance(self):
+        """A datetime instance should be returned unchanged by the adapter."""
+        dt = datetime(2024, 1, 2, 3, 4, 5)
+
+        payload = adapt_ifdo_image_set_to_serializer_payload(self._base_ifdo(**{"image-set-start-datetime": dt}))
+
+        self.assertIs(payload["date_time"], dt)
+
+    def test_imageset_named_uri_object_rejects_invalid_type(self):
+        """Named/URI fields should reject non-string, non-dict values."""
+        ifdo = self._base_ifdo(**{"image-project": 123})
+
+        with self.assertRaises(IFDOAdaptError) as ctx:
+            adapt_ifdo_image_set_to_serializer_payload(ifdo)
+
+        self.assertIn(
+            "ifdo.image-set-header.image-project must be a string or object",
+            str(ctx.exception),
+        )
