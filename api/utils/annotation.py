@@ -1,5 +1,6 @@
 """Service functions related to annotation data."""
 
+import uuid
 from itertools import zip_longest
 
 import pandas as pd
@@ -7,7 +8,7 @@ from django.db import transaction
 
 from api.models.fields import Creator
 from api.models.image_set import ImageSet
-from api.serializers import AnnotationSetSerializer
+from api.serializers import AnnotationSetSerializer, LabelSerializer
 from api.utils.constants import ANNOTATION_KEYS
 
 
@@ -88,10 +89,10 @@ def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
         if pd.notna(value) and final_key in ANNOTATION_KEYS:
             annotation_data[final_key] = value
 
-    insert_annotations_into_tables(data=annotation_data)
+    return insert_annotations_into_tables(data=annotation_data)
 
 
-def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
+def parse_label_set(label_df: pd.DataFrame, annotation_set: uuid.UUID) -> list[dict]:
     """Parse Label set data from Dataframe."""
     start_idx = None
     for i, val in enumerate(label_df.iloc[:, 0]):
@@ -129,7 +130,8 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
             continue
 
         label_data.append({
-            "label_name": row["label_name"].strip(),
+            "annotation_set_id": annotation_set,
+            "name": row["label_name"].strip(),
             "parent_label_name": row["parent_label_name"].strip(),
             "lowest_taxonomic_name": row["lowest_taxonomic_name"].strip(),
             "lowest_aphia_id": row["lowest_aphia_id"],
@@ -137,4 +139,20 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
             "identification_qualifier": row["identification_qualifier"].strip(),
         })
 
+    insert_label_data(label_data)
+
     return label_data
+
+
+def insert_label_data(label_list):
+    """Inserts a list of label dictionaries into the Label table."""
+    print(f'Inserting label data: {label_list}')
+    with transaction.atomic():
+        # we pass many=True because we are providing a list of dicts
+        serializer = LabelSerializer(data=label_list, many=True)
+
+        if serializer.is_valid(raise_exception=True):
+            labels = serializer.save()
+            return labels
+        else:
+            raise ValueError("Invalid label data: ", serializer.errors)

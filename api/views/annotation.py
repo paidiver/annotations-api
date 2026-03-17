@@ -75,12 +75,12 @@ class UploadAnnotationsView(viewsets.ViewSet):
                 status=HTTP_400_BAD_REQUEST,
             )
 
-        # annotation_metadata = parse_annodation_set_metadata(df)
+        # annotation_set = parse_annodation_set_metadata(df)
 
-        label_data = parse_label_set(label_df)
+        label_data = parse_label_set(label_df, annotation_set.id)
 
         data = {
-            # "annotation_metadata": annotation_metadata,
+            # "annotation_set": annotation_set,
             "label_set": label_data,
         }
         return Response(
