@@ -1,9 +1,8 @@
 """Debug view to dump database contents as JSON."""
 
-from urllib.request import Request
-
 from django.conf import settings
 from drf_spectacular.utils import extend_schema
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
