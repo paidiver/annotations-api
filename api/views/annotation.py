@@ -9,9 +9,8 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from api.models import Annotation, AnnotationLabel, Annotator
-from api.models.label import Label
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
-from api.utils.annotation import parse_annodation_set_metadata, parse_label_set
+from api.utils.annotation import ingest_annotation_data, parse_annodation_set_metadata, parse_label_set
 
 
 @extend_schema(tags=["Annotations API"])
@@ -77,12 +76,9 @@ class UploadAnnotationsView(viewsets.ViewSet):
 
         annotation_set = parse_annodation_set_metadata(df)
 
-        label_data = parse_label_set(label_df, annotation_set["id"])
+        label_data = parse_label_set(label_df)
 
-        data = {
-            "annotation_set": annotation_set,
-            "label_set": label_data,
-        }
+        data = ingest_annotation_data(annotation_set, label_data)
         return Response(
             {"status": "uploaded", "data": data},
             status=HTTP_201_CREATED,
