@@ -48,6 +48,10 @@ spec:
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
+          {{- if .Values.api.resources }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- end }}
           env:
             - name: DJANGO_SECRET_KEY
               valueFrom:
