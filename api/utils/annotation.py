@@ -61,7 +61,7 @@ def insert_annotations_into_tables(data: pd.DataFrame):
                 )
                 annotation_set.image_sets.add(image_set)
 
-        return annotation_set
+        return serializer.data
 
 
 def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
