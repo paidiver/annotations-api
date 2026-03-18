@@ -140,7 +140,8 @@ DJANGO_SECRET_KEY=dev-secret-key-change-me
 DJANGO_DEBUG=1
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 WORMS_API_BASE_URL=https://marinespecies.org/rest
-CACHED_WORMS_API_BASE_URL=https://marinespecies.org/rest
+CACHED_WORMS_API_BASE_URL=https://worms-cache.paidiver.site/api
+CACHED_WORMS_API_TOKEN=mysecrettoken
 ```
 
 ### 2. Build and run the stack
@@ -174,6 +175,11 @@ API schema and documentation:
 ```
 http://localhost:8000/api/docs/
 ```
+
+### 4. Worms cache API
+
+If you set the environment variable `CACHED_WORMS_API_BASE_URL` to point to a local instance of the WoRMS cache API, you may need to start that separately. Please follow the instructions in the [worms-cache repo](https://github.com/paidiver/worms-cache).
+
 
 ## Running Locally Without Docker
 
