@@ -164,14 +164,9 @@ def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, an
         annotation_set = insert_annotations_into_tables(annotation_set_df)
         label_set = insert_label_data(label_list, annotation_set["id"])
 
-        created_count, errors = insert_annotations_data(annotation_data, annotation_set["id"])
+        annotation_data = insert_annotations_data(annotation_data, annotation_set["id"])
 
-        print(f"Created {created_count} annotations.")
-        if errors:
-            print("Errors encountered during annotation data ingestion:")
-            for error in errors:
-                print(error)
-        data = {"annotation_set": annotation_set, "label_set": label_set}
+        data = {"annotation_set": annotation_set, "label_set": label_set, "annotation_data": annotation_data}
         return data
 
 
@@ -243,6 +238,7 @@ def insert_annotations_data(parsed_data_list, annotation_set_inst):
     """Ingests parsed records into Annotation, Annotator, and AnnotationLabel."""
     created_count = 0
     errors = []
+    annotation_data = []
 
     for index, entry in enumerate(parsed_data_list):
         try:
@@ -264,7 +260,7 @@ def insert_annotations_data(parsed_data_list, annotation_set_inst):
             label_inst = Label.objects.filter(name=entry["label_name"], annotation_set=annotation_set_inst).first()
 
             if not label_inst:
-                errors.append(f"Row {index}: Label '{entry['label_name']}' not found in this Annotation Set.")
+                errors.append(f"Row {index+1}: Label '{entry['label_name']}' not found in this Annotation Set.")
                 continue
 
             # find or create the person/machine
@@ -304,9 +300,17 @@ def insert_annotations_data(parsed_data_list, annotation_set_inst):
             anno_label_serializer.is_valid(raise_exception=True)
             anno_label_serializer.save()
 
+            annotation_data.append(
+                {
+                    "annotation": anno_serializer.data,
+                    "label": anno_label_serializer.data,
+                    "annotator": annotator_inst.data,
+                }
+            )
             created_count += 1
 
         except Exception as e:
-            errors.append(f"Row {index}: {str(e)}")
+            errors.append(f"Row {index+1}: {str(e)}")
 
-    return created_count, errors
+    data = {"created": created_count, "data": annotation_data, "errors": errors}
+    return data
