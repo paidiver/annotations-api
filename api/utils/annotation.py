@@ -21,7 +21,6 @@ def insert_annotations_into_tables(data: pd.DataFrame):
     Returns:
         newly created annotation_set object
     """
-    # with transaction.atomic():
     # Prepare data for AnnotationSet
     annotation_set_data = {
         "name": data.get("annotation-set-name", ""),
@@ -89,7 +88,6 @@ def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
         if pd.notna(value) and final_key in ANNOTATION_KEYS:
             annotation_data[final_key] = value
 
-    # return insert_annotations_into_tables(data=annotation_data)
     return annotation_data
 
 
@@ -102,11 +100,8 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
             print(f'original start index: {start_idx}')
             break
 
-    # if start_idx is None:
-    #     return Response(
-    #         {"error": "Invalid Label Set format (missing 'Value' row)."},
-    #         status=HTTP_400_BAD_REQUEST,
-    #     )
+    if start_idx is None:
+        raise ValueError("Could not find values in Label Set.")
 
     label_df = label_df.iloc[start_idx:, :7]
 
@@ -139,15 +134,11 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
             "identification_qualifier": row["identification_qualifier"].strip(),
         })
 
-    # insert_label_data(label_data)
-
     return label_data
 
 
 def insert_label_data(label_list, annotation_set_id: uuid.UUID):
     """Inserts a list of label dictionaries into the Label table."""
-    print(f'Inserting label data: {label_list}')
-    # with transaction.atomic():
     for label_dict in label_list:
         label_dict["annotation_set_id"] = annotation_set_id
     # we pass many=True because we are providing a list of dicts
