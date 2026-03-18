@@ -33,7 +33,11 @@ api:
       secretName: my-app-secrets
       secretKey: django-secret-key
     djangoDebug: "1"
-  resources: {}
+    cachedWormsApi: "https://worms-cache.paidiver.site/api"
+    cachedWormsApiToken:
+      secretName: my-app-secrets
+      secretKey: ingest-api-token
+  resources: {}      
   securityContext:
     runAsUser: 1000
   initContainer:
