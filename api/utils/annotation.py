@@ -1,5 +1,6 @@
 """Service functions related to annotation data."""
 
+import json
 import uuid
 from itertools import zip_longest
 
@@ -96,8 +97,8 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     start_idx = None
     for i, val in enumerate(label_df.iloc[:, 0]):
         if str(val).strip().lower() == "value":
-            start_idx = i   # data starts AFTER this row
-            print(f'original start index: {start_idx}')
+            start_idx = i  # data starts AFTER this row
+            print(f"original start index: {start_idx}")
             break
 
     if start_idx is None:
@@ -121,18 +122,19 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     label_data = []
 
     for row in label_df.to_dict(orient="records"):
-
         if not str(row["label_name"]).strip():
             continue
 
-        label_data.append({
-            "name": row["label_name"].strip(),
-            "parent_label_name": row["parent_label_name"].strip(),
-            "lowest_taxonomic_name": row["lowest_taxonomic_name"].strip(),
-            "lowest_aphia_id": row["lowest_aphia_id"],
-            "is_lowest": str(row["label_name_is_lowest"]).strip().lower() == 'yes',
-            "identification_qualifier": row["identification_qualifier"].strip(),
-        })
+        label_data.append(
+            {
+                "name": row["label_name"].strip(),
+                "parent_label_name": row["parent_label_name"].strip(),
+                "lowest_taxonomic_name": row["lowest_taxonomic_name"].strip(),
+                "lowest_aphia_id": row["lowest_aphia_id"],
+                "is_lowest": str(row["label_name_is_lowest"]).strip().lower() == "yes",
+                "identification_qualifier": row["identification_qualifier"].strip(),
+            }
+        )
 
     return label_data
 
@@ -157,5 +159,69 @@ def ingest_annotation_data(annotation_df: pd.DataFrame, label_list: list):
         annotation_set = insert_annotations_into_tables(annotation_df)
         label_set = insert_label_data(label_list, annotation_set["id"])
 
-        data= {"annotation_set": annotation_set, "label_set": label_set}
+        data = {"annotation_set": annotation_set, "label_set": label_set}
         return data
+
+
+def _parse_coordinates(coord_val):
+    """Convert coordinate string into list format."""
+    if not coord_val or pd.isna(coord_val):
+        return []
+
+    coord_val = str(coord_val).strip()
+
+    try:
+        if coord_val.startswith("["):
+            return json.loads(coord_val)
+
+        parts = [float(x.strip()) for x in coord_val.split(",")]
+        return [parts]
+
+    except Exception:
+        return []
+
+
+def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
+    """Parse Annotation data from dataframe."""
+    annotation_df = annotation_df.iloc[4:,1:10]
+    print(annotation_df.head())
+
+    annotation_df.columns = [
+        "image_uuid",
+        "annotation_platform",
+        "image_filename",
+        "annotation_human_creator",
+        "annotation_creation_datetime",
+        "annotation_label_name",
+        "annotation_shape_name",
+        "annotation_coordinates",
+        "annotation_dimension_pixels",
+    ]
+
+    annotation_df = annotation_df.fillna("")
+
+    annotation_data = []
+
+    for row in annotation_df.to_dict(orient="records"):
+        # Skip empty rows
+        if not str(row["image_filename"]).strip():
+            continue
+
+        parsed_row = {
+            "image_id": row["image_uuid"].strip(),
+            "image_filename": row["image_filename"].strip(),
+            "annotation_platform": row["annotation_platform"].strip(),
+            "shape": row["annotation_shape_name"].strip(),
+            "coordinates": _parse_coordinates(row["annotation_coordinates"]),
+            "dimension_pixels": (
+                float(row["annotation_dimension_pixels"]) if str(row["annotation_dimension_pixels"]).strip() else None
+            ),
+            "label_name": row["annotation_label_name"].strip(),
+            "annotator_name": row["annotation_human_creator"].strip(),
+            "creation_datetime": row["annotation_creation_datetime"],
+        }
+
+        print(f"Parsed annotation row: {parsed_row}")
+        annotation_data.append(parsed_row)
+
+    return annotation_data
