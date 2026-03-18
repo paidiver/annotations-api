@@ -255,6 +255,23 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 
 Coverage reports are written to `coverage_reports/`.
 
+## API Token Generation
+
+This project is configured to use [TokenAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication)
+for any requests that modify data. Anonymous users may only use "safe" methods (`GET`, `HEAD` or `OPTIONS`).
+The project includes a management command to create a new user with an auth token:
+
+```bash
+python manage.py create_user_with_token <username> <password>
+```
+
+The created API token is returned in the command output. Please ensure to store this token safely and clear console output if required.
+
+Example output:
+```
+User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
+```
+
 ## Fake Data Generation
 
 For development and testing, the project includes a management command that seeds the database with realistic fake data:
