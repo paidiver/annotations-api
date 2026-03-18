@@ -48,7 +48,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             errors["lowest_aphia_id"] = "This field is required."
             return errors
 
-        aphia_cache = self.context.setdefault("aphia_validation_cache", {})
+        aphia_cache = self.context.setdefault("aphia_validation_error_cache", {})
 
         if aphia_id in aphia_cache:
             cached_error = aphia_cache[aphia_id]

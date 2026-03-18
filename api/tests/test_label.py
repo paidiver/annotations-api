@@ -185,7 +185,7 @@ class LabelViewSetTests(APITestCase):
         """Test that the same aphia_id is only validated once per shared serializer context."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
-        shared_context = {"aphia_validation_cache": {}}
+        shared_context = {"aphia_validation_error_cache": {}}
 
         payload_1 = {
             "name": "Label One",
@@ -207,14 +207,14 @@ class LabelViewSetTests(APITestCase):
         self.assertTrue(serializer_2.is_valid(), serializer_2.errors)
 
         self.mocked_worms.assert_called_once_with("12345")
-        self.assertIn("12345", shared_context["aphia_validation_cache"])
-        self.assertIsNone(shared_context["aphia_validation_cache"]["12345"])
+        self.assertIn("12345", shared_context["aphia_validation_error_cache"])
+        self.assertIsNone(shared_context["aphia_validation_error_cache"]["12345"])
 
     def test_validate_aphia_id_caches_invalid_result(self):
         """Test that an invalid aphia_id result is cached and not requested twice."""
         self.mocked_worms.return_value = Mock(status_code=400)
 
-        shared_context = {"aphia_validation_cache": {}}
+        shared_context = {"aphia_validation_error_cache": {}}
 
         payload = {
             "name": "Invalid Aphia Label",
@@ -231,6 +231,6 @@ class LabelViewSetTests(APITestCase):
 
         self.mocked_worms.assert_called_once_with("999999999")
         self.assertEqual(
-            shared_context["aphia_validation_cache"]["999999999"],
+            shared_context["aphia_validation_error_cache"]["999999999"],
             "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
         )

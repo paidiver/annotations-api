@@ -26,7 +26,7 @@ class TestWormsAPI(TestCase):
         self.mock_settings.CACHED_WORMS_API_TOKEN = "test-token"
 
     def test_returns_cached_if_cached_is_200(self):
-        """If cached API returns 200, live API should not be called."""
+        """No errors are returned if aphia_id is validated successfully."""
         cached_response = Mock(status_code=200)
         self.mock_post.return_value = cached_response
 
@@ -40,12 +40,19 @@ class TestWormsAPI(TestCase):
             timeout=20,
         )
 
-    def test_returns_live_error_if_both_fail(self):
-        """If both cached and live fail, return the live response."""
+    def test_returns_error_if_cached_fails(self):
+        """Error is returned for aphia_id if worms cache response is unsuccessful."""
         cached_response = Mock(status_code=404)
 
         self.mock_post.side_effect = [cached_response]
 
-        _ingest_get_aphia_id_cached_worms("789")
+        response = _ingest_get_aphia_id_cached_worms("789")
 
         self.assertEqual(self.mock_post.call_count, 1)
+        self.mock_post.assert_called_with(
+            "http://cached/api/taxa/ingest/",
+            json={"aphia_id": "789"},
+            headers={"Authorization": "Bearer test-token"},
+            timeout=20,
+        )
+        self.assertEqual(response, cached_response)
