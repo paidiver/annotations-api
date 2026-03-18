@@ -146,16 +146,31 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
 
 def insert_label_data(label_list, annotation_set_id: uuid.UUID):
     """Inserts a list of label dictionaries into the Label table."""
-    for label_dict in label_list:
-        label_dict["annotation_set_id"] = annotation_set_id
-    # we pass many=True because we are providing a list of dicts
-    serializer = LabelSerializer(data=label_list, many=True)
+    processed_data = []
 
-    if serializer.is_valid(raise_exception=True):
-        serializer.save()
-        return serializer.data
-    else:
-        raise ValueError("Invalid label data: ", serializer.errors)
+    for label_dict in label_list:
+
+        label_name = label_dict.get("name")
+        parent_label = label_dict.get("parent_label_name")
+
+        # Look for existing record in this specific set
+        existing_label = Label.objects.filter(
+            name=label_name, parent_label=parent_label, annotation_set_id=annotation_set_id
+        ).first()
+
+        if existing_label:
+            # UPDATE mode
+            serializer = LabelSerializer(existing_label, data=label_dict, partial=True)
+        else:
+            # CREATE mode
+            label_dict["annotation_set_id"] = annotation_set_id
+            serializer = LabelSerializer(data=label_dict)
+
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            processed_data.append(serializer.data)
+
+    return processed_data
 
 
 def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, annotation_data: list[dict]):
