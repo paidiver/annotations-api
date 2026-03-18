@@ -85,8 +85,13 @@ The CI workflow:
 - Packages the Helm chart with the correct version
 - Publishes the chart via [helm/chart-releaser-action](https://github.com/helm/chart-releaser-action)
 
-The repo itself continues to have 0.0.0-dev in Chart.yaml for development.
-The release version is derived solely from the Git tag.
+Whenever you make any change to a Chart, you must update the version in `Chart.yaml`.
+
+* Increment the version to a higher value (e.g. `0.0.0-dev` → `0.0.1-dev`)
+* This is required because the lint process checks that the new version is greater than the previous one
+* If the version is not increased, linting will fail and the release will not run
+
+> Note: The `Chart.yaml` version does not need to match the Git tag, but it must always be higher than the previous version.
 
 ### Usage
 
