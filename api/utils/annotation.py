@@ -2,14 +2,19 @@
 
 import json
 import uuid
+from datetime import datetime
 from itertools import zip_longest
 
 import pandas as pd
 from django.db import transaction
 
+from api.models.annotation import Annotator
 from api.models.fields import Creator
+from api.models.image import Image
 from api.models.image_set import ImageSet
+from api.models.label import Label
 from api.serializers import AnnotationSetSerializer, LabelSerializer
+from api.serializers.annotation import AnnotationLabelSerializer, AnnotationSerializer
 from api.utils.constants import ANNOTATION_KEYS
 
 
@@ -153,12 +158,19 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID):
         raise ValueError("Invalid label data: ", serializer.errors)
 
 
-def ingest_annotation_data(annotation_df: pd.DataFrame, label_list: list):
+def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, annotation_data: list[dict]):
     """Ingest data."""
     with transaction.atomic():
-        annotation_set = insert_annotations_into_tables(annotation_df)
+        annotation_set = insert_annotations_into_tables(annotation_set_df)
         label_set = insert_label_data(label_list, annotation_set["id"])
 
+        created_count, errors = insert_annotations_data(annotation_data, annotation_set["id"])
+
+        print(f"Created {created_count} annotations.")
+        if errors:
+            print("Errors encountered during annotation data ingestion:")
+            for error in errors:
+                print(error)
         data = {"annotation_set": annotation_set, "label_set": label_set}
         return data
 
@@ -183,7 +195,7 @@ def _parse_coordinates(coord_val):
 
 def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
     """Parse Annotation data from dataframe."""
-    annotation_df = annotation_df.iloc[4:,1:10]
+    annotation_df = annotation_df.iloc[3:, 1:10]
     print(annotation_df.head())
 
     annotation_df.columns = [
@@ -225,3 +237,76 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
         annotation_data.append(parsed_row)
 
     return annotation_data
+
+
+def insert_annotations_data(parsed_data_list, annotation_set_inst):
+    """Ingests parsed records into Annotation, Annotator, and AnnotationLabel."""
+    created_count = 0
+    errors = []
+
+    for index, entry in enumerate(parsed_data_list):
+        try:
+            image_inst = None
+            image_uuid = entry.get("image_id")
+            image_filename = entry.get("image_filename")
+
+            if image_uuid and str(image_uuid).strip() != "":
+                image_inst = Image.objects.filter(id=image_uuid).first()
+
+            if not image_inst and image_filename:
+                image_inst = Image.objects.filter(filename=image_filename).first()
+
+            if not image_inst:
+                errors.append(f"Row {index+1}: Image not found (UUID: {image_uuid}, Name: {image_filename})")
+                continue
+
+            # Labels must exist in the context of this Annotation Set (from Tab 3)
+            label_inst = Label.objects.filter(name=entry["label_name"], annotation_set=annotation_set_inst).first()
+
+            if not label_inst:
+                errors.append(f"Row {index}: Label '{entry['label_name']}' not found in this Annotation Set.")
+                continue
+
+            # find or create the person/machine
+            annotator_name = entry.get("annotator_name")
+            annotator_inst, _ = Annotator.objects.get_or_create(name=annotator_name)
+
+            # Create Annotation via Serializer
+            annotation_data = {
+                "image_id": image_inst.id,
+                "annotation_set_id": annotation_set_inst,
+                "annotation_platform": entry["annotation_platform"],
+                "shape": entry["shape"],
+                "coordinates": entry["coordinates"],
+                "dimension_pixels": entry["dimension_pixels"],
+            }
+
+            anno_serializer = AnnotationSerializer(data=annotation_data)
+            anno_serializer.is_valid(raise_exception=True)
+            annotation_obj = anno_serializer.save()
+
+            # Create AnnotationLabel via Serializer
+            dt_val = entry["creation_datetime"]
+            if isinstance(dt_val, str) and dt_val.strip():
+                try:
+                    dt_val = datetime.strptime(dt_val, "%d%m%Y %H:%M:%S")
+                except ValueError:
+                    dt_val = datetime.now()
+
+            anno_label_data = {
+                "annotation_id": annotation_obj.id,
+                "label_id": label_inst.id,
+                "annotator_id": annotator_inst.id,
+                "creation_datetime": dt_val,
+            }
+
+            anno_label_serializer = AnnotationLabelSerializer(data=anno_label_data)
+            anno_label_serializer.is_valid(raise_exception=True)
+            anno_label_serializer.save()
+
+            created_count += 1
+
+        except Exception as e:
+            errors.append(f"Row {index}: {str(e)}")
+
+    return created_count, errors
