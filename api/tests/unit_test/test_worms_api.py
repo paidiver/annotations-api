@@ -40,7 +40,6 @@ class TestWormsAPI(TestCase):
             timeout=20,
         )
 
-
     def test_returns_live_error_if_both_fail(self):
         """If both cached and live fail, return the live response."""
         cached_response = Mock(status_code=404)
