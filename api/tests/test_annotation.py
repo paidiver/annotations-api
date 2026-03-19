@@ -229,9 +229,19 @@ class UploadAnnotationsViewTests(APITestCase):
             self.assertTrue(mock_parse_annotation.called)
             self.assertTrue(mock_ingest.called)
 
-            # Verify ingest was called with the parsed data
             mock_ingest.assert_called_once_with(
                 self.mock_annotation_set,
                 self.mock_label_data,
                 self.mock_annotation_data,
             )
+
+    def test_upload_annotations_requires_file(self):
+        """Test that uploading without a file is rejected by the serializer."""
+        response = self.client.post(
+            self.upload_url,
+            {},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["file"][0], "This field is required.")
