@@ -20,6 +20,24 @@ entries:
     - https://github.com/paidiver/annotations-api/releases/download/api-1.0.4/api-1.0.4.tgz
     version: 1.0.4
   - apiVersion: v2
+    appVersion: 1.0.4-dev
+    created: "2026-03-19T14:21:36.095547494Z"
+    dependencies:
+    - name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 18.2.4
+    description: A database and API for imagery metadata and annotations
+    digest: c9cf109989138a962a866d20fa72d22a764f5a40e3fdbfde16a1b4ee405a98ae
+    maintainers:
+    - email: elisabeth.wetchy@noc.ac.uk
+      name: eawetchy
+      url: bodc.ac.uk
+    name: api
+    type: application
+    urls:
+    - https://github.com/paidiver/annotations-api/releases/download/api-1.0.4-dev/api-1.0.4-dev.tgz
+    version: 1.0.4-dev
+  - apiVersion: v2
     appVersion: 1.0.2
     created: "2026-03-17T13:16:40.63364338Z"
     dependencies:
@@ -288,4 +306,4 @@ entries:
     urls:
     - https://github.com/paidiver/annotations-api/releases/download/paidiver-annotations-api-0.1.0/paidiver-annotations-api-0.1.0.tgz
     version: 0.1.0
-generated: "2026-03-18T11:15:54.742047597Z"
+generated: "2026-03-19T14:21:36.095650778Z"
