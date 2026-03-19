@@ -53,6 +53,7 @@ ingress:
     pathType: Prefix
   ingressClassName: ""
   host: ""
+  proxyBodySize: "100m"
 
 # This is to override the chart name.
 nameOverride: ""
