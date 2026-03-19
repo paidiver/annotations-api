@@ -23,7 +23,7 @@ from api.utils.constants import (
 )
 
 
-def insert_annotations_into_tables(data: pd.DataFrame) -> dict:
+def insert_annotations_set(data: pd.DataFrame) -> dict:
     """Insert annotations related into respective tables.
 
     Args:
@@ -201,7 +201,7 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID) -> list[dict]:
 def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, annotation_data: list[dict]) -> dict:
     """Ingest data."""
     with transaction.atomic():
-        annotation_set = insert_annotations_into_tables(annotation_set_df)
+        annotation_set = insert_annotations_set(annotation_set_df)
         label_set = insert_label_data(label_list, annotation_set["id"])
 
         annotation_data = insert_annotations_data(annotation_data, annotation_set["id"])
@@ -291,7 +291,7 @@ def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: u
     """
     created_count = 0
     errors = []
-    annotation_data = []
+    data = []
 
     for index, entry in enumerate(parsed_data_list):
         try:
@@ -353,7 +353,7 @@ def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: u
             anno_label_serializer.is_valid(raise_exception=True)
             anno_label_serializer.save()
 
-            annotation_data.append(
+            data.append(
                 {
                     "annotation": anno_serializer.data,
                     "label": anno_label_serializer.data,
@@ -365,5 +365,5 @@ def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: u
         except Exception as e:
             errors.append(f"Row {index+1}: {str(e)}")
 
-    data = {"created": created_count, "data": annotation_data, "errors": errors}
+    data = {"created": created_count, "data": data, "errors": errors}
     return data
