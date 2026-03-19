@@ -1,6 +1,6 @@
 """A module to hold all constants."""
 
-ANNOTATION_KEYS = {
+ANNOTATION_METADATA_KEYS = {
     "annotation-set-name",
     "annotation-project-name",
     "annotation-project-uri",
@@ -25,3 +25,7 @@ ANNOTATION_KEYS = {
     "annotation-image-set-uuid",
     "annotation-image-set-handle",
 }
+
+ANNOTATION_DATA_START_ROW = 3
+ANNOTATION_DATA_START_COL = 1
+ANNOTATION_DATA_END_COL = 10

@@ -95,7 +95,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             dict: The validated attributes.
         """
         errors = {}
-        # errors = self._validate_aphia_id(attrs, errors)
+        errors = self._validate_aphia_id(attrs, errors)
         if errors:
             raise serializers.ValidationError(errors)
         return attrs

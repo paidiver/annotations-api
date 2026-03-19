@@ -15,10 +15,15 @@ from api.models.image_set import ImageSet
 from api.models.label import Label
 from api.serializers import AnnotationSetSerializer, LabelSerializer
 from api.serializers.annotation import AnnotationLabelSerializer, AnnotationSerializer
-from api.utils.constants import ANNOTATION_KEYS
+from api.utils.constants import (
+    ANNOTATION_DATA_END_COL,
+    ANNOTATION_DATA_START_COL,
+    ANNOTATION_DATA_START_ROW,
+    ANNOTATION_METADATA_KEYS,
+)
 
 
-def insert_annotations_into_tables(data: pd.DataFrame):
+def insert_annotations_into_tables(data: pd.DataFrame) -> dict:
     """Insert annotations related into respective tables.
 
     Args:
@@ -70,7 +75,14 @@ def insert_annotations_into_tables(data: pd.DataFrame):
 
 
 def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
-    """Parse annotation metadata from dataframe and insert into db."""
+    """Parse annotation metadata from dataframe and insert into db.
+
+    Args:
+        annotation_df(pd.DataFrame): annotation_set metadata
+
+    Returns:
+        dict: parsed data.
+    """
     df = annotation_df.iloc[:, :3]
     df.iloc[:, 2] = df.iloc[:, 2].fillna("")
 
@@ -91,14 +103,21 @@ def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
         final_key = f"{current_main_key}-{sub_key_clean}" if sub_key_clean else current_main_key
 
         # Store only if value exists
-        if pd.notna(value) and final_key in ANNOTATION_KEYS:
+        if pd.notna(value) and final_key in ANNOTATION_METADATA_KEYS:
             annotation_data[final_key] = value
 
     return annotation_data
 
 
 def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
-    """Parse Label set data from Dataframe."""
+    """Parse Label set data from Dataframe.
+
+    Args:
+        label_df(pd.DataFrame): label data.
+
+    Returns:
+        list[dict]: list of label dictionaries.
+    """
     start_idx = None
     for i, val in enumerate(label_df.iloc[:, 0]):
         if str(val).strip().lower() == "value":
@@ -144,8 +163,16 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     return label_data
 
 
-def insert_label_data(label_list, annotation_set_id: uuid.UUID):
-    """Inserts a list of label dictionaries into the Label table."""
+def insert_label_data(label_list, annotation_set_id: uuid.UUID) -> list[dict]:
+    """Inserts a list of label dictionaries into the Label table.
+
+    Args:
+        label_list(list[dict]): list of label dictionaries.
+        annotation_set_id(uuid.UUID): associated annotation set ID.
+
+    Returns:
+        list[dict]: list of inserted label data.
+    """
     processed_data = []
 
     for label_dict in label_list:
@@ -172,7 +199,7 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID):
     return processed_data
 
 
-def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, annotation_data: list[dict]):
+def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, annotation_data: list[dict]) -> dict:
     """Ingest data."""
     with transaction.atomic():
         annotation_set = insert_annotations_into_tables(annotation_set_df)
@@ -184,7 +211,7 @@ def ingest_annotation_data(annotation_set_df: pd.DataFrame, label_list: list, an
         return data
 
 
-def _parse_coordinates(coord_val):
+def _parse_coordinates(coord_val: str) -> list:
     """Convert coordinate string into list format."""
     if not coord_val or pd.isna(coord_val):
         return []
@@ -203,8 +230,15 @@ def _parse_coordinates(coord_val):
 
 
 def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
-    """Parse Annotation data from dataframe."""
-    annotation_df = annotation_df.iloc[3:, 1:10]
+    """Parse Annotation data from dataframe.
+
+    Args:
+        annotation_df(pd.DataFrame): annotation data.
+
+    Returns:
+        list[dict]: list of annotation dictionaries.
+    """
+    annotation_df = annotation_df.iloc[ANNOTATION_DATA_START_ROW:, ANNOTATION_DATA_START_COL:ANNOTATION_DATA_END_COL]
     print(annotation_df.head())
 
     annotation_df.columns = [
@@ -248,8 +282,16 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
     return annotation_data
 
 
-def insert_annotations_data(parsed_data_list, annotation_set_inst):
-    """Ingests parsed records into Annotation, Annotator, and AnnotationLabel."""
+def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: uuid.UUID) -> dict:
+    """Ingests parsed records into Annotation, Annotator, and AnnotationLabel.
+
+    Args:
+        parsed_data_list (list[dict]): List of parsed annotation data.
+        annotation_set_inst (uuid.UUID): UUID of the annotation set.
+
+    Returns:
+        dict: Dictionary containing the inserted annotation data.
+    """
     created_count = 0
     errors = []
     annotation_data = []
