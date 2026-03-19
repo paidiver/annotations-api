@@ -4,12 +4,12 @@ from uuid import UUID
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models.fields import PI, Context, Creator, Event, License, Platform, Project, RelatedMaterial, Sensor
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class CreatorTests(APITestCase):
+class CreatorTests(AuthenticatedAPITestCase):
     """Tests for the Creator model."""
 
     @classmethod
@@ -83,7 +83,7 @@ class CreatorTests(APITestCase):
         self.assertEqual(Creator.objects.count(), 0)
 
 
-class ContextTests(APITestCase):
+class ContextTests(AuthenticatedAPITestCase):
     """Tests for the Context model."""
 
     @classmethod
@@ -157,7 +157,7 @@ class ContextTests(APITestCase):
         self.assertEqual(context_instance.name, "New Test Context")
 
 
-class PITests(APITestCase):
+class PITests(AuthenticatedAPITestCase):
     """Tests for the PI model."""
 
     @classmethod
@@ -231,7 +231,7 @@ class PITests(APITestCase):
         self.assertEqual(pi_instance.name, "New Test PI")
 
 
-class EventTests(APITestCase):
+class EventTests(AuthenticatedAPITestCase):
     """Tests for the Event model."""
 
     @classmethod
@@ -305,7 +305,7 @@ class EventTests(APITestCase):
         self.assertEqual(Event.objects.count(), 0)
 
 
-class LicenseTests(APITestCase):
+class LicenseTests(AuthenticatedAPITestCase):
     """Tests for the License model."""
 
     @classmethod
@@ -379,7 +379,7 @@ class LicenseTests(APITestCase):
         self.assertEqual(License.objects.count(), 0)
 
 
-class PlatformTests(APITestCase):
+class PlatformTests(AuthenticatedAPITestCase):
     """Tests for the Platform model."""
 
     @classmethod
@@ -453,7 +453,7 @@ class PlatformTests(APITestCase):
         self.assertEqual(Platform.objects.count(), 0)
 
 
-class ProjectTests(APITestCase):
+class ProjectTests(AuthenticatedAPITestCase):
     """Tests for the Project model."""
 
     @classmethod
@@ -527,7 +527,7 @@ class ProjectTests(APITestCase):
         self.assertEqual(Project.objects.count(), 0)
 
 
-class SensorTests(APITestCase):
+class SensorTests(AuthenticatedAPITestCase):
     """Tests for the Sensor model."""
 
     @classmethod
@@ -601,7 +601,7 @@ class SensorTests(APITestCase):
         self.assertEqual(Sensor.objects.count(), 0)
 
 
-class RelatedMaterialTests(APITestCase):
+class RelatedMaterialTests(AuthenticatedAPITestCase):
     """Tests for the RelatedMaterial model."""
 
     @classmethod

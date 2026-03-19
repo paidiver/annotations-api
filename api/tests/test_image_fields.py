@@ -4,7 +4,6 @@ from uuid import UUID
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models.fields import (
     ImageCameraCalibrationModel,
@@ -14,9 +13,10 @@ from api.models.fields import (
     ImageFlatportParameter,
     ImagePhotometricCalibration,
 )
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class ImageCameraCalibrationModelTests(APITestCase):
+class ImageCameraCalibrationModelTests(AuthenticatedAPITestCase):
     """Tests for the ImageCameraCalibrationModel model."""
 
     @classmethod
@@ -88,7 +88,7 @@ class ImageCameraCalibrationModelTests(APITestCase):
         self.assertEqual(camera_cal_instance.calibration_model_type, "New Test record")
 
 
-class ImageCameraPoseTests(APITestCase):
+class ImageCameraPoseTests(AuthenticatedAPITestCase):
     """Tests for the ImageCameraPose model."""
 
     @classmethod
@@ -160,7 +160,7 @@ class ImageCameraPoseTests(APITestCase):
         self.assertEqual(camera_pose_instance.utm_east_north_up_meters, [50.0, 60.0])
 
 
-class ImageDomeportParameterTests(APITestCase):
+class ImageDomeportParameterTests(AuthenticatedAPITestCase):
     """Tests for the ImageDomeportParameter model."""
 
     @classmethod
@@ -232,7 +232,7 @@ class ImageDomeportParameterTests(APITestCase):
         self.assertEqual(domeport_param_instance.extra_description, "New domeport parameter")
 
 
-class ImageFlatportParameterTests(APITestCase):
+class ImageFlatportParameterTests(AuthenticatedAPITestCase):
     """Tests for the ImageFlatportParameter model."""
 
     @classmethod
@@ -304,7 +304,7 @@ class ImageFlatportParameterTests(APITestCase):
         self.assertEqual(flatport_param_instance.extra_description, "New flatport parameter")
 
 
-class ImageCameraHousingViewportTests(APITestCase):
+class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
     """Tests for the ImageCameraHousingViewport model."""
 
     @classmethod
@@ -376,7 +376,7 @@ class ImageCameraHousingViewportTests(APITestCase):
         self.assertEqual(housing_param_instance.extra_description, "New housing parameter")
 
 
-class ImagePhotometricCalibrationTests(APITestCase):
+class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
     """Tests for the ImagePhotometricCalibration model."""
 
     @classmethod

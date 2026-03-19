@@ -4,12 +4,12 @@ from uuid import UUID
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models.annotation import Annotator
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotatorTests(APITestCase):
+class AnnotatorTests(AuthenticatedAPITestCase):
     """Tests for the Annotator model."""
 
     @classmethod

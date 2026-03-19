@@ -2,17 +2,18 @@
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import AnnotationSet, Creator, Project
 from api.models.image_set import ImageSet
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotationSetViewSetTests(APITestCase):
+class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationSetViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.creators_payload = [
             {"name": "Ada Lovelace", "uri": "https://example.com/people/ada"},
             {"name": "Grace Hopper", "uri": "https://example.com/people/grace"},

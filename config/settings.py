@@ -43,8 +43,8 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "api.services.token_auth.BearerAuthentication",  # custom override for rest_framework.authentication.TokenAuthentication
-    ]
+        "api.services.token_auth.BearerAuthentication",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {

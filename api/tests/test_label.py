@@ -6,18 +6,19 @@ from unittest.mock import Mock, patch
 from django.urls import reverse
 from requests.exceptions import Timeout
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class LabelViewSetTests(APITestCase):
+class LabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for LabelViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])

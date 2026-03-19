@@ -4,7 +4,6 @@ import uuid
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import AnnotationLabel
 from api.models.annotation import Annotation, Annotator
@@ -12,13 +11,15 @@ from api.models.annotation_set import AnnotationSet
 from api.models.image import Image
 from api.models.image_set import ImageSet
 from api.models.label import Label
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotationLabelViewSetTests(APITestCase):
+class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationLabelViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])

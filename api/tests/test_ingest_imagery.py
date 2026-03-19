@@ -3,13 +3,13 @@
 from unittest.mock import Mock, patch
 
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.ingest.data_subs_mapping import IFDOAdaptError
 from api.models import Image, ImageSet
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class IngestIFDOViewTests(APITestCase):
+class IngestIFDOViewTests(AuthenticatedAPITestCase):
     """Integration tests for ingest_ifdo_image_set endpoint."""
 
     def ingest_url(self):

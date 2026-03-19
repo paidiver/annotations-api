@@ -17,12 +17,8 @@ class Command(BaseCommand):
         Args:
             parser: The argument parser to which we can add custom arguments.
         """
-        parser.add_argument(
-            "username", help="Username for the new user."
-        )
-        parser.add_argument(
-            "password", help="Password for the new user."
-        )
+        parser.add_argument("username", help="Username for the new user.")
+        parser.add_argument("password", help="Password for the new user.")
 
     @transaction.atomic
     def handle(self, *args, **options) -> None:
@@ -34,6 +30,6 @@ class Command(BaseCommand):
         """
         user = User.objects.create_user(options["username"], email=None, password=options["password"])
         user.save()
-        token, created = Token.objects.get_or_create(user=user)
+        token, _ = Token.objects.get_or_create(user=user)
 
         self.stdout.write(f"User created: {options["username"]}. API token (please store this securely): {token.key}")
