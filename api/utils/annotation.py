@@ -149,7 +149,6 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID):
     processed_data = []
 
     for label_dict in label_list:
-
         label_name = label_dict.get("name")
         parent_label = label_dict.get("parent_label_name")
 
