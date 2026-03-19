@@ -45,3 +45,33 @@ class TestAnnotationParsers(TestCase):
 
         # Ensure that keys with no value are NOT in the dict
         self.assertNotIn("annotation-context-uri", result)
+
+
+    def test_parse_label_set(self):
+        """Test parsing label set."""
+        data = [
+            ["Field", "label_name", "parent_label_name", "lowest_taxonomic_name", "lowest_AphiaID", "label_name_is_lowest", "identificationQualifier"],  # noqa: E501
+            ["Expected value", "Text", "Text", "Text", "Integer", "Yes, No", "Text"],
+            ["Explanation", "name of label", "name of parent", "Most detailed", "AphiaID", "If No...", "Open nomenclature"],  # noqa: E501
+            ["Value", "antedon", "Echinodermata", "Antedon", 123349, "Yes", "sp.indet."],
+            [np.nan, "anthozoa_34", "Cnidaria", "Anthozoa", 1292, "No", "class indet.34"],
+            [np.nan, "coarse", "habitat", np.nan, np.nan, np.nan, np.nan],
+            [np.nan, " ", " ", " ", " ", " ", " "],
+        ]
+
+        df = pd.DataFrame(data)
+
+        result = parse_label_set(df)
+
+        self.assertEqual(len(result), 3)
+
+        self.assertEqual(result[0]["name"], "antedon")
+        self.assertEqual(result[0]["is_lowest"], True)
+        self.assertEqual(result[0]["lowest_aphia_id"], 123349)
+        self.assertEqual(result[0]["identification_qualifier"], "sp.indet.")
+
+        self.assertEqual(result[1]["name"], "anthozoa_34")
+        self.assertEqual(result[1]["is_lowest"], False)
+
+        self.assertEqual(result[2]["name"], "coarse")
+        self.assertEqual(result[2]["parent_label_name"], "habitat")
