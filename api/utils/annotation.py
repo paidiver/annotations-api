@@ -122,7 +122,6 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     for i, val in enumerate(label_df.iloc[:, 0]):
         if str(val).strip().lower() == "value":
             start_idx = i  # data starts AFTER this row
-            print(f"original start index: {start_idx}")
             break
 
     if start_idx is None:
@@ -239,7 +238,6 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
         list[dict]: list of annotation dictionaries.
     """
     annotation_df = annotation_df.iloc[ANNOTATION_DATA_START_ROW:, ANNOTATION_DATA_START_COL:ANNOTATION_DATA_END_COL]
-    print(annotation_df.head())
 
     annotation_df.columns = [
         "image_uuid",

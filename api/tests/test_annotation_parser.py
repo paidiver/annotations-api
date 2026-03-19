@@ -5,8 +5,15 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+from django.test import TransactionTestCase
 
-from api.utils.annotation import parse_annodation_set_metadata, parse_annotation_data, parse_label_set
+from api.utils.annotation import (
+    _parse_coordinates,
+    ingest_annotation_data,
+    parse_annodation_set_metadata,
+    parse_annotation_data,
+    parse_label_set,
+)
 
 
 class TestAnnotationParsers(TestCase):
@@ -94,7 +101,7 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result[2]["parent_label_name"], "habitat")
 
     @patch("api.utils.annotation._parse_coordinates")
-    def test_parse_annotation_data_from_image_spec(self, mock_parse_coords):
+    def test_parse_annotation_data(self, mock_parse_coords):
         """Test parsing the main annotation data sheet based on image structure."""
         mock_parse_coords.return_value = [1427, 8163]
 
@@ -157,3 +164,48 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result[1]["dimension_pixels"], 384.06)
 
         self.assertTrue(mock_parse_coords.called)
+
+
+class TestParseCoordinates(TestCase):
+    """Test for parsing coordinates."""
+
+    def test_parse_comma_separated_string(self):
+        """Test standard 'x, y' string format."""
+        input_val = "1427.5, 8163.2"
+        expected = [[1427.5, 8163.2]]
+        self.assertEqual(_parse_coordinates(input_val), expected)
+
+    def test_parse_json_list_format(self):
+        """Test if it handles stringified JSON lists (common in some exports)."""
+        input_val = "[10, 20, 30, 40]"
+        expected = [10, 20, 30, 40]
+        self.assertEqual(_parse_coordinates(input_val), expected)
+
+    def test_parse_empty_or_nan(self):
+        """Test that empty inputs return an empty list."""
+        self.assertEqual(_parse_coordinates(""), [])
+        self.assertEqual(_parse_coordinates(None), [])
+
+class TestIngestAnnotationData(TransactionTestCase):
+    """Test class for testing data ingestion."""
+    @patch('api.utils.annotation.insert_annotations_into_tables')
+    @patch('api.utils.annotation.insert_label_data')
+    @patch('api.utils.annotation.insert_annotations_data')
+    def test_ingest_annotation_data_success(self, mock_insert_annot, mock_insert_label, mock_insert_set):
+        """Test the orchestration of the ingestion process."""
+        mock_insert_set.return_value = {"id": 1, "name": "Test Set"}
+        mock_insert_label.return_value = [{"id": 10, "name": "Coral"}]
+        mock_insert_annot.return_value = [{"id": 100, "image_id": "ABC"}]
+
+        annotation_set_df = {"name": "Test Set"}
+        label_list = [{"name": "Coral"}]
+        annot_list = [{"image_id": "ABC"}]
+
+        result = ingest_annotation_data(annotation_set_df, label_list, annot_list)
+
+        mock_insert_set.assert_called_once_with(annotation_set_df)
+        mock_insert_label.assert_called_once_with(label_list, 1)
+        mock_insert_annot.assert_called_once_with(annot_list, 1)
+
+        self.assertEqual(result["annotation_set"]["id"], 1)
+        self.assertEqual(len(result["label_set"]), 1)
