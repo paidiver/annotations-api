@@ -68,7 +68,15 @@ spec:
             - -c
             - |
               python manage.py migrate &&
-              poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }}
+              poetry run gunicorn config.wsgi:application \
+                -w {{ .Values.api.workers }} \
+                -b 0.0.0.0:{{ .Values.api.port }} \
+                --timeout {{ .Values.api.timeout }} \
+                --error-logfile - \
+                --log-level {{ .Values.api.logLevel }} \
+                {{- if .Values.api.accessLogsEnabled }} \
+                --access-logfile - \
+                {{- end }}
           securityContext:
             {{- toYaml .Values.api.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
