@@ -161,17 +161,9 @@ class UploadAnnotationsViewTests(APITestCase):
 
     def test_upload_annotations_rejects_non_xlsx_file(self):
         """Test that uploading a non-.xlsx file is rejected."""
-        text_file = SimpleUploadedFile(
-            "test_file.txt",
-            b"This is not an Excel file",
-            content_type="text/plain"
-        )
+        text_file = SimpleUploadedFile("test_file.txt", b"This is not an Excel file", content_type="text/plain")
 
-        response = self.client.post(
-            self.upload_url,
-            {"file": text_file},
-            format="multipart",
-        )
+        response = self.client.post(self.upload_url, {"file": text_file}, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["error"], "Provided file is not a .xlsx file.")
@@ -182,7 +174,7 @@ class UploadAnnotationsViewTests(APITestCase):
         invalid_file = SimpleUploadedFile(
             "invalid.xlsx",
             b"Not a valid Excel file content",
-            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
         response = self.client.post(
@@ -193,3 +185,53 @@ class UploadAnnotationsViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["error"], "Failed to read Excel file.")
+
+    def test_upload_annotations_handles_missing_sheets(self):
+        """Test that uploading a file with missing required sheets is rejected."""
+        file_stream = io.BytesIO()
+        df = pd.DataFrame([{"name": "wrong sheet"}])
+        with pd.ExcelWriter(file_stream, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Wrong Sheet")
+        file_stream.seek(0)
+        file_stream.name = "incomplete.xlsx"
+
+        response = self.client.post(
+            self.upload_url,
+            {"file": file_stream},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("error", response.data)
+
+    def test_upload_annotations_calls_parse_functions_correctly(self):
+        """Test that the correct parse functions are called with the correct data."""
+        with (
+            patch("api.views.annotation.parse_annodation_set_metadata") as mock_parse_set,
+            patch("api.views.annotation.parse_label_set") as mock_parse_label,
+            patch("api.views.annotation.parse_annotation_data") as mock_parse_annotation,
+            patch("api.views.annotation.ingest_annotation_data") as mock_ingest,
+        ):
+            mock_parse_set.return_value = self.mock_annotation_set
+            mock_parse_label.return_value = self.mock_label_data
+            mock_parse_annotation.return_value = self.mock_annotation_data
+            mock_ingest.return_value = {}
+
+            xlsx_file = self.create_mock_xlsx_file()
+            self.client.post(
+                self.upload_url,
+                {"file": xlsx_file},
+                format="multipart",
+            )
+
+            self.assertTrue(mock_parse_set.called)
+            self.assertTrue(mock_parse_label.called)
+            self.assertTrue(mock_parse_annotation.called)
+            self.assertTrue(mock_ingest.called)
+
+            # Verify ingest was called with the parsed data
+            mock_ingest.assert_called_once_with(
+                self.mock_annotation_set,
+                self.mock_label_data,
+                self.mock_annotation_data,
+            )
