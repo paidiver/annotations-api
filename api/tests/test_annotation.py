@@ -104,7 +104,7 @@ class AnnotationViewSetTests(APITestCase):
 
 
 class UploadAnnotationsViewTests(APITestCase):
-    """Integration tests for UploadAnnotationsView endpoints."""
+    """Tests for UploadAnnotationsView endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
