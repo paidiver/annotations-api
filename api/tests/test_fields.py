@@ -169,6 +169,7 @@ class ContextTests(AuthenticatedAPITestCase):
         self.assertEqual(context_instance.name, "New Test Context")
 
     def test_anonymous_user_cannot_post_context(self):
+        """Test that a Context can't be created by an anonymous user."""
         data = {"name": "New Test Context", "uri": "http://test.com/context"}
         self.client.force_authenticate(user=None)
         response = self.client.post(self.context_list, data, format="json")
@@ -430,6 +431,7 @@ class LicenseTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(License.objects.count(), 1)
+
 
 class PlatformTests(AuthenticatedAPITestCase):
     """Tests for the Platform model."""
