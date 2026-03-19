@@ -158,3 +158,38 @@ class UploadAnnotationsViewTests(APITestCase):
             self.assertEqual(response.data["status"], "uploaded")
             self.assertEqual(response.data["data"]["status"], "success")
             self.assertEqual(response.data["data"]["count"], 10)
+
+    def test_upload_annotations_rejects_non_xlsx_file(self):
+        """Test that uploading a non-.xlsx file is rejected."""
+        text_file = SimpleUploadedFile(
+            "test_file.txt",
+            b"This is not an Excel file",
+            content_type="text/plain"
+        )
+
+        response = self.client.post(
+            self.upload_url,
+            {"file": text_file},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Provided file is not a .xlsx file.")
+
+    def test_upload_annotations_rejects_invalid_excel_file(self):
+        """Test that uploading an invalid Excel file is rejected."""
+        # This has the right name, but the content will make pd.read_excel fail
+        invalid_file = SimpleUploadedFile(
+            "invalid.xlsx",
+            b"Not a valid Excel file content",
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        response = self.client.post(
+            self.upload_url,
+            {"file": invalid_file},
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Failed to read Excel file.")
