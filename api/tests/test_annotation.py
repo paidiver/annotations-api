@@ -2,9 +2,8 @@
 
 import io
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import openpyxl
 import pandas as pd
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
