@@ -186,11 +186,13 @@ class TestParseCoordinates(TestCase):
         self.assertEqual(_parse_coordinates(""), [])
         self.assertEqual(_parse_coordinates(None), [])
 
+
 class TestIngestAnnotationData(TransactionTestCase):
     """Test class for testing data ingestion."""
-    @patch('api.utils.annotation.insert_annotations_into_tables')
-    @patch('api.utils.annotation.insert_label_data')
-    @patch('api.utils.annotation.insert_annotations_data')
+
+    @patch("api.utils.annotation.insert_annotations_into_tables")
+    @patch("api.utils.annotation.insert_label_data")
+    @patch("api.utils.annotation.insert_annotations_data")
     def test_ingest_annotation_data_success(self, mock_insert_annot, mock_insert_label, mock_insert_set):
         """Test the orchestration of the ingestion process."""
         mock_insert_set.return_value = {"id": 1, "name": "Test Set"}
