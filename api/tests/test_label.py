@@ -10,6 +10,7 @@ from rest_framework import status
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
+from api.serializers.label import LabelSerializer
 from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
@@ -23,7 +24,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
 
-        self._worms_patcher = patch("api.serializers.label._test_cached_and_live_worms_api")
+        self._worms_patcher = patch("api.serializers.label._ingest_get_aphia_id_cached_worms")
         self.mocked_worms = self._worms_patcher.start()
         self.addCleanup(self._worms_patcher.stop)
 
@@ -114,7 +115,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_create_label_with_empty_aphia_id(self):
-        """Test that creating a Label with an empty lowest_aphia_id is accepted."""
+        """Test that creating a Label with an empty lowest_aphia_id is rejected."""
         payload = {
             "name": "Valid Aphia Label",
             "annotation_set_id": self.annotation_set.pk,
@@ -122,7 +123,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         }
 
         resp = self.client.post(self.list_url(), payload, format="json")
-        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_labels(self):
         """Test listing Labels."""
@@ -182,6 +183,60 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         resp = self.client.delete(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Label.objects.filter(pk=label.pk).exists())
+
+    def test_validate_aphia_id_uses_context_cache(self):
+        """Test that the same aphia_id is only validated once per shared serializer context."""
+        self.mocked_worms.return_value = Mock(status_code=200)
+
+        shared_context = {"aphia_validation_error_cache": {}}
+
+        payload_1 = {
+            "name": "Label One",
+            "annotation_set_id": self.annotation_set.pk,
+            "lowest_aphia_id": "12345",
+            "parent_label_name": "Parent Label",
+        }
+        payload_2 = {
+            "name": "Label Two",
+            "annotation_set_id": self.annotation_set.pk,
+            "lowest_aphia_id": "12345",
+            "parent_label_name": "Parent Label",
+        }
+
+        serializer_1 = LabelSerializer(data=payload_1, context=shared_context)
+        serializer_2 = LabelSerializer(data=payload_2, context=shared_context)
+
+        self.assertTrue(serializer_1.is_valid(), serializer_1.errors)
+        self.assertTrue(serializer_2.is_valid(), serializer_2.errors)
+
+        self.mocked_worms.assert_called_once_with("12345")
+        self.assertIn("12345", shared_context["aphia_validation_error_cache"])
+        self.assertIsNone(shared_context["aphia_validation_error_cache"]["12345"])
+
+    def test_validate_aphia_id_caches_invalid_result(self):
+        """Test that an invalid aphia_id result is cached and not requested twice."""
+        self.mocked_worms.return_value = Mock(status_code=400)
+
+        shared_context = {"aphia_validation_error_cache": {}}
+
+        payload = {
+            "name": "Invalid Aphia Label",
+            "annotation_set_id": self.annotation_set.pk,
+            "lowest_aphia_id": "999999999",
+            "parent_label_name": "Parent Label",
+        }
+
+        serializer_1 = LabelSerializer(data=payload, context=shared_context)
+        serializer_2 = LabelSerializer(data=payload, context=shared_context)
+
+        self.assertFalse(serializer_1.is_valid())
+        self.assertFalse(serializer_2.is_valid())
+
+        self.mocked_worms.assert_called_once_with("999999999")
+        self.assertEqual(
+            shared_context["aphia_validation_error_cache"]["999999999"],
+            "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
+        )
 
     def test_anonymous_user_cannot_patch_label(self):
         """Test that a Label can't be PATCHed by an anonymous user.."""
