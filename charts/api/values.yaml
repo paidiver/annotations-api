@@ -39,7 +39,7 @@ api:
     cachedWormsApiToken:
       secretName: my-app-secrets
       secretKey: ingest-api-token
-  resources: {}      
+  resources: {}
   securityContext:
     runAsUser: 1000
   initContainer:
