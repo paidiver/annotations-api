@@ -276,7 +276,6 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
             "creation_datetime": row["annotation_creation_datetime"],
         }
 
-        print(f"Parsed annotation row: {parsed_row}")
         annotation_data.append(parsed_row)
 
     return annotation_data
