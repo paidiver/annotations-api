@@ -56,6 +56,9 @@ class Label(DefaultColumns):
         """Meta class for Label."""
 
         db_table = "labels"
+        constraints = [
+            models.UniqueConstraint(fields=["name", "parent_label_name"], name="unique_label_name_per_parent")
+        ]
 
     def __str__(self):
         """String representation of the Label instance."""
