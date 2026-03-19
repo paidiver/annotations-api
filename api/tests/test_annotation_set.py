@@ -41,7 +41,10 @@ class AnnotationSetViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.data
-        names = sorted([item["name"] for item in data])
+        self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(len(data["results"]), 2)
+        names = sorted([item["name"] for item in data["results"]])
         self.assertEqual(names, ["Set A", "Set B"])
 
     def test_retrieve_annotation_set(self):

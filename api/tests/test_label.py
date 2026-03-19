@@ -126,24 +126,36 @@ class LabelViewSetTests(APITestCase):
 
     def test_list_labels(self):
         """Test listing Labels."""
-        Label.objects.create(name="Test Label", annotation_set=self.annotation_set, parent_label_name="Parent Label")
-        Label.objects.create(name="Another Label", annotation_set=self.annotation_set, parent_label_name="Parent Label")
+        Label.objects.create(
+            name="Test Label",
+            annotation_set=self.annotation_set,
+            parent_label_name="Parent Label",
+            lowest_aphia_id="12345",
+        )
+        Label.objects.create(
+            name="Another Label",
+            annotation_set=self.annotation_set,
+            parent_label_name="Parent Label",
+            lowest_aphia_id="12345",
+        )
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.data
-        names = sorted([item["name"] for item in data])
+        self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(len(data["results"]), 2)
+        names = sorted([item["name"] for item in data["results"]])
         self.assertEqual(names, ["Another Label", "Test Label"])
 
     def test_retrieve_label(self):
         """Test retrieving a specific Label."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
+        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
         resp = self.client.get(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(label.pk))
         self.assertEqual(resp.data["name"], "Test Label")
-        self.assertEqual(label.__str__(), "Test Label")
 
     def test_create_label_with_annotation_set_that_does_not_exist(self):
         """Test that creating an Label with an annotation set that does not exist is rejected."""
@@ -161,7 +173,7 @@ class LabelViewSetTests(APITestCase):
         """Test that PATCHing an Label."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
+        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
         payload = {
             "name": "Updated Label",
             "lowest_aphia_id": "12345",
@@ -175,7 +187,7 @@ class LabelViewSetTests(APITestCase):
 
     def test_delete_label(self):
         """Test deleting an Label."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
+        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
 
         resp = self.client.delete(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
@@ -206,9 +218,9 @@ class LabelViewSetTests(APITestCase):
         self.assertTrue(serializer_1.is_valid(), serializer_1.errors)
         self.assertTrue(serializer_2.is_valid(), serializer_2.errors)
 
-        self.mocked_worms.assert_called_once_with("12345")
-        self.assertIn("12345", shared_context["aphia_validation_error_cache"])
-        self.assertIsNone(shared_context["aphia_validation_error_cache"]["12345"])
+        self.mocked_worms.assert_called_once_with(12345)
+        self.assertIn(12345, shared_context["aphia_validation_error_cache"])
+        self.assertIsNone(shared_context["aphia_validation_error_cache"][12345])
 
     def test_validate_aphia_id_caches_invalid_result(self):
         """Test that an invalid aphia_id result is cached and not requested twice."""
@@ -229,8 +241,8 @@ class LabelViewSetTests(APITestCase):
         self.assertFalse(serializer_1.is_valid())
         self.assertFalse(serializer_2.is_valid())
 
-        self.mocked_worms.assert_called_once_with("999999999")
+        self.mocked_worms.assert_called_once_with(999999999)
         self.assertEqual(
-            shared_context["aphia_validation_error_cache"]["999999999"],
+            shared_context["aphia_validation_error_cache"][999999999],
             "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
         )
