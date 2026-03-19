@@ -42,6 +42,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         annotation_data_b = {**self.annotation_data, "annotation_platform": "Another Platform"}
         Annotation.objects.create(annotation_set=self.annotation_set, image=self.image_a, **self.annotation_data)
         Annotation.objects.create(annotation_set=self.annotation_set, image=self.image_b, **annotation_data_b)
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -55,6 +56,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         annotation = Annotation.objects.create(
             annotation_set=self.annotation_set, image=self.image_a, **self.annotation_data
         )
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.detail_url(annotation.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -98,3 +100,19 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         resp = self.client.delete(self.detail_url(annotation.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Annotation.objects.filter(pk=annotation.pk).exists())
+
+    def test_anonymous_user_cannot_patch_annotation(self):
+        """Test that an Annotation can't be PATCHed by an anonymous user."""
+        annotation = Annotation.objects.create(
+            image=self.image_a, annotation_set=self.annotation_set, **self.annotation_data
+        )
+        payload = {
+            "annotation_platform": "Updated Platform",
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.patch(self.detail_url(annotation.pk), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        annotation.refresh_from_db()
+        self.assertEqual(annotation.annotation_platform, "Test Platform")

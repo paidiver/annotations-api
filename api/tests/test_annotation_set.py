@@ -37,6 +37,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         annotation_set_a.image_sets.set([self.image_set])
         annotation_set_b = AnnotationSet.objects.create(name="Set B")
         annotation_set_b.image_sets.set([self.image_set])
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -49,6 +50,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         """Test retrieving a specific AnnotationSet."""
         annotation_set = AnnotationSet.objects.create(name="Set A")
         annotation_set.image_sets.set([self.image_set])
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         self.assertEqual(
             annotation_set.__str__(), f"AnnotationSet(id={annotation_set.pk}, version={annotation_set.version})"
@@ -175,3 +177,14 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         resp = self.client.delete(self.detail_url(annotation_set.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(AnnotationSet.objects.filter(pk=annotation_set.pk).exists())
+
+    def test_anonymous_user_cannot_create_annotation_set(self):
+        """Test that an AnnotationSet can't be created by an anonymous user."""
+        payload = {
+            "name": "Created Set via IDs",
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

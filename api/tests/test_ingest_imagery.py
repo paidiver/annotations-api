@@ -165,3 +165,17 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
         self.assertEqual(ImageSet.objects.count(), 0)
         self.assertEqual(Image.objects.count(), 0)
+
+    def test_anonymous_user_cannot_ingest_ifdo(self):
+        """Test that an anonymous user can't create ImageSet and Images ."""
+        payload = {
+            "submission_id": "sub-123",
+            "ifdo": {
+                "image-set-header": {"image-set-name": "ok"},
+                "image-set-items": [{"x": 1}, {"x": 2}],
+            },
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.post(self.ingest_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

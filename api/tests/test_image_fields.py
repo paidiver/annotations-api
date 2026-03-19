@@ -35,6 +35,7 @@ class ImageCameraCalibrationModelTests(AuthenticatedAPITestCase):
     def test_get_camera_cals(self):
         """Test retrieving camera_cals list."""
         url = self.camera_cal_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -43,6 +44,7 @@ class ImageCameraCalibrationModelTests(AuthenticatedAPITestCase):
     def test_get_camera_cal_by_id(self):
         """Test retrieving a specific camera_cal by id."""
         url = self.camera_cal_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.camera_cal_id)
@@ -87,6 +89,14 @@ class ImageCameraCalibrationModelTests(AuthenticatedAPITestCase):
         camera_cal_instance = ImageCameraCalibrationModel.objects.get(id=camera_cal_id)
         self.assertEqual(camera_cal_instance.calibration_model_type, "New Test record")
 
+    def test_anonymous_user_cannot_post_camera_cal(self):
+        """Test that camera_cal can't be created by an anonymous user."""
+        data = {"calibration_model_type": "New Test record"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.camera_cal_list, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class ImageCameraPoseTests(AuthenticatedAPITestCase):
     """Tests for the ImageCameraPose model."""
@@ -107,6 +117,7 @@ class ImageCameraPoseTests(AuthenticatedAPITestCase):
     def test_get_camera_poses(self):
         """Test retrieving camera_poses list."""
         url = self.camera_pose_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -115,6 +126,7 @@ class ImageCameraPoseTests(AuthenticatedAPITestCase):
     def test_get_camera_pose_by_id(self):
         """Test retrieving a specific camera_pose by id."""
         url = self.camera_pose_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.camera_pose_id)
@@ -159,6 +171,13 @@ class ImageCameraPoseTests(AuthenticatedAPITestCase):
         camera_pose_instance = ImageCameraPose.objects.get(id=camera_pose_id)
         self.assertEqual(camera_pose_instance.utm_east_north_up_meters, [50.0, 60.0])
 
+    def test_anonymous_user_cannot_post_camera_pose(self):
+        """Test that a camera_pose can't be created by an anonymous user."""
+        data = {"utm_east_north_up_meters": [50.0, 60.0]}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.camera_pose_list, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class ImageDomeportParameterTests(AuthenticatedAPITestCase):
     """Tests for the ImageDomeportParameter model."""
@@ -179,6 +198,7 @@ class ImageDomeportParameterTests(AuthenticatedAPITestCase):
     def test_get_domeport_params(self):
         """Test retrieving domeport_params list."""
         url = self.domeport_param_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -187,6 +207,7 @@ class ImageDomeportParameterTests(AuthenticatedAPITestCase):
     def test_get_domeport_param_by_id(self):
         """Test retrieving a specific domeport_param by id."""
         url = self.domeport_param_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.domeport_param_id)
@@ -231,6 +252,13 @@ class ImageDomeportParameterTests(AuthenticatedAPITestCase):
         domeport_param_instance = ImageDomeportParameter.objects.get(id=domeport_param_id)
         self.assertEqual(domeport_param_instance.extra_description, "New domeport parameter")
 
+    def test_anonymous_user_cannot_post_domeport_param(self):
+        """Test that a domeport_param can't be created by an anonymous user."""
+        data = {"extra_description": "New domeport parameter"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.domeport_param_list, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class ImageFlatportParameterTests(AuthenticatedAPITestCase):
     """Tests for the ImageFlatportParameter model."""
@@ -251,6 +279,7 @@ class ImageFlatportParameterTests(AuthenticatedAPITestCase):
     def test_get_flatport_params(self):
         """Test retrieving flatport_params list."""
         url = self.flatport_param_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -259,6 +288,7 @@ class ImageFlatportParameterTests(AuthenticatedAPITestCase):
     def test_get_flatport_param_by_id(self):
         """Test retrieving a specific flatport_param by id."""
         url = self.flatport_param_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.flatport_param_id)
@@ -303,6 +333,13 @@ class ImageFlatportParameterTests(AuthenticatedAPITestCase):
         flatport_param_instance = ImageFlatportParameter.objects.get(id=flatport_param_id)
         self.assertEqual(flatport_param_instance.extra_description, "New flatport parameter")
 
+    def test_anonymous_user_cannot_post_flatport_param(self):
+        """Test that a flatport_param can't be created by an anonymous user."""
+        data = {"extra_description": "New flatport parameter"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.flatport_param_list, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
     """Tests for the ImageCameraHousingViewport model."""
@@ -323,6 +360,7 @@ class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
     def test_get_housing_params(self):
         """Test retrieving housing_params list."""
         url = self.housing_param_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -331,6 +369,7 @@ class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
     def test_get_housing_param_by_id(self):
         """Test retrieving a specific housing_param by id."""
         url = self.housing_param_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.housing_param_id)
@@ -375,6 +414,13 @@ class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
         housing_param_instance = ImageCameraHousingViewport.objects.get(id=housing_param_id)
         self.assertEqual(housing_param_instance.extra_description, "New housing parameter")
 
+    def test_anonymous_user_cannot_post_housing_param(self):
+        """Test that a housing_param can't be created by an anonymous user."""
+        data = {"extra_description": "New housing parameter"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.housing_param_list, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
     """Tests for the ImagePhotometricCalibration model."""
@@ -397,6 +443,7 @@ class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
     def test_get_photometric_cals(self):
         """Test retrieving photometric_cals list."""
         url = self.photometric_cal_list
+        self.client.force_authenticate(user=None)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -405,6 +452,7 @@ class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
     def test_get_photometric_cal_by_id(self):
         """Test retrieving a specific photometric_cal by id."""
         url = self.photometric_cal_detail
+        self.client.force_authenticate(user=None)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.photometric_cal_id)
@@ -448,3 +496,10 @@ class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
         self.assertEqual(ImagePhotometricCalibration.objects.count(), 2)
         photometric_cal_instance = ImagePhotometricCalibration.objects.get(id=photometric_cal_id)
         self.assertEqual(photometric_cal_instance.sequence_illumination_type, "mixed")
+
+    def test_anonymous_user_cannot_post_photometric_cal(self):
+        """Test that a camera_pose can't be created by an anonymous user."""
+        data = {"sequence_illumination_type": "mixed"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.photometric_cal_list, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
