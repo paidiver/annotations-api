@@ -44,7 +44,10 @@ class TestAnnotationParsers(TestCase):
             "annotation-abstract",
         ]
 
-        with patch("api.utils.annotation.ANNOTATION_METADATA_KEYS", mock_keys):
+        with (
+            patch("api.utils.annotation.ANNOTATION_METADATA_KEYS", mock_keys),
+            patch("api.utils.annotation.ANNOTATION_SET_COL_SIZE", 3),
+        ):
             result = parse_annodation_set_metadata(df)
 
         self.assertEqual(result["annotation-set-name"], "Trial Data")
@@ -85,7 +88,10 @@ class TestAnnotationParsers(TestCase):
 
         df = pd.DataFrame(data)
 
-        result = parse_label_set(df)
+        with (
+            patch("api.utils.annotation.LABEL_SET_COL_SIZE", 7),
+        ):
+            result = parse_label_set(df)
 
         self.assertEqual(len(result), 3)
 

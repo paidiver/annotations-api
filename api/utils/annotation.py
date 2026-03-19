@@ -20,6 +20,8 @@ from api.utils.constants import (
     ANNOTATION_DATA_START_COL,
     ANNOTATION_DATA_START_ROW,
     ANNOTATION_METADATA_KEYS,
+    ANNOTATION_SET_COL_SIZE,
+    LABEL_SET_COL_SIZE,
 )
 
 
@@ -83,7 +85,7 @@ def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
     Returns:
         dict: parsed data.
     """
-    df = annotation_df.iloc[:, :3]
+    df = annotation_df.iloc[:, :ANNOTATION_SET_COL_SIZE]
     df.iloc[:, 2] = df.iloc[:, 2].fillna("")
 
     annotation_data = {}
@@ -127,7 +129,7 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     if start_idx is None:
         raise ValueError("Could not find values in Label Set.")
 
-    label_df = label_df.iloc[start_idx:, :7]
+    label_df = label_df.iloc[start_idx:, :LABEL_SET_COL_SIZE]
 
     label_df.columns = [
         "field",
