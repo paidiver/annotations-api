@@ -11,8 +11,12 @@ class TestWormsAPI(TestCase):
     """Unit tests for _ingest_get_aphia_id_cached_worms."""
 
     @patch("api.serializers.label.CachedWoRMSClient")
-    def test_returns_cached_if_cached_is_200(self, mock_client_class):
-        """Return the response from CachedWoRMSClient.ingest when the cache returns 200."""
+    def test_returns_cached_if_cached_is_200(self, mock_client_class: Mock):
+        """Return the response from CachedWoRMSClient.ingest when the cache returns 200.
+
+        Args:
+            mock_client_class (Mock): Mock of the CachedWoRMSClient class.
+        """
         cached_response = Mock(status_code=200)
         mock_client = mock_client_class.return_value
         mock_client.ingest.return_value = cached_response
@@ -24,8 +28,12 @@ class TestWormsAPI(TestCase):
         mock_client.ingest.assert_called_once_with("123")
 
     @patch("api.serializers.label.CachedWoRMSClient")
-    def test_returns_error_if_cached_fails(self, mock_client_class):
-        """Return the response from CachedWoRMSClient.ingest when the cache returns an error."""
+    def test_returns_error_if_cached_fails(self, mock_client_class: Mock):
+        """Return the response from CachedWoRMSClient.ingest when the cache returns an error.
+
+        Args:
+            mock_client_class (Mock): Mock of the CachedWoRMSClient class.
+        """
         cached_response = Mock(status_code=404)
         mock_client = mock_client_class.return_value
         mock_client.ingest.return_value = cached_response

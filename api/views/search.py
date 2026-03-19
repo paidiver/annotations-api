@@ -95,19 +95,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         paginator = self.paginator
         page = paginator.paginate_queryset(queryset, request, view=self)
 
-        if page is not None:
-            grouped = {}
-            for row in page:
-                annotation_set_id = str(row.pop("annotation_set_id"))
-                grouped.setdefault(annotation_set_id, []).append(row)
-            return paginator.get_paginated_response(grouped)
-
-        rows = list(queryset)
+        rows = page if page is not None else list(queryset)
         grouped = {}
         for row in rows:
             annotation_set_id = str(row.pop("annotation_set_id"))
             grouped.setdefault(annotation_set_id, []).append(row)
-
+        if page is not None:
+            return paginator.get_paginated_response(grouped)
         return Response(grouped)
 
     def _get_search_queryset(self, aphia_ids: builtins.list[int]) -> QuerySet:
