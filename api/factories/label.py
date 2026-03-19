@@ -10,6 +10,25 @@ from api.models import Label
 
 from .annotation_set import AnnotationSetFactory
 
+LOWEST_APHIA_ID_LIST = [
+    123349,
+    1292,
+    100698,
+    146142,
+    100684,
+    127137,
+    148427,
+    106835,
+    123084,
+    106738,
+    100793,
+    125166,
+    110835,
+    558,
+    110956,
+    123813,
+]
+
 
 class LabelFactory(DjangoModelFactory):
     """Factory for Label."""
@@ -39,7 +58,7 @@ class LabelFactory(DjangoModelFactory):
         )
     )
 
-    lowest_aphia_id = factory.LazyFunction(lambda: str(random.randint(1, 9999)))
+    lowest_aphia_id = factory.LazyFunction(lambda: random.choice(LOWEST_APHIA_ID_LIST))
 
     name_is_lowest = factory.LazyFunction(lambda: random.random() < 0.3)  # noqa: PLR2004
 

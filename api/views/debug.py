@@ -84,7 +84,10 @@ tables_to_models_and_serializers = {
 }
 
 
-@extend_schema(tags=["Debug"])
+@extend_schema(
+    tags=["Debug"],
+    responses={200: dict},
+)
 class DebugDatabaseDumpView(APIView):
     """Debug endpoint to dump DB contents as JSON.
 
