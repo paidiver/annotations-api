@@ -46,6 +46,8 @@ SEARCH_PARAMS = [
 class AnnotationSearchViewSet(GenericViewSet):
     """ViewSet for searching Annotations."""
 
+    queryset = AnnotationLabel.objects.none()
+
     @extend_schema(
         parameters=SEARCH_PARAMS,
         responses={200: SEARCH_RESULT_ITEM},
@@ -185,7 +187,7 @@ class AnnotationSearchViewSet(GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if name_part:
-            aphia_ids.extend(_get_aphia_ids_by_name_part(name_part))
+            aphia_ids.extend(_get_aphia_ids_by_name_part(name_part) or [])
 
         aphia_ids = list(dict.fromkeys(aphia_ids))
 
@@ -196,8 +198,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             )
 
         if include_descendants:
-            descendant_ids = _get_descendant_aphia_ids(aphia_ids)
-
+            descendant_ids = _get_descendant_aphia_ids(aphia_ids) or []
             aphia_ids = list(dict.fromkeys([*aphia_ids, *descendant_ids]))
 
         return aphia_ids
@@ -225,7 +226,7 @@ def _get_descendant_aphia_ids(aphia_ids: list[int]) -> list[int]:
     """
     client = CachedWoRMSClient()
     try:
-        return client.descendants_aphia_ids(aphia_ids)
+        return client.descendants_aphia_ids(aphia_ids) or []
     except requests.RequestException:
         return []
 
@@ -241,6 +242,6 @@ def _get_aphia_ids_by_name_part(name_part: str) -> list[str]:
     """
     client = CachedWoRMSClient()
     try:
-        return client.aphia_ids_by_name_part(name_part, combine_vernaculars=True)
+        return client.aphia_ids_by_name_part(name_part, combine_vernaculars=True) or []
     except requests.RequestException:
         return []
