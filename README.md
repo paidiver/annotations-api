@@ -88,6 +88,13 @@ The CI workflow:
 The repo itself continues to have 0.0.0-dev in Chart.yaml for development.
 The release version is derived solely from the Git tag.
 
+To tag a git commit:
+
+```bash
+git tag helm-vX.X.X
+git push origin helm-vX.X.X
+```
+
 ### Usage
 
 [Helm](https://helm.sh) must be installed to use the charts.  Please refer to
@@ -137,6 +144,13 @@ The CI workflow:
 - Builds a new Docker image
 - Tags the Docker image with the tag version as well as the tagged commit SHA
 - Pushes the images to the GitHub Container Repository
+
+To tag a git commit:
+
+```bash
+git tag docker-vX.X.X
+git push origin docker-vX.X.X
+```
 
 ## Quick Start (Docker – Recommended)
 
