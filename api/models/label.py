@@ -26,10 +26,9 @@ class Label(DefaultColumns):
         help_text="Most detailed taxonomic identification possible; scientificName field in DarwinCore",
     )
 
-    lowest_aphia_id = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
+    lowest_aphia_id = models.PositiveIntegerField(
+        null=False,
+        db_index=True,
         help_text="The AphiaID corresponding to the lowest_taxonomic_name, if applicable",
     )
 
@@ -56,7 +55,6 @@ class Label(DefaultColumns):
         """Meta class for Label."""
 
         db_table = "labels"
-
-    def __str__(self):
-        """String representation of the Label instance."""
-        return self.name
+        indexes = [
+            models.Index(fields=["lowest_aphia_id"], name="labels_lowest_aphia_idx"),
+        ]

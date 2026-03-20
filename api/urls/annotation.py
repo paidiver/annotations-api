@@ -3,6 +3,7 @@
 from rest_framework.routers import DefaultRouter
 
 from api.views import AnnotationLabelViewSet, AnnotationSetViewSet, AnnotationViewSet, AnnotatorViewSet
+from api.views.search import AnnotationSearchViewSet
 
 router_annotation = DefaultRouter()
 
@@ -29,4 +30,11 @@ router_annotation.register(
     r"annotation_sets",
     AnnotationSetViewSet,
     basename="annotation_set",
+)
+
+# annotatiion_set endpoints are registered here
+router_annotation.register(
+    r"search",
+    AnnotationSearchViewSet,
+    basename="search",
 )

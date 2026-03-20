@@ -29,7 +29,7 @@ class AnnotationLabelViewSetTests(APITestCase):
             shape="rectangle",
             coordinates=[[10, 10], [20, 20]],
         )
-        self.label = Label.objects.create(name="A Label", annotation_set=self.annotation_set)
+        self.label = Label.objects.create(name="A Label", annotation_set=self.annotation_set, lowest_aphia_id=12345)
 
         self.annotator = Annotator.objects.create(name="Test Annotator")
 
@@ -43,8 +43,8 @@ class AnnotationLabelViewSetTests(APITestCase):
 
     def test_list_annotation_labels(self):
         """Test listing AnnotationLabels."""
-        label1 = Label.objects.create(name="Test Label", annotation_set=self.annotation_set)
-        label2 = Label.objects.create(name="Another Label", annotation_set=self.annotation_set)
+        label1 = Label.objects.create(name="Test Label", annotation_set=self.annotation_set, lowest_aphia_id=12345)
+        label2 = Label.objects.create(name="Another Label", annotation_set=self.annotation_set, lowest_aphia_id=12345)
 
         AnnotationLabel.objects.create(
             annotation=self.annotation, label=label1, annotator=self.annotator, creation_datetime="2024-01-01T00:00:00Z"
@@ -57,7 +57,10 @@ class AnnotationLabelViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.data
-        creation_datetimes = sorted([item["creation_datetime"] for item in data])
+        self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(len(data["results"]), 2)
+        creation_datetimes = sorted([item["creation_datetime"] for item in data["results"]])
         self.assertEqual(creation_datetimes, ["2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"])
 
     def test_retrieve_annotation_label(self):

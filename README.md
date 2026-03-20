@@ -151,6 +151,14 @@ CACHED_WORMS_API_TOKEN=mysecrettoken
 
 ### 2. Build and run the stack
 
+First, ensure you have a shared Docker network named `shared_services` (used for inter-container communication with the WoRMS cache API if necessary):
+
+```bash
+docker network create shared_services
+```
+
+Then run the stack:
+
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 ```

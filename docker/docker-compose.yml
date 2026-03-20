@@ -11,7 +11,8 @@ services:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5435:5432"
-
+    networks:
+      - shared_services
   api:
     build:
       context: ../
@@ -30,6 +31,12 @@ services:
     volumes:
       - ../:/app:Z
       - ../docker/scripts:/tmp/scripts
+    networks:
+      - shared_services
 
 volumes:
   pg_data:
+
+networks:
+  shared_services:
+    external: true
