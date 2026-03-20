@@ -11,7 +11,8 @@ env:
 jobs:
   release-docker-image:
     permissions:
-      contents: write
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
