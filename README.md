@@ -125,7 +125,7 @@ helm uninstall my-api
 ## Releasing Docker Images
 
 ### Production release
-A new `latest` Docker image is build and published to https://ghcr.io/annotations-api on each push to main.
+A new `latest` Docker image is build and published to https://ghcr.io/paidiver/annotations-api on each push to main.
 
 ### Development release
 Development versions of Docker images can be released manually, driven by Git tags.
