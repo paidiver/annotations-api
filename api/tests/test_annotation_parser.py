@@ -96,12 +96,12 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(len(result), 3)
 
         self.assertEqual(result[0]["name"], "antedon")
-        self.assertEqual(result[0]["is_lowest"], True)
+        self.assertEqual(result[0]["name_is_lowest"], True)
         self.assertEqual(result[0]["lowest_aphia_id"], 123349)
         self.assertEqual(result[0]["identification_qualifier"], "sp.indet.")
 
         self.assertEqual(result[1]["name"], "anthozoa_34")
-        self.assertEqual(result[1]["is_lowest"], False)
+        self.assertEqual(result[1]["name_is_lowest"], False)
 
         self.assertEqual(result[2]["name"], "coarse")
         self.assertEqual(result[2]["parent_label_name"], "habitat")

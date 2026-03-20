@@ -182,11 +182,8 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID) -> list[dict]:
         parent_name = label_dict.get("parent_label_name")
 
         existing_label = Label.objects.filter(
-            name=label_name,
-            parent_label_name=parent_name,
-            annotation_set_id=annotation_set_id
+            name=label_name, parent_label_name=parent_name, annotation_set_id=annotation_set_id
         ).first()
-
 
         if not existing_label:
             label_dict["annotation_set_id"] = annotation_set_id

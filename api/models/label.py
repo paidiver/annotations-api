@@ -56,7 +56,9 @@ class Label(DefaultColumns):
 
         db_table = "labels"
         constraints = [
-            models.UniqueConstraint(fields=["name", "parent_label_name", "annotation_set"], name="unique_label_name_per_parent")
+            models.UniqueConstraint(
+                fields=["name", "parent_label_name", "annotation_set"], name="unique_label_name_per_parent"
+            )
         ]
 
     def __str__(self):
