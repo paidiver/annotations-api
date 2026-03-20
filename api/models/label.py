@@ -10,7 +10,6 @@ class Label(DefaultColumns):
 
     name = models.CharField(
         max_length=255,
-        unique=True,
         help_text="Name in BIIGLE label tree output; name of label as annotated",
     )
 
@@ -57,7 +56,7 @@ class Label(DefaultColumns):
 
         db_table = "labels"
         constraints = [
-            models.UniqueConstraint(fields=["name", "parent_label_name"], name="unique_label_name_per_parent")
+            models.UniqueConstraint(fields=["name", "parent_label_name", "annotation_set"], name="unique_label_name_per_parent")
         ]
 
     def __str__(self):

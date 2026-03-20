@@ -14,7 +14,7 @@ from api.models.image import Image
 from api.models.image_set import ImageSet
 from api.models.label import Label
 from api.serializers import AnnotationSetSerializer, LabelSerializer
-from api.serializers.annotation import AnnotationLabelSerializer, AnnotationSerializer
+from api.serializers.annotation import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer
 from api.utils.constants import (
     ANNOTATION_DATA_END_COL,
     ANNOTATION_DATA_START_COL,
@@ -156,7 +156,7 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
                 "parent_label_name": row["parent_label_name"].strip(),
                 "lowest_taxonomic_name": row["lowest_taxonomic_name"].strip(),
                 "lowest_aphia_id": row["lowest_aphia_id"],
-                "is_lowest": str(row["label_name_is_lowest"]).strip().lower() == "yes",
+                "name_is_lowest": str(row["label_name_is_lowest"]).strip().lower() == "yes",
                 "identification_qualifier": row["identification_qualifier"].strip(),
             }
         )
@@ -178,24 +178,23 @@ def insert_label_data(label_list, annotation_set_id: uuid.UUID) -> list[dict]:
 
     for label_dict in label_list:
         label_name = label_dict.get("name")
-        parent_label = label_dict.get("parent_label_name")
+        # Ensure this matches the key from parse_label_set
+        parent_name = label_dict.get("parent_label_name")
 
-        # Look for existing record in this specific set
         existing_label = Label.objects.filter(
-            name=label_name, parent_label_name=parent_label, annotation_set_id=annotation_set_id
+            name=label_name,
+            parent_label_name=parent_name,
+            annotation_set_id=annotation_set_id
         ).first()
 
-        if existing_label:
-            # UPDATE mode
-            serializer = LabelSerializer(existing_label, data=label_dict, partial=True)
-        else:
-            # CREATE mode
+
+        if not existing_label:
             label_dict["annotation_set_id"] = annotation_set_id
             serializer = LabelSerializer(data=label_dict)
 
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            processed_data.append(serializer.data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                processed_data.append(serializer.data)
 
     return processed_data
 
@@ -355,11 +354,13 @@ def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: u
             anno_label_serializer.is_valid(raise_exception=True)
             anno_label_serializer.save()
 
+            annotator_serializer = AnnotatorSerializer(annotator_inst)
+
             data.append(
                 {
                     "annotation": anno_serializer.data,
                     "label": anno_label_serializer.data,
-                    "annotator": annotator_inst.data,
+                    "annotator": annotator_serializer.data,
                 }
             )
             created_count += 1
