@@ -15,16 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-pq0+to@p+04nu_njy7_r*nreqq(#*niwu@vqbev4a#bc07x^&^"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 allowed_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts if h.strip()]
 
@@ -40,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "corsheaders",
     "rest_framework",
+    "rest_framework.authtoken",
     "drf_spectacular",
     "api",
 ]
@@ -50,6 +41,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "api.pagination.DefaultPageNumberPagination",
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "api.services.token_auth.BearerAuthentication",
+    ],
 }
 
 SPECTACULAR_SETTINGS = {

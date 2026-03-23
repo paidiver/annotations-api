@@ -4,16 +4,17 @@ import uuid
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import Creator, Image, ImageSet, Project
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class ImageViewSetTests(APITestCase):
+class ImageViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for ImageViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.creators_payload = [
             {"name": "Ada Lovelace", "uri": "https://example.com/people/ada"},
             {"name": "Grace Hopper", "uri": "https://example.com/people/grace"},
@@ -35,6 +36,7 @@ class ImageViewSetTests(APITestCase):
         """Test listing Images."""
         Image.objects.create(filename="file_a.jpg", image_set=self.image_set)
         Image.objects.create(filename="file_b.jpg", image_set=self.image_set)
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -49,6 +51,7 @@ class ImageViewSetTests(APITestCase):
     def test_retrieve_image(self):
         """Test retrieving a specific Image."""
         image = Image.objects.create(filename="file_a.jpg", image_set=self.image_set)
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.detail_url(image.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -206,3 +209,12 @@ class ImageViewSetTests(APITestCase):
         resp = self.client.delete(self.detail_url(image.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Image.objects.filter(pk=image.pk).exists())
+
+    def test_anonymous_user_cannot_create_image(self):
+        """Test that an Image can't be PATCHed by an anonymous user."""
+        payload = {
+            "filename": "created_file_via_ids.jpg",
+        }
+        self.client.force_authenticate(user=None)
+        resp = self.client.post(self.list_url(), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

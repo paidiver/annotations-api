@@ -2,17 +2,18 @@
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import AnnotationSet, Creator, Project
 from api.models.image_set import ImageSet
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotationSetViewSetTests(APITestCase):
+class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationSetViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.creators_payload = [
             {"name": "Ada Lovelace", "uri": "https://example.com/people/ada"},
             {"name": "Grace Hopper", "uri": "https://example.com/people/grace"},
@@ -36,6 +37,7 @@ class AnnotationSetViewSetTests(APITestCase):
         annotation_set_a.image_sets.set([self.image_set])
         annotation_set_b = AnnotationSet.objects.create(name="Set B")
         annotation_set_b.image_sets.set([self.image_set])
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -51,6 +53,7 @@ class AnnotationSetViewSetTests(APITestCase):
         """Test retrieving a specific AnnotationSet."""
         annotation_set = AnnotationSet.objects.create(name="Set A")
         annotation_set.image_sets.set([self.image_set])
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         self.assertEqual(
             annotation_set.__str__(), f"AnnotationSet(id={annotation_set.pk}, version={annotation_set.version})"
@@ -177,3 +180,14 @@ class AnnotationSetViewSetTests(APITestCase):
         resp = self.client.delete(self.detail_url(annotation_set.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(AnnotationSet.objects.filter(pk=annotation_set.pk).exists())
+
+    def test_anonymous_user_cannot_create_annotation_set(self):
+        """Test that an AnnotationSet can't be created by an anonymous user."""
+        payload = {
+            "name": "Created Set via IDs",
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.post(self.list_url(), payload, format="json")
+
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

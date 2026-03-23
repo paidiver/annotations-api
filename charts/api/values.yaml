@@ -26,6 +26,8 @@ api:
   port: 8000
   timeout: 300
   workers: 1
+  logLevel: info
+  accessLogsEnabled: true
   service:
     port: 8000
   env:
@@ -39,6 +41,7 @@ api:
     cachedWormsApiToken:
       secretName: my-app-secrets
       secretKey: ingest-api-token
+  resources: {}
   securityContext:
     runAsUser: 1000
   initContainer:
@@ -52,6 +55,7 @@ ingress:
     pathType: Prefix
   ingressClassName: ""
   host: ""
+  proxyBodySize: "100m"
 
 # This is to override the chart name.
 nameOverride: ""

@@ -48,6 +48,10 @@ spec:
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
+          {{- if .Values.api.resources }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- end }}
           env:
             - name: DJANGO_SECRET_KEY
               valueFrom:
@@ -75,7 +79,7 @@ spec:
             - -c
             - |
               python manage.py migrate &&
-              poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }}
+              poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }} --error-logfile - --log-level {{ .Values.api.logLevel }}{{ if .Values.api.accessLogsEnabled }} --access-logfile -{{ end }}
           securityContext:
             {{- toYaml .Values.api.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
