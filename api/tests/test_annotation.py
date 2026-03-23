@@ -122,7 +122,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(annotation.annotation_platform, "Test Platform")
 
 
-class UploadAnnotationsViewTests(APITestCase):
+class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
     """Tests for UploadAnnotationsView endpoints."""
 
     def setUp(self):
