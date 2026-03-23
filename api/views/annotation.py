@@ -10,8 +10,8 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from api.models import Annotation, AnnotationLabel, Annotator
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
-from api.utils.annotation import (
-    ingest_annotation_data,
+from api.utils.annotations_ingest import ingest_annotation_data
+from api.utils.annotations_parser import (
     parse_annodation_set_metadata,
     parse_annotation_data,
     parse_label_set,

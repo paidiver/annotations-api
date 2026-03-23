@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from django.test import TransactionTestCase
 
-from api.utils.annotation import (
+from api.utils.annotations_parser import (
     _parse_coordinates,
     ingest_annotation_data,
     parse_annodation_set_metadata,

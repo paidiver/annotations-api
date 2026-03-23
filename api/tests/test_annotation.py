@@ -134,7 +134,7 @@ class UploadAnnotationsViewTests(APITestCase):
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
-    def test_upload_annotations_with_valid_xlsx_file(self):
+    def test_upload_annotations_returns_201_resp_for_valid_xlsx_file(self):
         """Test successful upload of a valid XLSX file."""
         with (
             patch("api.views.annotation.parse_annodation_set_metadata") as mock_parse_set,
