@@ -14,7 +14,7 @@ from api.utils.constants import (
 )
 
 
-def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
+def parse_annotation_set_metadata(annotation_df: pd.DataFrame) -> dict:
     """Parse annotation set metadata.
 
     Args:

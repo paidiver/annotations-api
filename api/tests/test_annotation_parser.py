@@ -12,7 +12,7 @@ from django.test import TransactionTestCase
 from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
     _parse_coordinates,
-    parse_annodation_set_metadata,
+    parse_annotation_set_metadata,
     parse_annotation_data,
     parse_label_set,
 )
@@ -52,7 +52,7 @@ class TestAnnotationParsers(TestCase):
             patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys),
             patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3),
         ):
-            result = parse_annodation_set_metadata(df)
+            result = parse_annotation_set_metadata(df)
 
         self.assertEqual(result["annotation-set-name"], "Trial Data")
         self.assertEqual(result["annotation-license-name"], "MIT")
@@ -182,7 +182,7 @@ class TestAnnotationParsers(TestCase):
 
         # Test Annotation Set Metadata Tab
         df_metadata = pd.read_excel(test_file_path, sheet_name="Annotation set metadata")
-        metadata_result = parse_annodation_set_metadata(df_metadata)
+        metadata_result = parse_annotation_set_metadata(df_metadata)
 
         self.assertIn("annotation-set-name", metadata_result)
         self.assertIn("annotation-license-name", metadata_result)

@@ -127,6 +127,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.upload_url = reverse("upload_annotation-list")
         self.mock_annotation_set = {"name": "Test Annotation Set"}
         self.mock_label_data = [{"name": "Label1", "parent": "Parent1"}]
@@ -156,7 +157,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
     def test_upload_annotations_returns_201_resp_for_valid_xlsx_file(self):
         """Test successful upload of a valid XLSX file."""
         with (
-            patch("api.views.annotation.parse_annodation_set_metadata") as mock_parse_set,
+            patch("api.views.annotation.parse_annotation_set_metadata") as mock_parse_set,
             patch("api.views.annotation.parse_label_set") as mock_parse_label,
             patch("api.views.annotation.parse_annotation_data") as mock_parse_annotation,
             patch("api.views.annotation.ingest_annotation_data") as mock_ingest,
@@ -226,7 +227,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
     def test_upload_annotations_calls_parse_functions_correctly(self):
         """Test that the correct parse functions are called with the correct data."""
         with (
-            patch("api.views.annotation.parse_annodation_set_metadata") as mock_parse_set,
+            patch("api.views.annotation.parse_annotation_set_metadata") as mock_parse_set,
             patch("api.views.annotation.parse_label_set") as mock_parse_label,
             patch("api.views.annotation.parse_annotation_data") as mock_parse_annotation,
             patch("api.views.annotation.ingest_annotation_data") as mock_ingest,

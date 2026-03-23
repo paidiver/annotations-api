@@ -1,7 +1,7 @@
 """ViewSet for the Annotation model."""
 
 import pandas as pd
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiTypes, extend_schema
 from rest_framework import viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.request import Request
@@ -12,8 +12,8 @@ from api.models import Annotation, AnnotationLabel, Annotator
 from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
 from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
-    parse_annodation_set_metadata,
     parse_annotation_data,
+    parse_annotation_set_metadata,
     parse_label_set,
 )
 
@@ -49,6 +49,13 @@ class UploadAnnotationsView(viewsets.ViewSet):
     parser_classes = [MultiPartParser, FormParser]
     serializer_class = FileUploadSerializer
 
+    @extend_schema(
+        operation_id="upload_annotations",
+        request={
+            "multipart/form-data": FileUploadSerializer,
+        },
+        responses={201: OpenApiTypes.OBJECT},
+    )
     def create(self, request: Request) -> Response:
         """Endpoint to receive an XLSX file and import it into the database.
 
@@ -80,7 +87,7 @@ class UploadAnnotationsView(viewsets.ViewSet):
                 status=HTTP_400_BAD_REQUEST,
             )
 
-        annotation_set = parse_annodation_set_metadata(df)
+        annotation_set = parse_annotation_set_metadata(df)
 
         label_data = parse_label_set(label_df)
 
