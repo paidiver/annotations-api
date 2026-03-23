@@ -18,10 +18,6 @@ class CachedWoRMSClient:
 
     authorization_token: str = f"Bearer {settings.CACHED_WORMS_API_TOKEN}"
 
-    def __post_init__(self):
-        """Post-initialization to validate the base URL."""
-        pass
-
     def _session(self) -> requests.Session:
         """Create a requests Session with retry logic for transient errors.
 

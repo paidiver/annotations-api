@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from api.models.annotation import AnnotationLabel
-from api.serializers.search import GROUPED_SEARCH_RESULT_ROW, SEARCH_RESULT_ITEM
+from api.serializers.search import GroupedSearchResultRow, SearchResultItem
 from api.services.cached_worms_client import CachedWoRMSClient
 
 SEARCH_PARAMS = [
@@ -76,7 +76,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
     @extend_schema(
         parameters=SEARCH_PARAMS,
-        responses={200: SEARCH_RESULT_ITEM},
+        responses={200: SearchResultItem},
     )
     def list(self, request: Request) -> Response:
         """Search for Annotations based on query parameters.
@@ -107,7 +107,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
     @extend_schema(
         parameters=GROUPED_SEARCH_PARAMS,
-        responses={200: GROUPED_SEARCH_RESULT_ROW},
+        responses={200: GroupedSearchResultRow},
     )
     @action(detail=False, methods=["get"], url_path="grouped")
     def list_grouped(self, request: Request) -> Response:
@@ -286,7 +286,7 @@ def _get_descendant_aphia_ids(aphia_ids: list[int]) -> list[int]:
         return []
 
 
-def _get_aphia_ids_by_name_part(name_part: str) -> list[str]:
+def _get_aphia_ids_by_name_part(name_part: str) -> list[int]:
     """Get AphiaIDs for a given name part.
 
     Args:

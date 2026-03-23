@@ -82,17 +82,12 @@ class AnnotationSearchViewSetTests(APITestCase):
             creation_datetime="2024-01-01T00:00:00Z",
         )
 
-    def list_url(self):
-        """Helper to get the list URL for AnnotationSearchViewSet."""
-        return reverse("search-list")
-
-    def grouped_url(self):
-        """Helper to get the grouped URL for AnnotationSearchViewSet."""
-        return reverse("search-list-grouped")
+        self.list_url = reverse("search-list")
+        self.grouped_url = reverse("search-list-grouped")
 
     def test_list_requires_aphia_ids_or_name_part(self):
         """Test that list rejects requests without aphia_ids[] or name_part."""
-        resp = self.client.get(self.list_url())
+        resp = self.client.get(self.list_url)
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -102,7 +97,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     def test_list_filters_by_aphia_ids(self):
         """Test listing search results filtered by aphia_ids[]."""
-        resp = self.client.get(self.list_url(), {"aphia_ids[]": [1001]})
+        resp = self.client.get(self.list_url, {"aphia_ids[]": [1001]})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -132,7 +127,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_list_returns_summary_when_requested(self):
         """Test list includes summary when calculate_summary=true."""
         resp = self.client.get(
-            self.list_url(),
+            self.list_url,
             {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
         )
 
@@ -152,7 +147,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_list_ignores_invalid_aphia_ids_in_query(self):
         """Test invalid aphia_ids[] values are ignored and valid ones are still used."""
         resp = self.client.get(
-            self.list_url(),
+            self.list_url,
             [("aphia_ids[]", "not-an-int"), ("aphia_ids[]", "1001"), ("aphia_ids[]", "also-bad")],
         )
 
@@ -169,7 +164,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = [1001]
 
-        resp = self.client.get(self.list_url(), {"name_part": "co"})
+        resp = self.client.get(self.list_url, {"name_part": "co"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
@@ -186,7 +181,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = []
 
-        resp = self.client.get(self.list_url(), {"name_part": "does-not-exist"})
+        resp = self.client.get(self.list_url, {"name_part": "does-not-exist"})
 
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(
@@ -204,7 +199,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         mocked_get_descendant_aphia_ids.return_value = [2002]
 
         resp = self.client.get(
-            self.list_url(),
+            self.list_url,
             {"aphia_ids[]": [1001], "include_descendants": "true"},
         )
 
@@ -233,7 +228,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         mocked_get_descendant_aphia_ids.return_value = [1001, 2002]
 
         resp = self.client.get(
-            self.list_url(),
+            self.list_url,
             {
                 "aphia_ids[]": [1001],
                 "name_part": "test",
@@ -249,7 +244,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     def test_grouped_requires_aphia_ids_or_name_part(self):
         """Test grouped rejects requests without aphia_ids[] or name_part."""
-        resp = self.client.get(self.grouped_url())
+        resp = self.client.get(self.grouped_url)
 
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -259,7 +254,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     def test_grouped_filters_by_aphia_ids(self):
         """Test grouped endpoint returns grouped rows keyed by annotation set id."""
-        resp = self.client.get(self.grouped_url(), {"aphia_ids[]": [1001]})
+        resp = self.client.get(self.grouped_url, {"aphia_ids[]": [1001]})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -288,7 +283,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_grouped_returns_summary_when_requested(self):
         """Test grouped includes summary when calculate_summary=true."""
         resp = self.client.get(
-            self.grouped_url(),
+            self.grouped_url,
             {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
         )
 
@@ -315,7 +310,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = [2002]
 
-        resp = self.client.get(self.grouped_url(), {"name_part": "cr"})
+        resp = self.client.get(self.grouped_url, {"name_part": "cr"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
@@ -371,7 +366,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         fake_paginator.paginate_queryset.return_value = None
         mocked_paginator.return_value = fake_paginator
 
-        resp = self.client.get(self.list_url(), {"name_part": "co"})
+        resp = self.client.get(self.list_url, {"name_part": "co"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIsNone(resp.data["summary"])
@@ -381,7 +376,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(len(annotations), 1)
         self.assertEqual(annotations[0]["label_name"], "Cod")
 
-        resp = self.client.get(self.grouped_url(), {"name_part": "co"})
+        resp = self.client.get(self.grouped_url, {"name_part": "co"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
