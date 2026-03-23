@@ -172,7 +172,6 @@ class TestAnnotationParsers(TestCase):
 
         self.assertTrue(mock_parse_coords.called)
 
-
     def test_full_template_parsing(self):
         """Verify that the parsers work with the actual Excel file structure without mocking constants."""
         test_file_path = os.path.join(
