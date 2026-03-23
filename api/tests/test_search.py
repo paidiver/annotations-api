@@ -109,10 +109,13 @@ class AnnotationSearchViewSetTests(APITestCase):
         data = resp.data
         self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
         self.assertEqual(data["count"], 1)
-        self.assertEqual(len(data["results"]), 1)
+        results = data["results"]
+        self.assertEqual(set(results.keys()), {"summary", "annotations"})
+        self.assertIsNone(results["summary"])
+        self.assertEqual(len(results["annotations"]), 1)
 
-        row = data["results"][0]
-        self.assertEqual(str(row["id"]), str(self.annotation_label_1.id))
+        row = results["annotations"][0]
+        self.assertEqual(str(row["uuid"]), str(self.annotation_label_1.id))
         self.assertEqual(row["image_filename"], "image_1.jpg")
         self.assertEqual(str(row["image_uuid"]), str(self.image_1.id))
         self.assertEqual(row["label_name"], "Cod")
@@ -126,6 +129,26 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(str(row["image_set_uuid"]), str(self.image_set_1.id))
         self.assertEqual(row["image_set_name"], "Image Set 1")
 
+    def test_list_returns_summary_when_requested(self):
+        """Test list includes summary when calculate_summary=true."""
+        resp = self.client.get(
+            self.list_url(),
+            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.data
+        self.assertEqual(data["count"], 2)
+
+        summary = data["results"]["summary"]
+        self.assertEqual(summary["n_annotations"], 2)
+        self.assertEqual(summary["n_images"], 2)
+        self.assertEqual(summary["n_annotation_sets"], 2)
+        self.assertEqual(summary["n_image_sets"], 2)
+
+        self.assertEqual(len(data["results"]["annotations"]), 2)
+
     def test_list_ignores_invalid_aphia_ids_in_query(self):
         """Test invalid aphia_ids[] values are ignored and valid ones are still used."""
         resp = self.client.get(
@@ -135,7 +158,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["results"][0]["label_aphia_id"], 1001)
+        self.assertEqual(resp.data["results"]["annotations"][0]["label_aphia_id"], 1001)
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_list_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock):
@@ -150,7 +173,8 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
-        self.assertEqual(resp.data["results"][0]["label_name"], "Cod")
+        self.assertIsNone(resp.data["results"]["summary"])
+        self.assertEqual(resp.data["results"]["annotations"][0]["label_name"], "Cod")
         mocked_get_aphia_ids_by_name_part.assert_called_once_with("co")
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
@@ -186,8 +210,9 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 2)
+        self.assertIsNone(resp.data["results"]["summary"])
 
-        returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"])
+        returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"]["annotations"])
         self.assertEqual(returned_aphia_ids, [1001, 2002])
         mocked_get_descendant_aphia_ids.assert_called_once_with([1001])
 
@@ -219,7 +244,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 2)
 
-        returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"])
+        returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"]["annotations"])
         self.assertEqual(returned_aphia_ids, [1001, 2002])
 
     def test_grouped_requires_aphia_ids_or_name_part(self):
@@ -242,12 +267,12 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
         self.assertEqual(data["count"], 1)
 
-        grouped = data["results"]
+        grouped = data["results"]["annotations"]
         self.assertEqual(list(grouped.keys()), [str(self.annotation_set_1.id)])
         self.assertEqual(len(grouped[str(self.annotation_set_1.id)]), 1)
 
         row = grouped[str(self.annotation_set_1.id)][0]
-        self.assertEqual(str(row["id"]), str(self.annotation_label_1.id))
+        self.assertEqual(str(row["uuid"]), str(self.annotation_label_1.id))
         self.assertEqual(row["annotation_set_name"], "Annotation Set 1")
         self.assertEqual(row["image_set_name"], "Image Set 1")
         self.assertEqual(str(row["image_set_uuid"]), str(self.image_set_1.id))
@@ -259,6 +284,27 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(row["annotation_shape"], "polygon")
         self.assertEqual(row["annotation_dimension_pixels"], 123)
         self.assertEqual(row["annotator_name"], "Test Annotator")
+
+    def test_grouped_returns_summary_when_requested(self):
+        """Test grouped includes summary when calculate_summary=true."""
+        resp = self.client.get(
+            self.grouped_url(),
+            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.data
+        self.assertEqual(data["count"], 2)
+
+        summary = data["results"]["summary"]
+        self.assertEqual(summary["n_annotations"], 2)
+        self.assertEqual(summary["n_images"], 2)
+        self.assertEqual(summary["n_annotation_sets"], 2)
+        self.assertEqual(summary["n_image_sets"], 2)
+
+        grouped = data["results"]["annotations"]
+        self.assertEqual(set(grouped.keys()), {str(self.annotation_set_1.id), str(self.annotation_set_2.id)})
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_grouped_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock):
@@ -274,7 +320,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
 
-        grouped = resp.data["results"]
+        grouped = resp.data["results"]["annotations"]
         self.assertEqual(list(grouped.keys()), [str(self.annotation_set_2.id)])
         self.assertEqual(grouped[str(self.annotation_set_2.id)][0]["label_name"], "Crab")
 
@@ -328,15 +374,17 @@ class AnnotationSearchViewSetTests(APITestCase):
         resp = self.client.get(self.list_url(), {"name_part": "co"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIsNone(resp.data["summary"])
+        annotations = resp.data["annotations"]
 
-        self.assertIsInstance(resp.data, list)
-        self.assertEqual(len(resp.data), 1)
-        self.assertEqual(resp.data[0]["label_name"], "Cod")
+        self.assertIsInstance(annotations, list)
+        self.assertEqual(len(annotations), 1)
+        self.assertEqual(annotations[0]["label_name"], "Cod")
 
         resp = self.client.get(self.grouped_url(), {"name_part": "co"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         self.assertIsInstance(resp.data, dict)
-        self.assertIn(str(self.annotation_set_1.id), resp.data.keys())
-        self.assertEqual(len(resp.data[str(self.annotation_set_1.id)]), 1)
+        self.assertIn(str(self.annotation_set_1.id), resp.data["annotations"].keys())
+        self.assertEqual(len(resp.data["annotations"][str(self.annotation_set_1.id)]), 1)

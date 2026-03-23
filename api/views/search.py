@@ -39,7 +39,33 @@ SEARCH_PARAMS = [
         required=False,
         description="If true, include descendant taxa in the response.",
     ),
+    OpenApiParameter(
+        name="calculate_summary",
+        type=OpenApiTypes.BOOL,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="If true, include a summary of the search results.",
+    ),
 ]
+
+PAGINATION_PARAMS = [
+    OpenApiParameter(
+        name="page",
+        type=OpenApiTypes.INT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Page number.",
+    ),
+    OpenApiParameter(
+        name="page_size",
+        type=OpenApiTypes.INT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Number of results per page.",
+    ),
+]
+
+GROUPED_SEARCH_PARAMS = [*SEARCH_PARAMS, *PAGINATION_PARAMS]
 
 
 @extend_schema(tags=["Annotations API"])
@@ -61,21 +87,26 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             Response: A DRF Response object containing the search results.
         """
+        calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         aphia_ids = self._get_all_aphia_ids_from_request(request)
         if isinstance(aphia_ids, Response):
             return aphia_ids
 
         queryset = self._get_search_queryset(aphia_ids)
+        summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator
         page = paginator.paginate_queryset(queryset, request, view=self)
-        if page is not None:
-            return paginator.get_paginated_response(page)
+        response_data = {"summary": summary}
 
-        return Response(list(queryset))
+        if page is not None:
+            response_data["annotations"] = page
+            return paginator.get_paginated_response(response_data)
+        response_data["annotations"] = list(queryset)
+        return Response(response_data)
 
     @extend_schema(
-        parameters=SEARCH_PARAMS,
+        parameters=GROUPED_SEARCH_PARAMS,
         responses={200: GROUPED_SEARCH_RESULT_ROW},
     )
     @action(detail=False, methods=["get"], url_path="grouped")
@@ -88,11 +119,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             Response: A DRF Response object containing the search results.
         """
+        calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         aphia_ids = self._get_all_aphia_ids_from_request(request)
         if isinstance(aphia_ids, Response):
             return aphia_ids
 
         queryset = self._get_grouped_queryset(aphia_ids)
+        summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator
         page = paginator.paginate_queryset(queryset, request, view=self)
@@ -100,11 +133,17 @@ class AnnotationSearchViewSet(GenericViewSet):
         rows = page if page is not None else list(queryset)
         grouped = {}
         for row in rows:
-            annotation_set_id = str(row.pop("annotation_set_id"))
-            grouped.setdefault(annotation_set_id, []).append(row)
+            annotation_set_uuid = str(row.pop("annotation_set_uuid"))
+            grouped.setdefault(annotation_set_uuid, []).append(row)
+
+        response_data = {
+            "summary": summary,
+            "annotations": grouped,
+        }
+
         if page is not None:
-            return paginator.get_paginated_response(grouped)
-        return Response(grouped)
+            return paginator.get_paginated_response(response_data)
+        return Response(response_data)
 
     def _get_search_queryset(self, aphia_ids: builtins.list[int]) -> QuerySet:
         """Get a queryset of Annotations matching the given AphiaIDs.
@@ -118,8 +157,8 @@ class AnnotationSearchViewSet(GenericViewSet):
         return (
             AnnotationLabel.objects.filter(label__lowest_aphia_id__in=aphia_ids)
             .values(
-                "id",
                 "creation_datetime",
+                uuid=F("id"),
                 image_filename=F("annotation__image__filename"),
                 image_uuid=F("annotation__image__id"),
                 label_name=F("label__name"),
@@ -149,9 +188,9 @@ class AnnotationSearchViewSet(GenericViewSet):
         return (
             AnnotationLabel.objects.filter(label__lowest_aphia_id__in=aphia_ids)
             .values(
-                "id",
                 "creation_datetime",
-                annotation_set_id=F("annotation__annotation_set__id"),
+                uuid=F("id"),
+                annotation_set_uuid=F("annotation__annotation_set__id"),
                 annotation_set_name=F("annotation__annotation_set__name"),
                 image_set_name=F("annotation__image__image_set__name"),
                 image_set_uuid=F("annotation__image__image_set__id"),
@@ -213,6 +252,22 @@ class AnnotationSearchViewSet(GenericViewSet):
             except (TypeError, ValueError):
                 continue
         return aphia_ids
+
+    def _build_summary(self, queryset: QuerySet) -> dict:
+        """Build summary statistics for a queryset.
+
+        Args:
+            queryset (QuerySet): The queryset to build the summary for.
+
+        Returns:
+            dict: A dictionary containing summary statistics.
+        """
+        return {
+            "n_annotations": queryset.count(),
+            "n_images": queryset.values("annotation__image__id").distinct().count(),
+            "n_annotation_sets": queryset.values("annotation__annotation_set__id").distinct().count(),
+            "n_image_sets": queryset.values("annotation__image__image_set__id").distinct().count(),
+        }
 
 
 def _get_descendant_aphia_ids(aphia_ids: list[int]) -> list[int]:

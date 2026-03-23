@@ -129,19 +129,21 @@ cp .env.example .env
 
 Example contents:
 
-```env
-POSTGRES_DB=annotationsdb
-POSTGRES_USER=myuser
-POSTGRES_PASSWORD=mypassword
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
+```bash
+POSTGRES_DB=annotationsdb # Database name
+POSTGRES_USER=myuser # Database user
+POSTGRES_PASSWORD=mypassword # Database password
+POSTGRES_HOST=db # Hostname of the PostgreSQL server (matches the service name in docker-compose)
+POSTGRES_PORT=5432 # Port number for PostgreSQL
 
-DJANGO_SECRET_KEY=dev-secret-key-change-me
-DJANGO_DEBUG=1
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
-WORMS_API_BASE_URL=https://marinespecies.org/rest
-CACHED_WORMS_API_BASE_URL=https://worms-cache.paidiver.site/api
-CACHED_WORMS_API_TOKEN=mysecrettoken
+DJANGO_SECRET_KEY=dev-secret-key-change-me # Secret key for Django (change for production)
+DJANGO_DEBUG=1 # Enable debug mode (set to 0 in production)
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0 # Allowed hosts for Django
+DJANGO_CORS_ALLOWED_ORIGINS=http://localhost:3000,https://paidiver.github.io # Allowed CORS origins
+DJANGO_CORS_ALLOW_ALL=1 # Allow all CORS origins (set to 0 in production)
+WORMS_API_BASE_URL=https://marinespecies.org/rest # Base URL for the WoRMS API
+CACHED_WORMS_API_BASE_URL=https://worms-cache.paidiver.site/api # Base URL for the cached WoRMS API (can point to local instance if needed)
+CACHED_WORMS_API_TOKEN=mysecrettoken # Token for authenticating with the cached WoRMS API
 ```
 
 ### 2. Build and run the stack
