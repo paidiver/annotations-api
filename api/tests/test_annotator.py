@@ -4,12 +4,12 @@ from uuid import UUID
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models.annotation import Annotator
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotatorTests(APITestCase):
+class AnnotatorTests(AuthenticatedAPITestCase):
     """Tests for the Annotator model."""
 
     @classmethod
@@ -24,6 +24,7 @@ class AnnotatorTests(APITestCase):
     def test_get_annotators(self):
         """Test retrieving annotators list."""
         url = self.annotator_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -34,6 +35,7 @@ class AnnotatorTests(APITestCase):
     def test_get_annotator_detail_by_id(self):
         """Test retrieving a specific annotator."""
         url = self.annotator_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.annotator_id)
@@ -72,3 +74,11 @@ class AnnotatorTests(APITestCase):
         response = self.client.delete(self.annotator_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Annotator.objects.count(), 0)
+
+    def test_anonymous_user_cannot_post_annotator(self):
+        """Test that an Annotator can't be created by an anonymous user."""
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.annotator_list, {"name": "New Test Annotator"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Annotator.objects.count(), 1)

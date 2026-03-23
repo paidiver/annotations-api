@@ -4,7 +4,6 @@ import uuid
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import AnnotationLabel
 from api.models.annotation import Annotation, Annotator
@@ -12,13 +11,15 @@ from api.models.annotation_set import AnnotationSet
 from api.models.image import Image
 from api.models.image_set import ImageSet
 from api.models.label import Label
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class AnnotationLabelViewSetTests(APITestCase):
+class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationLabelViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
@@ -52,6 +53,7 @@ class AnnotationLabelViewSetTests(APITestCase):
         AnnotationLabel.objects.create(
             annotation=self.annotation, label=label2, annotator=self.annotator, creation_datetime="2024-01-02T00:00:00Z"
         )
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -71,6 +73,7 @@ class AnnotationLabelViewSetTests(APITestCase):
             label=self.label,
             annotator=self.annotator,
         )
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.detail_url(annotation_label.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -168,3 +171,19 @@ class AnnotationLabelViewSetTests(APITestCase):
         resp = self.client.delete(self.detail_url(annotation_label.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(AnnotationLabel.objects.filter(pk=annotation_label.pk).exists())
+
+    def test_anonymous_user_cannot_patch_annotation_label(self):
+        """Test that an AnnotationLabel can't be PATCHed by an anonymous user."""
+        annotation_label = AnnotationLabel.objects.create(
+            creation_datetime="2024-01-01T00:00:00Z",
+            annotation=self.annotation,
+            label=self.label,
+            annotator=self.annotator,
+        )
+        payload = {
+            "creation_datetime": "2024-01-02T00:00:00Z",
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.patch(self.detail_url(annotation_label.pk), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)

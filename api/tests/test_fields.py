@@ -4,12 +4,12 @@ from uuid import UUID
 
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models.fields import PI, Context, Creator, Event, License, Platform, Project, RelatedMaterial, Sensor
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class CreatorTests(APITestCase):
+class CreatorTests(AuthenticatedAPITestCase):
     """Tests for the Creator model."""
 
     @classmethod
@@ -28,6 +28,7 @@ class CreatorTests(APITestCase):
     def test_get_creators(self):
         """Test retrieving creators list."""
         url = self.creator_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -39,6 +40,7 @@ class CreatorTests(APITestCase):
     def test_get_creator_detail(self):
         """Test retrieving a specific creator."""
         url = self.creator_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.creator_id)
@@ -83,8 +85,17 @@ class CreatorTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Creator.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_creator(self):
+        """Test that a Creator can't be created by an anonymous user."""
+        data = {"name": "New Test Creator", "uri": "http://test.com"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.creator_list, data, format="json")
 
-class ContextTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Creator.objects.count(), 1)
+
+
+class ContextTests(AuthenticatedAPITestCase):
     """Tests for the Context model."""
 
     @classmethod
@@ -99,6 +110,7 @@ class ContextTests(APITestCase):
     def test_get_contexts(self):
         """Test retrieving contexts list."""
         url = self.context_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(isinstance(response.data, dict))
@@ -111,6 +123,7 @@ class ContextTests(APITestCase):
     def test_get_context_by_id(self):
         """Test retrieving a specific context by id /api/context/{id}/."""
         url = self.context_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.context_id)
@@ -156,8 +169,17 @@ class ContextTests(APITestCase):
         context_instance = Context.objects.get(id=context_id)
         self.assertEqual(context_instance.name, "New Test Context")
 
+    def test_anonymous_user_cannot_post_context(self):
+        """Test that a Context can't be created by an anonymous user."""
+        data = {"name": "New Test Context", "uri": "http://test.com/context"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.context_list, data, format="json")
 
-class PITests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Context.objects.count(), 1)
+
+
+class PITests(AuthenticatedAPITestCase):
     """Tests for the PI model."""
 
     @classmethod
@@ -172,6 +194,7 @@ class PITests(APITestCase):
     def test_get_pis(self):
         """Test retrieving pis list using /api/pi/."""
         url = self.pi_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -183,6 +206,7 @@ class PITests(APITestCase):
     def test_get_pi_by_id(self):
         """Test retrieving a specific pi by id /api/pi/{id}/."""
         url = self.pi_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.pi_id)
@@ -228,8 +252,17 @@ class PITests(APITestCase):
         pi_instance = PI.objects.get(id=pi_id)
         self.assertEqual(pi_instance.name, "New Test PI")
 
+    def test_anonymous_user_cannot_post_pi(self):
+        """Test that a PI can't be created by an anonymous user."""
+        data = {"name": "New Test PI", "uri": "http://test.com/pi"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.pi_list, data, format="json")
 
-class EventTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(PI.objects.count(), 1)
+
+
+class EventTests(AuthenticatedAPITestCase):
     """Tests for the Event model."""
 
     @classmethod
@@ -244,6 +277,7 @@ class EventTests(APITestCase):
     def test_get_events(self):
         """Test retrieving events list using /api/event/."""
         url = self.event_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -255,6 +289,7 @@ class EventTests(APITestCase):
     def test_get_event_by_id(self):
         """Test retrieving a specific event by id /api/events/{id}/."""
         url = self.event_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.event_id)
@@ -300,8 +335,17 @@ class EventTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Event.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_event(self):
+        """Test that an Event can't be created by an anonymous user."""
+        data = {"name": "New Test Event", "uri": "http://test.com/event"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.event_list, data, format="json")
 
-class LicenseTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Event.objects.count(), 1)
+
+
+class LicenseTests(AuthenticatedAPITestCase):
     """Tests for the License model."""
 
     @classmethod
@@ -316,6 +360,7 @@ class LicenseTests(APITestCase):
     def test_get_licenses(self):
         """Test retrieving licenses list using /api/license/."""
         url = self.license_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -327,6 +372,7 @@ class LicenseTests(APITestCase):
     def test_get_license_by_id(self):
         """Test retrieving a specific license by id /api/license/{id}/."""
         url = self.license_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.license_id)
@@ -372,8 +418,17 @@ class LicenseTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(License.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_license(self):
+        """Test that a License can't be created by an anonymous user."""
+        data = {"name": "New Test License", "uri": "http://test.com/license"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.license_list, data, format="json")
 
-class PlatformTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(License.objects.count(), 1)
+
+
+class PlatformTests(AuthenticatedAPITestCase):
     """Tests for the Platform model."""
 
     @classmethod
@@ -392,6 +447,7 @@ class PlatformTests(APITestCase):
     def test_get_platforms(self):
         """Test retrieving platforms list using /api/platform/."""
         url = self.platform_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -403,6 +459,7 @@ class PlatformTests(APITestCase):
     def test_get_platform_by_id(self):
         """Test retrieving a specific platform by id /api/platform/{id}/."""
         url = self.platform_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.platform_id)
@@ -448,8 +505,17 @@ class PlatformTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Platform.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_platform(self):
+        """Test that a Platform can't be created by an anonymous user."""
+        data = {"name": "New Test Platform", "uri": "http://test.com/platform"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.platform_list, data, format="json")
 
-class ProjectTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Platform.objects.count(), 1)
+
+
+class ProjectTests(AuthenticatedAPITestCase):
     """Tests for the Project model."""
 
     @classmethod
@@ -468,6 +534,7 @@ class ProjectTests(APITestCase):
     def test_get_projects(self):
         """Test retrieving projects list using /api/project/."""
         url = self.project_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -479,6 +546,7 @@ class ProjectTests(APITestCase):
     def test_get_project_by_id(self):
         """Test retrieving a specific project by id /api/project/{id}/."""
         url = self.project_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.project_id)
@@ -524,8 +592,17 @@ class ProjectTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Project.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_project(self):
+        """Test that a Project can't be created by an anonymous user."""
+        data = {"name": "New Test Project", "uri": "http://test.com/project"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.project_list, data, format="json")
 
-class SensorTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Project.objects.count(), 1)
+
+
+class SensorTests(AuthenticatedAPITestCase):
     """Tests for the Sensor model."""
 
     @classmethod
@@ -544,6 +621,7 @@ class SensorTests(APITestCase):
     def test_get_sensors(self):
         """Test retrieving sensors list using /api/sensor/."""
         url = self.sensor_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -555,6 +633,7 @@ class SensorTests(APITestCase):
     def test_get_sensor_by_id(self):
         """Test retrieving a specific sensor by id /api/sensor/{id}/."""
         url = self.sensor_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.sensor_id)
@@ -600,8 +679,17 @@ class SensorTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Sensor.objects.count(), 0)
 
+    def test_anonymous_user_cannot_post_sensor(self):
+        """Test that a Sensor can't be created by an anonymous user."""
+        data = {"name": "New Test Sensor", "uri": "http://test.com/sensor"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.sensor_list, data, format="json")
 
-class RelatedMaterialTests(APITestCase):
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Sensor.objects.count(), 1)
+
+
+class RelatedMaterialTests(AuthenticatedAPITestCase):
     """Tests for the RelatedMaterial model."""
 
     @classmethod
@@ -622,6 +710,7 @@ class RelatedMaterialTests(APITestCase):
     def test_get_related_materials(self):
         """Test retrieving related_materials list using /api/relatedmaterial/."""
         url = self.related_material_list
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
@@ -634,6 +723,7 @@ class RelatedMaterialTests(APITestCase):
     def test_get_related_material_by_id(self):
         """Test retrieving a specific related_material by id /api/relatedmaterial/{id}/."""
         url = self.related_material_detail
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(UUID(response.data["id"]), self.related_material_id)
@@ -678,3 +768,12 @@ class RelatedMaterialTests(APITestCase):
         response = self.client.delete(self.related_material_detail)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(RelatedMaterial.objects.count(), 0)
+
+    def test_anonymous_user_cannot_post_related_material(self):
+        """Test that Related Material can't be created by an anonymous user."""
+        data = {"title": "New Test RelatedMaterial", "uri": "http://test.com/relatedmaterial"}
+        self.client.force_authenticate(user=None)
+        response = self.client.post(self.related_material_list, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(RelatedMaterial.objects.count(), 1)

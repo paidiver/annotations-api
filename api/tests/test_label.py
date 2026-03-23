@@ -6,19 +6,20 @@ from unittest.mock import Mock, patch
 from django.urls import reverse
 from requests.exceptions import Timeout
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
 from api.serializers.label import LabelSerializer
+from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
-class LabelViewSetTests(APITestCase):
+class LabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for LabelViewSet endpoints."""
 
     def setUp(self):
         """Set up test data and common variables."""
+        super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
@@ -138,6 +139,7 @@ class LabelViewSetTests(APITestCase):
             parent_label_name="Parent Label",
             lowest_aphia_id="12345",
         )
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
         resp = self.client.get(self.list_url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -152,6 +154,7 @@ class LabelViewSetTests(APITestCase):
     def test_retrieve_label(self):
         """Test retrieving a specific Label."""
         label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
+        self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         resp = self.client.get(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(label.pk))
@@ -246,3 +249,18 @@ class LabelViewSetTests(APITestCase):
             shared_context["aphia_validation_error_cache"][999999999],
             "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
         )
+
+    def test_anonymous_user_cannot_patch_label(self):
+        """Test that a Label can't be PATCHed by an anonymous user.."""
+        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
+        payload = {
+            "name": "Updated Label",
+            "lowest_aphia_id": "12345",
+        }
+        self.client.force_authenticate(user=None)
+
+        resp = self.client.patch(self.detail_url(label.pk), payload, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        label.refresh_from_db()
+        self.assertEqual(label.name, "Test Label")
