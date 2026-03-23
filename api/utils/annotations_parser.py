@@ -1,4 +1,4 @@
-"""Service functions related to annotation data."""
+"""Parser functions related to annotation data."""
 
 import json
 
