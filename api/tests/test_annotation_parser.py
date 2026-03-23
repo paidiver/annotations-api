@@ -12,8 +12,8 @@ from django.test import TransactionTestCase
 from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
     _parse_coordinates,
-    parse_annotation_set_metadata,
     parse_annotation_data,
+    parse_annotation_set_metadata,
     parse_label_set,
 )
 
