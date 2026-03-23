@@ -265,10 +265,18 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
 
     annotation_data = []
 
-    for row in annotation_df.to_dict(orient="records"):
+    for index, row in enumerate(annotation_df.to_dict(orient="records")):
+        uuid_val = str(row["image_uuid"]).strip()
+        filename_val = str(row["image_filename"]).strip()
         # Skip empty rows
         if not str(row["image_filename"]).strip():
             continue
+        if not uuid_val and not filename_val:
+            excel_row = index + 1 + ANNOTATION_DATA_START_ROW
+            raise ValueError(
+                f"Validation Error at Row {excel_row}: "
+                f"Record must provide either 'image-uuid' or 'image-filename'."
+            )
 
         parsed_row = {
             "image_id": row["image_uuid"].strip(),
