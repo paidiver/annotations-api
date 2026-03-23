@@ -252,7 +252,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
     def test_anonymous_user_cannot_patch_label(self):
         """Test that a Label can't be PATCHed by an anonymous user.."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label")
+        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12346")
         payload = {
             "name": "Updated Label",
             "lowest_aphia_id": "12345",
