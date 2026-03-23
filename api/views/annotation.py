@@ -42,7 +42,6 @@ class AnnotationLabelViewSet(viewsets.ModelViewSet):
     serializer_class = AnnotationLabelSerializer
 
 
-@extend_schema(tags=["Annotations API"])
 class UploadAnnotationsView(viewsets.ViewSet):
     """Annotations view to import image annotation data into the database."""
 
@@ -50,10 +49,9 @@ class UploadAnnotationsView(viewsets.ViewSet):
     serializer_class = FileUploadSerializer
 
     @extend_schema(
+        tags=["Annotations API"],
         operation_id="upload_annotations",
-        request={
-            "multipart/form-data": FileUploadSerializer,
-        },
+        request=FileUploadSerializer,
         responses={201: OpenApiTypes.OBJECT},
     )
     def create(self, request: Request) -> Response:

@@ -172,4 +172,4 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
 class FileUploadSerializer(serializers.Serializer):
     """Serializer for file upload, for uploading annotations data using XLSX file."""
 
-    file = serializers.FileField()
+    file = serializers.FileField(help_text="Select the .xlsx template file")
