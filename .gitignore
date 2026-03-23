@@ -7,6 +7,5 @@ dist
 coverage_reports
 .env
 data/*
-*.xlsx
 
 .idea/

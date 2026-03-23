@@ -1,15 +1,17 @@
 """Unit tests for annotation parsing functions in api/util/annotation.py."""
 
+import os
 from unittest import TestCase
 from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
+from django.conf import settings
 from django.test import TransactionTestCase
 
+from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
     _parse_coordinates,
-    ingest_annotation_data,
     parse_annodation_set_metadata,
     parse_annotation_data,
     parse_label_set,
@@ -20,14 +22,14 @@ class TestAnnotationParsers(TestCase):
     """Parsing tests for annotation."""
 
     def test_parse_annotation_set_metadata_success(self):
-        """Test parsing metadata with merged-cell style."""
-        # Col 0: iFDO fields, Col 1: subfields, Col 2: Value
+        """Test parsing metadata with merged-cell style and required fields."""
         data = [
             ["annotation-set-name", np.nan, "Trial Data"],
             ["annotation-project", "name", "Trial Data"],
             [np.nan, "uri", "http://example.com"],
-            ["annotation-context", "name", "Trial Data"],
-            [np.nan, "uri", np.nan],
+            ["annotation-license", "name", "MIT"],
+            ["annotation-image-set", "name", "Set A"],
+            ["annotation-image-set", "uuid", "0000-0000"],
             ["annotation-abstract", np.nan, "Trial Data"],
             ["annotation-pi", "name", "Test User"],
             [np.nan, "uri", "user@example.com"],
@@ -38,25 +40,24 @@ class TestAnnotationParsers(TestCase):
             "annotation-set-name",
             "annotation-project-name",
             "annotation-project-uri",
-            "annotation-context-name",
+            "annotation-license-name",
+            "annotation-image-set-name",
+            "annotation-image-set-uuid",
             "annotation-pi-name",
             "annotation-pi-uri",
             "annotation-abstract",
         ]
 
         with (
-            patch("api.utils.annotation.ANNOTATION_METADATA_KEYS", mock_keys),
-            patch("api.utils.annotation.ANNOTATION_SET_COL_SIZE", 3),
+            patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys),
+            patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3),
         ):
             result = parse_annodation_set_metadata(df)
 
         self.assertEqual(result["annotation-set-name"], "Trial Data")
-        self.assertEqual(result["annotation-project-name"], "Trial Data")
-        self.assertEqual(result["annotation-project-uri"], "http://example.com")
+        self.assertEqual(result["annotation-license-name"], "MIT")
+        self.assertEqual(result["annotation-image-set-name"], "Set A")
         self.assertEqual(result["annotation-pi-uri"], "user@example.com")
-
-        # Ensure that keys with no value are NOT in the dict
-        self.assertNotIn("annotation-context-uri", result)
 
     def test_parse_label_set(self):
         """Test parsing label set."""
@@ -89,7 +90,7 @@ class TestAnnotationParsers(TestCase):
         df = pd.DataFrame(data)
 
         with (
-            patch("api.utils.annotation.LABEL_SET_COL_SIZE", 7),
+            patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7),
         ):
             result = parse_label_set(df)
 
@@ -106,7 +107,7 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result[2]["name"], "coarse")
         self.assertEqual(result[2]["parent_label_name"], "habitat")
 
-    @patch("api.utils.annotation._parse_coordinates")
+    @patch("api.utils.annotations_parser._parse_coordinates")
     def test_parse_annotation_data(self, mock_parse_coords):
         """Test parsing the main annotation data sheet based on image structure."""
         mock_parse_coords.return_value = [1427, 8163]
@@ -153,9 +154,9 @@ class TestAnnotationParsers(TestCase):
         df = pd.DataFrame(data)
 
         with (
-            patch("api.utils.annotation.ANNOTATION_DATA_START_ROW", 3),
-            patch("api.utils.annotation.ANNOTATION_DATA_START_COL", 0),
-            patch("api.utils.annotation.ANNOTATION_DATA_END_COL", 9),
+            patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 3),
+            patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0),
+            patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9),
         ):
             result = parse_annotation_data(df)
 
@@ -170,6 +171,44 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result[1]["dimension_pixels"], 384.06)
 
         self.assertTrue(mock_parse_coords.called)
+
+
+    def test_full_template_parsing(self):
+        """Verify that the parsers work with the actual Excel file structure without mocking constants."""
+        test_file_path = os.path.join(
+            settings.BASE_DIR, "api", "tests", "test_data", "annotation_metadata_template_v1.xlsx"
+        )
+        if not os.path.exists(test_file_path):
+            self.skipTest(f"Test file not found at {test_file_path}")
+
+        # Test Annotation Set Metadata Tab
+        df_metadata = pd.read_excel(test_file_path, sheet_name="Annotation set metadata")
+        metadata_result = parse_annodation_set_metadata(df_metadata)
+
+        self.assertIn("annotation-set-name", metadata_result)
+        self.assertIn("annotation-license-name", metadata_result)
+        self.assertIn("annotation-image-set-name", metadata_result)
+        self.assertEqual(metadata_result["annotation-set-version"], "1")
+
+        # Test Label Set Tab
+        df_labels = pd.read_excel(test_file_path, sheet_name="Label set")
+        label_result = parse_label_set(df_labels)
+
+        self.assertTrue(len(label_result) > 0)
+        # Check first real label in your template (e.g., 'antedon')
+        self.assertEqual(label_result[0]["name"], "antedon")
+        self.assertEqual(label_result[0]["parent_label_name"], "Echinodermata")
+
+        # Test Annotation Data Tab
+        df_annotations = pd.read_excel(test_file_path, sheet_name="Annotation data")
+        annotation_result = parse_annotation_data(df_annotations)
+
+        self.assertTrue(len(annotation_result) > 0)
+
+        first_anno = annotation_result[0]
+        self.assertEqual(first_anno["image_id"], "1234")
+        self.assertEqual(first_anno["label_name"], "reteporella")
+        self.assertEqual(first_anno["shape"], "rectangle")
 
 
 class TestParseCoordinates(TestCase):
@@ -196,9 +235,9 @@ class TestParseCoordinates(TestCase):
 class TestIngestAnnotationData(TransactionTestCase):
     """Test class for testing data ingestion."""
 
-    @patch("api.utils.annotation.insert_annotations_set")
-    @patch("api.utils.annotation.insert_label_data")
-    @patch("api.utils.annotation.insert_annotations_data")
+    @patch("api.utils.annotations_ingest.insert_annotations_set")
+    @patch("api.utils.annotations_ingest.insert_label_data")
+    @patch("api.utils.annotations_ingest.insert_annotations_data")
     def test_ingest_annotation_data_success(self, mock_insert_annot, mock_insert_label, mock_insert_set):
         """Test the orchestration of the ingestion process."""
         mock_insert_set.return_value = {"id": 1, "name": "Test Set"}

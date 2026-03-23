@@ -172,8 +172,8 @@ def parse_annotation_data(annotation_df: pd.DataFrame) -> list[dict]:
             )
 
         parsed_row = {
-            "image_id": row["image_uuid"].strip(),
-            "image_filename": row["image_filename"].strip(),
+            "image_id": uuid_val,
+            "image_filename": filename_val,
             "annotation_platform": row["annotation_platform"].strip(),
             "shape": row["annotation_shape_name"].strip(),
             "coordinates": _parse_coordinates(row["annotation_coordinates"]),
