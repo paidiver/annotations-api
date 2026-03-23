@@ -77,7 +77,7 @@ def insert_annotations_set(data: pd.DataFrame) -> dict:
 
 
 def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
-    """Parse annotation metadata from dataframe and insert into db.
+    """Parse annotation set metadata.
 
     Args:
         annotation_df(pd.DataFrame): annotation_set metadata
@@ -105,8 +105,20 @@ def parse_annodation_set_metadata(annotation_df: pd.DataFrame) -> dict:
         final_key = f"{current_main_key}-{sub_key_clean}" if sub_key_clean else current_main_key
 
         # Store only if value exists
-        if pd.notna(value) and final_key in ANNOTATION_METADATA_KEYS:
-            annotation_data[final_key] = value
+        if pd.notna(value) and str(value).strip() != "" and final_key in ANNOTATION_METADATA_KEYS:
+            annotation_data[final_key] = str(value).strip()
+
+    required_keys = {
+        "annotation-image-set-name": "Image Set Name",
+        "annotation-image-set-uuid": "Image Set UUID",
+        "annotation-set-name": "Annotation Set Name",
+        "annotation-license-name": "License Name",
+    }
+
+    missing = [label for key, label in required_keys.items() if not annotation_data.get(key)]
+    if missing:
+        # Raising a ValidationError for missing required keys.
+        raise ValueError(f"Missing required metadata: {', '.join(missing)}")
 
     return annotation_data
 
