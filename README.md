@@ -71,7 +71,7 @@ Helm chart releases are automated and driven by Git tags.
 
 To release a new Helm Chart version, create a Git tag in the format:
 
-`vMAJOR.MINOR.PATCH[-PRERELEASE]`
+`helm-vMAJOR.MINOR.PATCH[-PRERELEASE]`
 
 Examples:
 - `v1.2.3` → stable release
@@ -80,13 +80,25 @@ Examples:
 The workflow triggers on tag creation.
 The CI workflow:
 
-- Reads the tag version (1.2.3 from v1.2.3)
+- Reads the tag version (1.2.3 from helm-v1.2.3)
 - Patches charts/api/Chart.yaml at package time (does not commit to the repo)
 - Packages the Helm chart with the correct version
 - Publishes the chart via [helm/chart-releaser-action](https://github.com/helm/chart-releaser-action)
 
-The repo itself continues to have 0.0.0-dev in Chart.yaml for development.
-The release version is derived solely from the Git tag.
+Whenever you make any change to a Chart, you must update the version in `Chart.yaml`.
+
+* Increment the version to a higher value (e.g. `0.0.0-dev` → `0.0.1-dev`)
+* This is required because the lint process checks that the new version is greater than the previous one
+* If the version is not increased, linting will fail and the release will not run
+
+> Note: The `Chart.yaml` version does not need to match the Git tag, but it must always be higher than the previous version.
+
+To tag a git commit:
+
+```bash
+git tag helm-vX.X.X
+git push origin helm-vX.X.X
+```
 
 ### Usage
 
@@ -113,6 +125,36 @@ To uninstall the chart:
 
 ```bash
 helm uninstall my-api
+```
+
+## Releasing Docker Images
+
+### Production release
+A new `latest` Docker image is build and published to https://ghcr.io/paidiver/annotations-api on each push to main.
+
+### Development release
+Development versions of Docker images can be released manually, driven by Git tags.
+To release a new Docker image, create a Git tag in the format:
+
+`docker-vMAJOR.MINOR.PATCH[-PRERELEASE]`
+
+Examples:
+- `v1.2.3` → stable release
+- `v1.3.0-alpha.1` → prerelease
+
+The workflow triggers on tag creation.
+The CI workflow:
+
+- Reads the tag version (1.2.3 from docker-v1.2.3)
+- Builds a new Docker image
+- Tags the Docker image with the tag version as well as the tagged commit SHA
+- Pushes the images to the GitHub Container Repository
+
+To tag a git commit:
+
+```bash
+git tag docker-vX.X.X
+git push origin docker-vX.X.X
 ```
 
 ## Quick Start (Docker – Recommended)
@@ -260,6 +302,23 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 ```
 
 Coverage reports are written to `coverage_reports/`.
+
+## API Token Generation
+
+This project is configured to use [TokenAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication)
+for any requests that modify data. Anonymous users may only use "safe" methods (`GET`, `HEAD` or `OPTIONS`).
+The project includes a management command to create a new user with an auth token:
+
+```bash
+python manage.py create_user_with_token <username> <password>
+```
+
+The created API token is returned in the command output. Please ensure to store this token safely and clear console output if required.
+
+Example output:
+```
+User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
+```
 
 ## Fake Data Generation
 
