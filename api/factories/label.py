@@ -78,6 +78,7 @@ class LabelFactory(DjangoModelFactory):
         return super()._create(model_class, *args, **kwargs)
 
 
+# List of low AphiaIDs to use for generating realistic test data, sourced from the WoRMS database
 LOWEST_APHIA_ID_LIST = [
     123349,
     1292,

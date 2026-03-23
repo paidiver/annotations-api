@@ -59,8 +59,8 @@ GroupedSearchResultRow = inline_serializer(
         "annotations": inline_serializer(
             name="GroupedSearchResultAnnotations",
             fields={
-                "34705832-8ad5-403f-8bbc-5b6f463309cc": AnnotationSetGroup,
-                "3535f7a4-e285-4017-a96b-18de8e592d8f": AnnotationSetGroup,
+                "<annotation_set_uuid1>": AnnotationSetGroup,
+                "<annotation_set_uuid2>": AnnotationSetGroup,
             },
         ),
     },
