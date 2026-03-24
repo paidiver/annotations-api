@@ -278,13 +278,15 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
             mock_parse_annotation.return_value = self.mock_annotation_data
 
             xlsx_file = self.create_mock_xlsx_file()
-            response =  self.client.post(
+            response = self.client.post(
                 self.upload_url,
                 {"file": xlsx_file},
                 format="multipart",
             )
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertIn("Error parsing annotations template: Missing required metadata: Image Set Name", response.data["error"])
+            self.assertIn(
+                "Error parsing annotations template: Missing required metadata: Image Set Name", response.data["error"]
+            )
 
     def test_upload_annotations_returns_400_if_ingestion_fails(self):
         """Test that uploading a file is rejected if ingestion into DB fails with a ValueError."""
@@ -300,7 +302,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
             mock_ingest.side_effect = ValueError("Row 0: Image not found (UUID: , Name: fake_filename)")
 
             xlsx_file = self.create_mock_xlsx_file()
-            response =  self.client.post(
+            response = self.client.post(
                 self.upload_url,
                 {"file": xlsx_file},
                 format="multipart",
