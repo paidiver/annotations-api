@@ -265,3 +265,45 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["file"][0], "No file was submitted.")
+
+    def test_upload_annotations_returns_400_if_parsing_fails(self):
+        """Test that uploading a file is rejected if parsing data fails with a ValueError."""
+        with (
+            patch("api.views.annotation.parse_annotation_set_metadata") as mock_parse_set,
+            patch("api.views.annotation.parse_label_set") as mock_parse_label,
+            patch("api.views.annotation.parse_annotation_data") as mock_parse_annotation,
+        ):
+            mock_parse_set.side_effect = ValueError("Missing required metadata: Image Set Name")
+            mock_parse_label.return_value = self.mock_label_data
+            mock_parse_annotation.return_value = self.mock_annotation_data
+
+            xlsx_file = self.create_mock_xlsx_file()
+            response =  self.client.post(
+                self.upload_url,
+                {"file": xlsx_file},
+                format="multipart",
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("Error parsing annotations template: Missing required metadata: Image Set Name", response.data["error"])
+
+    def test_upload_annotations_returns_400_if_ingestion_fails(self):
+        """Test that uploading a file is rejected if ingestion into DB fails with a ValueError."""
+        with (
+            patch("api.views.annotation.parse_annotation_set_metadata") as mock_parse_set,
+            patch("api.views.annotation.parse_label_set") as mock_parse_label,
+            patch("api.views.annotation.parse_annotation_data") as mock_parse_annotation,
+            patch("api.views.annotation.ingest_annotation_data") as mock_ingest,
+        ):
+            mock_parse_set.side_effect = self.mock_annotation_set
+            mock_parse_label.return_value = self.mock_label_data
+            mock_parse_annotation.return_value = self.mock_annotation_data
+            mock_ingest.side_effect = ValueError("Row 0: Image not found (UUID: , Name: fake_filename)")
+
+            xlsx_file = self.create_mock_xlsx_file()
+            response =  self.client.post(
+                self.upload_url,
+                {"file": xlsx_file},
+                format="multipart",
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn("Row 0: Image not found (UUID: , Name: fake_filename)", response.data["error"])
