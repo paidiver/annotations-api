@@ -1,6 +1,6 @@
 """ViewSet for the Annotation model."""
 
-import builtins
+from __future__ import annotations
 
 import requests
 from django.db.models import F, QuerySet
@@ -145,7 +145,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             return paginator.get_paginated_response(response_data)
         return Response(response_data)
 
-    def _get_search_queryset(self, aphia_ids: builtins.list[int]) -> QuerySet:
+    def _get_search_queryset(self, aphia_ids: list[int]) -> QuerySet:
         """Get a queryset of Annotations matching the given AphiaIDs.
 
         Args:
@@ -176,7 +176,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             .order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
         )
 
-    def _get_grouped_queryset(self, aphia_ids: builtins.list[int]) -> QuerySet:
+    def _get_grouped_queryset(self, aphia_ids: list[int]) -> QuerySet:
         """Get a queryset of Annotations grouped by annotation set and image set.
 
         Args:
@@ -207,7 +207,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             .order_by("annotation__annotation_set__id", "annotation__image__image_set__name", "id")
         )
 
-    def _get_all_aphia_ids_from_request(self, request: Request) -> builtins.list[int] | Response:
+    def _get_all_aphia_ids_from_request(self, request: Request) -> list[int] | Response:
         """Extract and validate a list of AphiaIDs from the query parameters, including descendants if requested.
 
         Args:
@@ -242,7 +242,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
         return aphia_ids
 
-    def _get_aphia_ids_from_query(self, request: Request) -> builtins.list[int]:
+    def _get_aphia_ids_from_query(self, request: Request) -> list[int]:
         """Extract and validate a list of AphiaIDs from the query parameters."""
         raw_ids = request.query_params.getlist("aphia_ids[]")
         aphia_ids = []
