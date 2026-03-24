@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import requests
-from django.db.models import F, QuerySet
+from django.db.models import F, Q, QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
@@ -91,8 +91,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         aphia_ids = self._get_all_aphia_ids_from_request(request)
         if isinstance(aphia_ids, Response):
             return aphia_ids
-
-        queryset = self._get_search_queryset(aphia_ids)
+        name_part = request.query_params.get("name_part")
+        queryset = self._get_search_queryset(aphia_ids=aphia_ids, name_part=name_part)
+        if not queryset.exists():
+            return Response(
+                {"detail": "No valid AphiaIDs or label_name found for the provided query parameters."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator
@@ -124,7 +129,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         if isinstance(aphia_ids, Response):
             return aphia_ids
 
-        queryset = self._get_grouped_queryset(aphia_ids)
+        name_part = request.query_params.get("name_part")
+        queryset = self._get_grouped_queryset(aphia_ids=aphia_ids, name_part=name_part)
+        if not queryset.exists():
+            return Response(
+                {"detail": "No valid AphiaIDs or label_name found for the provided query parameters."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator
@@ -145,17 +156,23 @@ class AnnotationSearchViewSet(GenericViewSet):
             return paginator.get_paginated_response(response_data)
         return Response(response_data)
 
-    def _get_search_queryset(self, aphia_ids: list[int]) -> QuerySet:
+    def _get_search_queryset(self, aphia_ids: list[int], name_part: str | None = None) -> QuerySet:
         """Get a queryset of Annotations matching the given AphiaIDs.
 
         Args:
             aphia_ids (list[int]): List of AphiaIDs to filter the Annotations by.
+            name_part (str | None): Optional partial name to filter the Annotations by.
 
         Returns:
             QuerySet: A queryset of Annotations matching the given AphiaIDs.
         """
+        filters = Q()
+        if aphia_ids:
+            filters &= Q(label__lowest_aphia_id__in=aphia_ids)
+        elif name_part:
+            filters &= Q(label__name__icontains=name_part)
         return (
-            AnnotationLabel.objects.filter(label__lowest_aphia_id__in=aphia_ids)
+            AnnotationLabel.objects.filter(filters)
             .values(
                 "creation_datetime",
                 uuid=F("id"),
@@ -176,17 +193,23 @@ class AnnotationSearchViewSet(GenericViewSet):
             .order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
         )
 
-    def _get_grouped_queryset(self, aphia_ids: list[int]) -> QuerySet:
+    def _get_grouped_queryset(self, aphia_ids: list[int], name_part: str | None = None) -> QuerySet:
         """Get a queryset of Annotations grouped by annotation set and image set.
 
         Args:
             aphia_ids (list[int]): List of AphiaIDs to filter the Annotations by.
+            name_part (str | None): Optional partial name to filter the Annotations by.
 
         Returns:
             QuerySet: A queryset of Annotations grouped by annotation set and image set.
         """
+        filters = Q()
+        if aphia_ids:
+            filters &= Q(label__lowest_aphia_id__in=aphia_ids)
+        if name_part:
+            filters &= Q(label__name__icontains=name_part)
         return (
-            AnnotationLabel.objects.filter(label__lowest_aphia_id__in=aphia_ids)
+            AnnotationLabel.objects.filter(filters)
             .values(
                 "creation_datetime",
                 uuid=F("id"),
@@ -231,9 +254,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         aphia_ids = list(dict.fromkeys(aphia_ids))
 
         if not aphia_ids:
-            return Response(
-                {"detail": "No valid AphiaIDs found for the provided query parameters."},
-                status=status.HTTP_404_NOT_FOUND,
+            return (
+                Response(
+                    {"detail": "No valid AphiaIDs found for the provided query parameters."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+                if not name_part
+                else []
             )
 
         if include_descendants:

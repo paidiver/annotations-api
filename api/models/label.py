@@ -1,6 +1,7 @@
 """Model for semantic labels assigned to annotations."""
 
 from django.contrib.gis.db import models
+from django.contrib.postgres.indexes import GinIndex
 
 from api.models.base import DefaultColumns
 
@@ -11,6 +12,7 @@ class Label(DefaultColumns):
     name = models.CharField(
         max_length=255,
         unique=True,
+        db_index=True,
         help_text="Name in BIIGLE label tree output; name of label as annotated",
     )
 
@@ -27,7 +29,8 @@ class Label(DefaultColumns):
     )
 
     lowest_aphia_id = models.PositiveIntegerField(
-        null=False,
+        null=True,
+        blank=True,
         db_index=True,
         help_text="The AphiaID corresponding to the lowest_taxonomic_name, if applicable",
     )
@@ -57,4 +60,10 @@ class Label(DefaultColumns):
         db_table = "labels"
         indexes = [
             models.Index(fields=["lowest_aphia_id"], name="labels_lowest_aphia_idx"),
+            models.Index(fields=["name"], name="labels_name_idx"),
+            GinIndex(
+                name="labels_name_trgm_idx",
+                fields=["name"],
+                opclasses=["gin_trgm_ops"],
+            ),
         ]

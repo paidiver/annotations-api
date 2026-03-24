@@ -123,7 +123,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         }
 
         resp = self.client.post(self.list_url(), payload, format="json")
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_list_labels(self):
         """Test listing Labels."""

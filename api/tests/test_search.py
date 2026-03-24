@@ -173,8 +173,30 @@ class AnnotationSearchViewSetTests(APITestCase):
         mocked_get_aphia_ids_by_name_part.assert_called_once_with("co")
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
-    def test_list_returns_404_when_name_part_finds_no_valid_aphia_ids(self, mocked_get_aphia_ids_by_name_part: Mock):
-        """Test list returns 404 when name_part produces no AphiaIDs.
+    def test_list_filters_by_label_name_when_name_part_finds_no_aphia_ids(
+        self,
+        mocked_get_aphia_ids_by_name_part: Mock,
+    ):
+        """Test list falls back to label name search when name_part produces no AphiaIDs.
+
+        Args:
+            mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
+        """
+        mocked_get_aphia_ids_by_name_part.return_value = []
+
+        resp = self.client.get(self.list_url, {"name_part": "co"})
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["results"]["annotations"][0]["label_name"], "Cod")
+        mocked_get_aphia_ids_by_name_part.assert_called_once_with("co")
+
+    @patch("api.views.search._get_aphia_ids_by_name_part")
+    def test_list_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
+        self,
+        mocked_get_aphia_ids_by_name_part: Mock,
+    ):
+        """Test list returns 404 when neither AphiaIDs nor label names match.
 
         Args:
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
@@ -186,7 +208,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(
             resp.data["detail"],
-            "No valid AphiaIDs found for the provided query parameters.",
+            "No valid AphiaIDs or label_name found for the provided query parameters.",
         )
 
     @patch("api.views.search._get_descendant_aphia_ids")
@@ -318,6 +340,47 @@ class AnnotationSearchViewSetTests(APITestCase):
         grouped = resp.data["results"]["annotations"]
         self.assertEqual(list(grouped.keys()), [str(self.annotation_set_2.id)])
         self.assertEqual(grouped[str(self.annotation_set_2.id)][0]["label_name"], "Crab")
+
+    @patch("api.views.search._get_aphia_ids_by_name_part")
+    def test_grouped_filters_by_label_name_when_name_part_finds_no_aphia_ids(
+        self,
+        mocked_get_aphia_ids_by_name_part: Mock,
+    ):
+        """Test grouped falls back to label name search when name_part produces no AphiaIDs.
+
+        Args:
+            mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
+        """
+        mocked_get_aphia_ids_by_name_part.return_value = []
+
+        resp = self.client.get(self.grouped_url, {"name_part": "cr"})
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+
+        grouped = resp.data["results"]["annotations"]
+        self.assertEqual(list(grouped.keys()), [str(self.annotation_set_2.id)])
+        self.assertEqual(grouped[str(self.annotation_set_2.id)][0]["label_name"], "Crab")
+
+    @patch("api.views.search._get_aphia_ids_by_name_part")
+    def test_grouped_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
+        self,
+        mocked_get_aphia_ids_by_name_part: Mock,
+    ):
+        """Test grouped returns 404 when neither AphiaIDs nor label names match.
+
+        Args:
+            mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
+        """
+        mocked_get_aphia_ids_by_name_part.return_value = []
+
+        resp = self.client.get(self.grouped_url, {"name_part": "does-not-exist"})
+
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            resp.data["detail"],
+            "No valid AphiaIDs or label_name found for the provided query parameters.",
+        )
 
     @patch("api.views.search.CachedWoRMSClient")
     def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock):
