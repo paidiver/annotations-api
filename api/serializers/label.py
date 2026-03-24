@@ -1,13 +1,13 @@
 """Serializers for the Labels API endpoints."""
 
 import requests
-from django.conf import settings
 from requests import RequestException
 from rest_framework import serializers, status
 
 from api.models import Label
 from api.models.annotation_set import AnnotationSet
 from api.serializers.base import ReadOnlyFieldsMixin
+from api.services.cached_worms_client import CachedWoRMSClient
 
 
 class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
@@ -44,9 +44,6 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             dict: The updated errors dictionary with any new errors added.
         """
         aphia_id = attrs.get("lowest_aphia_id")
-        if aphia_id is None:
-            errors["lowest_aphia_id"] = "This field is required."
-            return errors
 
         aphia_cache = self.context.setdefault("aphia_validation_error_cache", {})
 
@@ -114,9 +111,5 @@ def _ingest_get_aphia_id_cached_worms(aphia_id: str) -> requests.Response:
     Returns:
         requests.Response: The response from the WoRMS API.
     """
-    return requests.post(
-        f"{settings.CACHED_WORMS_API_BASE_URL}/taxa/ingest/",
-        json={"aphia_id": aphia_id},
-        headers={"Authorization": f"Bearer {settings.CACHED_WORMS_API_TOKEN}"},
-        timeout=20,
-    )
+    client = CachedWoRMSClient()
+    return client.ingest(aphia_id)

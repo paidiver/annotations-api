@@ -6,6 +6,91 @@ Set your API base URL once:
 export API_BASE="http://localhost:8000"
 ```
 
+## Search endpoints
+
+The API provides two search endpoints for annotation labels. You can search either by WoRMS AphiaID(s) or by a partial taxon name.
+
+Supported query parameters:
+
+* `name_part`: partial label name to search for
+* `aphia_ids[]`: one or more AphiaIDs
+* `include_descendants=true`: include descendant taxa of the provided AphiaIDs
+
+At least one of `name_part` or `aphia_ids[]` must be provided.
+
+If neither `name_part` nor `aphia_ids[]` is provided, the API returns `400 Bad Request`. If no valid AphiaIDs are found from the provided query, the API returns `404 Not Found`.
+
+### Search annotation labels
+
+Returns a flat list of matching annotation label records.
+
+```bash
+curl -sS "$API_BASE/api/annotations/search/?name_part=cod&aphia_ids[]=126436&aphia_ids[]=126437&include_descendants=true"
+```
+
+A successful response returns paginated results. Each item contains fields such as:
+
+* `id`
+* `creation_datetime`
+* `image_filename`
+* `image_uuid`
+* `label_name`
+* `label_aphia_id`
+* `annotation_platform`
+* `annotation_shape`
+* `annotation_coordinates`
+* `annotation_dimension_pixels`
+* `annotator_name`
+* `annotation_set_uuid`
+* `annotation_set_name`
+* `image_set_uuid`
+* `image_set_name`
+
+### Search annotation labels grouped by annotation set
+
+The grouped response is keyed by `annotation_set_id`, with each value containing a list of matching rows for that annotation set.
+
+```bash
+curl -sS "$API_BASE/api/annotations/search/grouped/?name_part=cod&aphia_ids[]=126436&aphia_ids[]=126437&include_descendants=true"
+```
+
+## Ingest imagery from an iFDO payload (POST)
+
+This endpoint ingests an iFDO payload and creates an `ImageSet` together with its related `Image` records in a single request.
+
+The request body accepts:
+
+* `submission_id` (optional)
+* `image_set_uuid` (optional)
+* `ifdo` (required): an object containing the iFDO payload
+
+Example:
+
+```bash
+curl -sS -X POST "$API_BASE/api/ingest/imagery/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "submission_id": "submission-001",
+    "image_set_uuid": "ifdo-image-set-001",
+    "ifdo": {
+      "image-set-header": {
+        "image-set-name": "Dive 2026-02-11",
+        "image-set-handle": "https://handle.example/12345/abc"
+      },
+      "image-set-items": [
+        {
+          "image-filename": "dive2026-02-11_img001.jpg"
+        },
+        {
+          "image-filename": "dive2026-02-11_img002.jpg"
+        }
+      ]
+    }
+  }'
+```
+
+If the `ifdo` object is missing or invalid, the API returns `400 Bad Request`. If one or more image items fail validation, the whole transaction is rolled back and the API returns a `400 Bad Request` response describing the failed items.
+
 ## Create (POST)
 
 ### Field endpoints

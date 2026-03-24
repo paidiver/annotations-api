@@ -36,6 +36,8 @@ api:
       secretKey: django-secret-key
     djangoDebug: "1"
     cachedWormsApi: "https://worms-cache.paidiver.site/api"
+    djangoCorsAllowedOrigins: ""
+    djangoCorsAllowAll: "1"
     cachedWormsApiToken:
       secretName: my-app-secrets
       secretKey: ingest-api-token

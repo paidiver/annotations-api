@@ -38,8 +38,10 @@ class ImageCameraCalibrationModelTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["calibration_model_type"], "rectilinear air")
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["calibration_model_type"], "rectilinear air")
 
     def test_get_camera_cal_by_id(self):
         """Test retrieving a specific camera_cal by id."""
@@ -120,8 +122,10 @@ class ImageCameraPoseTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["utm_east_north_up_meters"], [10.0, 20.0])
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["utm_east_north_up_meters"], [10.0, 20.0])
 
     def test_get_camera_pose_by_id(self):
         """Test retrieving a specific camera_pose by id."""
@@ -201,8 +205,10 @@ class ImageDomeportParameterTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["extra_description"], "Test domeport parameter")
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["extra_description"], "Test domeport parameter")
 
     def test_get_domeport_param_by_id(self):
         """Test retrieving a specific domeport_param by id."""
@@ -282,8 +288,10 @@ class ImageFlatportParameterTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["extra_description"], "Test flatport parameter")
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["extra_description"], "Test flatport parameter")
 
     def test_get_flatport_param_by_id(self):
         """Test retrieving a specific flatport_param by id."""
@@ -363,8 +371,10 @@ class ImageCameraHousingViewportTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["extra_description"], "Test housing parameter")
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["extra_description"], "Test housing parameter")
 
     def test_get_housing_param_by_id(self):
         """Test retrieving a specific housing_param by id."""
@@ -446,8 +456,10 @@ class ImagePhotometricCalibrationTests(AuthenticatedAPITestCase):
         self.client.force_authenticate(user=None)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["sequence_illumination_type"], "constant artificial")
+        self.assertEqual(set(response.data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["sequence_illumination_type"], "constant artificial")
 
     def test_get_photometric_cal_by_id(self):
         """Test retrieving a specific photometric_cal by id."""
