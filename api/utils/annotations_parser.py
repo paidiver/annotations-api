@@ -61,6 +61,14 @@ def parse_annotation_set_metadata(annotation_df: pd.DataFrame) -> dict:
     return annotation_data
 
 
+def _empty_to_none(value):
+    """Helper to convert blank strings to None."""
+    if value is None:
+        return None
+    value = str(value).strip()
+    return value if value else None
+
+
 def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
     """Parse Label set data from Dataframe.
 
@@ -104,10 +112,10 @@ def parse_label_set(label_df: pd.DataFrame) -> list[dict]:
             {
                 "name": row["label_name"].strip(),
                 "parent_label_name": row["parent_label_name"].strip(),
-                "lowest_taxonomic_name": row["lowest_taxonomic_name"].strip(),
-                "lowest_aphia_id": row["lowest_aphia_id"],
+                "lowest_taxonomic_name": _empty_to_none(row["lowest_taxonomic_name"]),
+                "lowest_aphia_id": _empty_to_none(row["lowest_aphia_id"]),
                 "name_is_lowest": str(row["label_name_is_lowest"]).strip().lower() == "yes",
-                "identification_qualifier": row["identification_qualifier"].strip(),
+                "identification_qualifier": _empty_to_none(row["identification_qualifier"]),
             }
         )
 
