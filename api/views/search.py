@@ -76,7 +76,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
     @extend_schema(
         parameters=SEARCH_PARAMS,
-        responses={200: SearchResultItem},
+        responses={200: SearchResultItem, 204: None},
     )
     def list(self, request: Request) -> Response:
         """Search for Annotations based on query parameters.
@@ -94,10 +94,8 @@ class AnnotationSearchViewSet(GenericViewSet):
         name_part = request.query_params.get("name_part")
         queryset = self._get_search_queryset(aphia_ids=aphia_ids, name_part=name_part)
         if not queryset.exists():
-            return Response(
-                {"detail": "No valid AphiaIDs or label_name found for the provided query parameters."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator
@@ -112,7 +110,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
     @extend_schema(
         parameters=GROUPED_SEARCH_PARAMS,
-        responses={200: GroupedSearchResultRow},
+        responses={200: GroupedSearchResultRow, 204: None},
     )
     @action(detail=False, methods=["get"], url_path="grouped")
     def list_grouped(self, request: Request) -> Response:
@@ -132,10 +130,8 @@ class AnnotationSearchViewSet(GenericViewSet):
         name_part = request.query_params.get("name_part")
         queryset = self._get_grouped_queryset(aphia_ids=aphia_ids, name_part=name_part)
         if not queryset.exists():
-            return Response(
-                {"detail": "No valid AphiaIDs or label_name found for the provided query parameters."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         summary = self._build_summary(queryset) if calculate_summary else None
 
         paginator = self.paginator

@@ -205,11 +205,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(self.list_url, {"name_part": "does-not-exist"})
 
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(
-            resp.data["detail"],
-            "No valid AphiaIDs or label_name found for the provided query parameters.",
-        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     @patch("api.views.search._get_descendant_aphia_ids")
     def test_list_include_descendants_adds_results(self, mocked_get_descendant_aphia_ids: Mock):
@@ -376,11 +372,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(self.grouped_url, {"name_part": "does-not-exist"})
 
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(
-            resp.data["detail"],
-            "No valid AphiaIDs or label_name found for the provided query parameters.",
-        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
     @patch("api.views.search.CachedWoRMSClient")
     def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock):
