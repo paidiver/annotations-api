@@ -162,11 +162,14 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             QuerySet: A queryset of Annotations matching the given AphiaIDs.
         """
-        filters = Q()
-        if aphia_ids:
-            filters &= Q(label__lowest_aphia_id__in=aphia_ids)
-        elif name_part:
-            filters &= Q(label__name__icontains=name_part)
+        if aphia_ids and name_part:
+            filters = Q(label__lowest_aphia_id__in=aphia_ids) | Q(label__name__icontains=name_part)
+        else:
+            filters = Q()
+            if aphia_ids:
+                filters &= Q(label__lowest_aphia_id__in=aphia_ids)
+            if name_part:
+                filters &= Q(label__name__icontains=name_part)
         return (
             AnnotationLabel.objects.filter(filters)
             .values(
@@ -199,11 +202,14 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             QuerySet: A queryset of Annotations grouped by annotation set and image set.
         """
-        filters = Q()
-        if aphia_ids:
-            filters &= Q(label__lowest_aphia_id__in=aphia_ids)
-        if name_part:
-            filters &= Q(label__name__icontains=name_part)
+        if aphia_ids and name_part:
+            filters = Q(label__lowest_aphia_id__in=aphia_ids) | Q(label__name__icontains=name_part)
+        else:
+            filters = Q()
+            if aphia_ids:
+                filters &= Q(label__lowest_aphia_id__in=aphia_ids)
+            if name_part:
+                filters &= Q(label__name__icontains=name_part)
         return (
             AnnotationLabel.objects.filter(filters)
             .values(
