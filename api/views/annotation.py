@@ -95,7 +95,14 @@ class UploadAnnotationsView(viewsets.ViewSet):
                 status=HTTP_400_BAD_REQUEST,
             )
 
-        data = ingest_annotation_data(annotation_set, label_data, annotation_data)
+        try:
+            data = ingest_annotation_data(annotation_set, label_data, annotation_data)
+        except ValueError as e:
+            return Response(
+                {"error": f"Error ingesting annotations data: {e}"},
+                status=HTTP_400_BAD_REQUEST,
+            )
+
         return Response(
             {"status": "uploaded", "data": data},
             status=HTTP_201_CREATED,

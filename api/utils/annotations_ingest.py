@@ -56,13 +56,23 @@ def insert_annotations_set(data: pd.DataFrame) -> dict:
                 annotation_set.creators.add(creator)
 
         # Handle Many-to-Many image-sets
-        if data.get("annotation-image-set-name"):
-            image_set, _ = ImageSet.objects.get_or_create(
-                name=data.get("annotation-image-set-name"),
-                id=data.get("annotation-image-set-uuid"),
-                handle=data.get("annotation-image-set-handle"),
-            )
-            annotation_set.image_sets.add(image_set)
+        image_set_uuid = data.get("annotation-image-set-uuid")
+        image_set_name = data.get("annotation-image-set-name")
+        if image_set_name or image_set_uuid:
+            image_set_inst = None
+            if image_set_uuid and str(image_set_uuid).strip() != "":
+                image_set_inst = ImageSet.objects.filter(id=image_set_uuid).first()
+            if not image_set_inst and image_set_name:
+                name_match = ImageSet.objects.filter(name=image_set_name).first()
+                if name_match and image_set_uuid:
+                    raise ValueError(
+                        f"ImageSet not found with id={image_set_uuid} but name={image_set_name!r} "
+                        f"matched a different record (id={name_match.id})"
+                    )
+                image_set_inst = name_match
+            if not image_set_inst:
+                raise ValueError(f"ImageSet not found with id={image_set_uuid} or name={image_set_name!r}")
+            annotation_set.image_sets.add(image_set_inst)
 
     return serializer.data
 
@@ -110,84 +120,83 @@ def insert_annotations_data(parsed_data_list: list[dict], annotation_set_inst: u
         dict: Dictionary containing the inserted annotation data.
     """
     created_count = 0
-    errors = []
     data = []
 
     for index, entry in enumerate(parsed_data_list):
-        try:
-            image_inst = None
-            image_uuid = entry.get("image_id")
-            image_filename = entry.get("image_filename")
+        image_inst = None
+        image_uuid = entry.get("image_id")
+        image_filename = entry.get("image_filename")
 
-            if image_uuid and str(image_uuid).strip() != "":
-                image_inst = Image.objects.filter(id=image_uuid).first()
+        if image_uuid and str(image_uuid).strip() != "":
+            image_inst = Image.objects.filter(id=image_uuid).first()
 
-            if not image_inst and image_filename:
-                image_inst = Image.objects.filter(filename=image_filename).first()
+        if not image_inst and image_filename:
+            name_match = Image.objects.filter(filename=image_filename).first()
+            if name_match and image_uuid:
+                raise ValueError(
+                    f"ImageSet not found with id={image_uuid} but name={image_filename!r} "
+                    f"matched a different record (id={name_match.id})"
+                )
+            image_inst = name_match
 
-            if not image_inst:
-                errors.append(f"Row {index+1}: Image not found (UUID: {image_uuid}, Name: {image_filename})")
-                continue
+        if not image_inst:
+            raise ValueError(f"Row {index+1}: Image not found (UUID: {image_uuid}, Name: {image_filename})")
 
-            # Labels must exist in the context of this Annotation Set (from Tab 3)
-            label_inst = Label.objects.filter(name=entry["label_name"], annotation_set=annotation_set_inst).first()
+        # Labels must exist in the context of this Annotation Set (from Tab 3)
+        label_inst = Label.objects.filter(name=entry["label_name"], annotation_set=annotation_set_inst).first()
 
-            if not label_inst:
-                errors.append(f"Row {index+1}: Label '{entry['label_name']}' not found in this Annotation Set.")
-                continue
+        if not label_inst:
+            raise ValueError(f"Row {index+1}: Label '{entry['label_name']}' not found in this Annotation Set.")
 
-            # find or create the person/machine
-            annotator_name = entry.get("annotator_name")
-            annotator_inst, _ = Annotator.objects.get_or_create(name=annotator_name)
+        # find or create the person/machine
+        annotator_name = entry.get("annotator_name")
+        annotator_inst, _ = Annotator.objects.get_or_create(name=annotator_name)
 
-            # Create Annotation via Serializer
-            annotation_data = {
-                "image_id": image_inst.id,
-                "annotation_set_id": annotation_set_inst,
-                "annotation_platform": entry["annotation_platform"],
-                "shape": entry["shape"],
-                "coordinates": entry["coordinates"],
-                "dimension_pixels": entry["dimension_pixels"],
+        # Create Annotation via Serializer
+        annotation_data = {
+            "image_id": image_inst.id,
+            "annotation_set_id": annotation_set_inst,
+            "annotation_platform": entry["annotation_platform"],
+            "shape": entry["shape"],
+            "coordinates": entry["coordinates"],
+            "dimension_pixels": entry["dimension_pixels"],
+        }
+
+        anno_serializer = AnnotationSerializer(data=annotation_data)
+        anno_serializer.is_valid(raise_exception=True)
+        annotation_obj = anno_serializer.save()
+
+        # Create AnnotationLabel via Serializer
+        dt_val = entry["creation_datetime"]
+        if isinstance(dt_val, str) and dt_val.strip():
+            try:
+                dt_val = datetime.strptime(dt_val, "%d%m%Y %H:%M:%S")
+            except ValueError:
+                dt_val = datetime.now()
+
+        anno_label_data = {
+            "annotation_id": annotation_obj.id,
+            "label_id": label_inst.id,
+            "annotator_id": annotator_inst.id,
+            "creation_datetime": dt_val,
+        }
+
+        anno_label_serializer = AnnotationLabelSerializer(data=anno_label_data)
+        anno_label_serializer.is_valid(raise_exception=True)
+        anno_label_serializer.save()
+
+        annotator_serializer = AnnotatorSerializer(annotator_inst)
+
+        data.append(
+            {
+                "annotation": anno_serializer.data,
+                "label": anno_label_serializer.data,
+                "annotator": annotator_serializer.data,
             }
+        )
+        created_count += 1
 
-            anno_serializer = AnnotationSerializer(data=annotation_data)
-            anno_serializer.is_valid(raise_exception=True)
-            annotation_obj = anno_serializer.save()
-
-            # Create AnnotationLabel via Serializer
-            dt_val = entry["creation_datetime"]
-            if isinstance(dt_val, str) and dt_val.strip():
-                try:
-                    dt_val = datetime.strptime(dt_val, "%d%m%Y %H:%M:%S")
-                except ValueError:
-                    dt_val = datetime.now()
-
-            anno_label_data = {
-                "annotation_id": annotation_obj.id,
-                "label_id": label_inst.id,
-                "annotator_id": annotator_inst.id,
-                "creation_datetime": dt_val,
-            }
-
-            anno_label_serializer = AnnotationLabelSerializer(data=anno_label_data)
-            anno_label_serializer.is_valid(raise_exception=True)
-            anno_label_serializer.save()
-
-            annotator_serializer = AnnotatorSerializer(annotator_inst)
-
-            data.append(
-                {
-                    "annotation": anno_serializer.data,
-                    "label": anno_label_serializer.data,
-                    "annotator": annotator_serializer.data,
-                }
-            )
-            created_count += 1
-
-        except Exception as e:
-            errors.append(f"Row {index+1}: {str(e)}")
-
-    data = {"created": created_count, "data": data, "errors": errors}
+    data = {"created": created_count, "data": data}
     return data
 
 
