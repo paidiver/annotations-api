@@ -5,13 +5,16 @@ from unittest.mock import Mock, PropertyMock, patch
 import requests
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.test import APIRequestFactory, APITestCase
 
 from api.models import Annotation, AnnotationLabel, Image, Label
 from api.models.annotation import Annotator
 from api.models.annotation_set import AnnotationSet
+from api.models.fields import Platform, Project
 from api.models.image_set import ImageSet
-from api.views.search import _get_aphia_ids_by_name_part, _get_descendant_aphia_ids
+from api.views.search import AnnotationSearchViewSet, _get_aphia_ids_by_name_part, _get_descendant_aphia_ids
 
 
 class AnnotationSearchViewSetTests(APITestCase):
@@ -22,8 +25,24 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.annotation_set_1 = AnnotationSet.objects.create(name="Annotation Set 1")
         self.annotation_set_2 = AnnotationSet.objects.create(name="Annotation Set 2")
 
-        self.image_set_1 = ImageSet.objects.create(name="Image Set 1")
-        self.image_set_2 = ImageSet.objects.create(name="Image Set 2")
+        self.project = Project.objects.create(name="Project Alpha")
+        self.platform = Platform.objects.create(name="ROV")
+        self.image_set_1 = ImageSet.objects.create(
+            name="Image Set 1",
+            deployment="mapping",
+            fauna_attraction="none",
+            marine_zone="seafloor",
+            project=self.project,
+            platform=self.platform,
+        )
+        self.image_set_2 = ImageSet.objects.create(
+            name="Image Set 2",
+            deployment="survey",
+            fauna_attraction="baited",
+            marine_zone="water column",
+            project=self.project,
+            platform=self.platform,
+        )
 
         self.annotation_set_1.image_sets.set([self.image_set_1])
         self.annotation_set_2.image_sets.set([self.image_set_2])
@@ -33,10 +52,14 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.image_1 = Image.objects.create(
             image_set=self.image_set_1,
             filename="image_1.jpg",
+            latitude=10.0,
+            longitude=20.0,
         )
         self.image_2 = Image.objects.create(
             image_set=self.image_set_2,
             filename="image_2.jpg",
+            latitude=30.0,
+            longitude=40.0,
         )
 
         self.annotation_1 = Annotation.objects.create(
@@ -92,7 +115,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             resp.data["detail"],
-            "Please provide either 'aphia_ids' or 'name_part' query parameter.",
+            {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
     def test_list_filters_by_aphia_ids(self):
@@ -164,13 +187,13 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = [1001]
 
-        resp = self.client.get(self.list_url, {"name_part": "co"})
+        resp = self.client.get(self.list_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
         self.assertIsNone(resp.data["results"]["summary"])
         self.assertEqual(resp.data["results"]["annotations"][0]["label_name"], "Cod")
-        mocked_get_aphia_ids_by_name_part.assert_called_once_with("co")
+        mocked_get_aphia_ids_by_name_part.assert_called_once_with("cod")
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_list_filters_by_label_name_when_name_part_finds_no_aphia_ids(
@@ -184,12 +207,12 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = []
 
-        resp = self.client.get(self.list_url, {"name_part": "co"})
+        resp = self.client.get(self.list_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
         self.assertEqual(resp.data["results"]["annotations"][0]["label_name"], "Cod")
-        mocked_get_aphia_ids_by_name_part.assert_called_once_with("co")
+        mocked_get_aphia_ids_by_name_part.assert_called_once_with("cod")
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_list_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
@@ -205,7 +228,10 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(self.list_url, {"name_part": "does-not-exist"})
 
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resp.data, {"count": 0, "next": None, "previous": None, "results": {"summary": None, "annotations": []}}
+        )
 
     @patch("api.views.search._get_descendant_aphia_ids")
     def test_list_include_descendants_adds_results(self, mocked_get_descendant_aphia_ids: Mock):
@@ -267,7 +293,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             resp.data["detail"],
-            "Please provide either 'aphia_ids' or 'name_part' query parameter.",
+            {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
     def test_grouped_filters_by_aphia_ids(self):
@@ -328,7 +354,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = [2002]
 
-        resp = self.client.get(self.grouped_url, {"name_part": "cr"})
+        resp = self.client.get(self.grouped_url, {"name_part": "cra"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
@@ -349,7 +375,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """
         mocked_get_aphia_ids_by_name_part.return_value = []
 
-        resp = self.client.get(self.grouped_url, {"name_part": "cr"})
+        resp = self.client.get(self.grouped_url, {"name_part": "cra"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
@@ -372,7 +398,10 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(self.grouped_url, {"name_part": "does-not-exist"})
 
-        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            resp.data, {"count": 0, "next": None, "previous": None, "results": {"summary": None, "annotations": {}}}
+        )
 
     @patch("api.views.search.CachedWoRMSClient")
     def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock):
@@ -421,7 +450,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         fake_paginator.paginate_queryset.return_value = None
         mocked_paginator.return_value = fake_paginator
 
-        resp = self.client.get(self.list_url, {"name_part": "co"})
+        resp = self.client.get(self.list_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIsNone(resp.data["summary"])
@@ -431,10 +460,184 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(len(annotations), 1)
         self.assertEqual(annotations[0]["label_name"], "Cod")
 
-        resp = self.client.get(self.grouped_url, {"name_part": "co"})
+        resp = self.client.get(self.grouped_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         self.assertIsInstance(resp.data, dict)
         self.assertIn(str(self.annotation_set_1.id), resp.data["annotations"].keys())
         self.assertEqual(len(resp.data["annotations"][str(self.annotation_set_1.id)]), 1)
+
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_list_returns_response_from_get_all_aphia_ids_from_request(
+        self,
+        mocked_get_all_aphia_ids: Mock,
+    ):
+        """Test list returns the Response object from _get_all_aphia_ids_from_request when it returns a Response.
+
+        Args:
+            mocked_get_all_aphia_ids (Mock): Mock of the _get_all_aphia_ids_from_request method.
+        """
+        mocked_get_all_aphia_ids.return_value = Response(
+            {"detail": "mocked error"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+        resp = self.client.get(self.list_url, {"aphia_ids[]": [1001]})
+
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.data, {"detail": "mocked error"})
+
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_grouped_returns_response_from_get_all_aphia_ids_from_request(
+        self,
+        mocked_get_all_aphia_ids: Mock,
+    ):
+        """Test grouped returns the Response object from _get_all_aphia_ids_from_request when it returns a Response.
+
+        Args:
+            mocked_get_all_aphia_ids (Mock): Mock of the _get_all_aphia_ids_from_request method.
+        """
+        mocked_get_all_aphia_ids.return_value = Response(
+            {"detail": "mocked error"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+        resp = self.client.get(self.grouped_url, {"aphia_ids[]": [1001]})
+
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.data, {"detail": "mocked error"})
+
+    def test_list_filters_by_all_optional_query_params(self):
+        """Test listing search results filtered by all optional query parameters together."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001],
+                "image_set_name": "Image Set 1",
+                "project": "Project Alpha",
+                "platform": "ROV",
+                "deployment": self.image_set_1.deployment,
+                "fauna_attraction": self.image_set_1.fauna_attraction,
+                "marine_zone": self.image_set_1.marine_zone,
+                "min_lat": self.image_1.latitude,
+                "max_lat": self.image_1.latitude,
+                "min_lon": self.image_1.longitude,
+                "max_lon": self.image_1.longitude,
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(
+            resp.data["results"]["annotations"][0]["label_aphia_id"],
+            1001,
+        )
+
+    def test_list_rejects_invalid_choice_params(self):
+        """Test list rejects invalid values for choice-based query parameters."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001],
+                "deployment": "invalid-deployment",
+                "fauna_attraction": "invalid-fauna",
+                "marine_zone": "invalid-zone",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("deployment", resp.data["detail"])
+        self.assertIn("fauna_attraction", resp.data["detail"])
+        self.assertIn("marine_zone", resp.data["detail"])
+
+    def test_list_rejects_short_length_params(self):
+        """Test list rejects values for string-based query parameters that are too short."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001],
+                "name_part": "ab",
+                "project": "xy",
+                "platform": "zz",
+                "image_set_name": "qw",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            resp.data["detail"]["name_part"],
+            "'name_part' must contain at least 3 characters.",
+        )
+        self.assertEqual(
+            resp.data["detail"]["project"],
+            "'project' must contain at least 3 characters.",
+        )
+        self.assertEqual(
+            resp.data["detail"]["platform"],
+            "'platform' must contain at least 3 characters.",
+        )
+        self.assertEqual(
+            resp.data["detail"]["image_set_name"],
+            "'image_set_name' must contain at least 3 characters.",
+        )
+
+    def test_list_rejects_non_numeric_bbox_params(self):
+        """Test list rejects non-numeric values for bounding box query parameters."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001],
+                "min_lat": "abc",
+                "max_lat": "def",
+                "min_lon": "ghi",
+                "max_lon": "jkl",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.data["detail"]["min_lat"], "'min_lat' must be a valid number.")
+        self.assertEqual(resp.data["detail"]["max_lat"], "'max_lat' must be a valid number.")
+        self.assertEqual(resp.data["detail"]["min_lon"], "'min_lon' must be a valid number.")
+        self.assertEqual(resp.data["detail"]["max_lon"], "'max_lon' must be a valid number.")
+
+    def test_list_rejects_invalid_bbox_ranges(self):
+        """Test list rejects values for bounding box query parameters that are out of valid ranges."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001],
+                "min_lat": "91",
+                "max_lat": "-91",
+                "min_lon": "181",
+                "max_lon": "-181",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(resp.data["detail"]["min_lat"], "'min_lat' must be between -90 and 90.")
+        self.assertEqual(resp.data["detail"]["max_lat"], "'max_lat' must be between -90 and 90.")
+        self.assertEqual(resp.data["detail"]["min_lon"], "'min_lon' must be between -180 and 180.")
+        self.assertEqual(resp.data["detail"]["max_lon"], "'max_lon' must be between -180 and 180.")
+        self.assertEqual(
+            resp.data["detail"]["latitude_range"],
+            "'min_lat' must be less than or equal to 'max_lat'.",
+        )
+        self.assertEqual(
+            resp.data["detail"]["longitude_range"],
+            "'min_lon' must be less than or equal to 'max_lon'.",
+        )
+
+    def test_get_float_query_param_returns_none_and_float(self):
+        """Test _get_float_query_param returns None for missing or empty params and returns float for valid input."""
+        factory = APIRequestFactory()
+        view = AnnotationSearchViewSet()
+
+        request = Request(factory.get("/fake", {}))
+        self.assertIsNone(view._get_float_query_param(request, "min_lat"))
+
+        request = Request(factory.get("/fake", {"min_lat": ""}))
+        self.assertIsNone(view._get_float_query_param(request, "min_lat"))
+
+        request = Request(factory.get("/fake", {"min_lat": "12.5"}))
+        self.assertEqual(view._get_float_query_param(request, "min_lat"), 12.5)

@@ -2,8 +2,6 @@
 
 import random
 
-from api.models.base import enum_choices
-
 
 def rand_lat() -> float:
     """Generates a random latitude between -80 and 80 degrees (avoiding poles)."""
@@ -45,19 +43,6 @@ def vec3(min_v: float = -1.0, max_v: float = 1.0) -> list[float]:
         A list of 3 random floats in the specified range.
     """
     return [random.uniform(min_v, max_v) for _ in range(3)]
-
-
-def enum_choice(enum_cls) -> str | None:
-    """Return a random .value from a Django-style Enum, or None.
-
-    Args:
-        enum_cls: An Enum class (e.g. AcquisitionEnum) with .value attributes.
-
-    Returns:
-        A random value from the enum, or None if the enum has no values.
-    """
-    values = enum_choices(enum_cls)
-    return random.choice(values) if values else None
 
 
 def coords_for_shape(shape: str) -> list[list[float]]:  # noqa: C901

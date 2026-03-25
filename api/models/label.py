@@ -59,8 +59,6 @@ class Label(DefaultColumns):
 
         db_table = "labels"
         indexes = [
-            models.Index(fields=["lowest_aphia_id"], name="labels_lowest_aphia_idx"),
-            models.Index(fields=["name"], name="labels_name_idx"),
             GinIndex(
                 name="labels_name_trgm_idx",
                 fields=["name"],
