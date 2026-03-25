@@ -44,7 +44,7 @@ class CaseInsensitiveEnum(str, enum.Enum):
         return None
 
 
-class ShapeEnum(str, enum.Enum):
+class ShapeEnum(CaseInsensitiveEnum):
     """Enumeration of possible annotation shapes."""
 
     single_pixel = "single-pixel"

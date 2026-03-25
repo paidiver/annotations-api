@@ -10,49 +10,36 @@ from api.serializers.label import _ingest_get_aphia_id_cached_worms
 class TestWormsAPI(TestCase):
     """Unit tests for _ingest_get_aphia_id_cached_worms."""
 
-    CACHED_API_BASE = "http://cached/api"
+    @patch("api.serializers.label.CachedWoRMSClient")
+    def test_returns_cached_if_cached_is_200(self, mock_client_class: Mock):
+        """Return the response from CachedWoRMSClient.ingest when the cache returns 200.
 
-    def setUp(self):
-        """Set up the test case by patching settings and requests.post."""
-        patcher_settings = patch("api.serializers.label.settings")
-        self.mock_settings = patcher_settings.start()
-        self.addCleanup(patcher_settings.stop)
-
-        patcher_post = patch("api.serializers.label.requests.post")
-        self.mock_post = patcher_post.start()
-        self.addCleanup(patcher_post.stop)
-
-        self.mock_settings.CACHED_WORMS_API_BASE_URL = self.CACHED_API_BASE
-        self.mock_settings.CACHED_WORMS_API_TOKEN = "test-token"
-
-    def test_returns_cached_if_cached_is_200(self):
-        """No errors are returned if aphia_id is validated successfully."""
+        Args:
+            mock_client_class (Mock): Mock of the CachedWoRMSClient class.
+        """
         cached_response = Mock(status_code=200)
-        self.mock_post.return_value = cached_response
+        mock_client = mock_client_class.return_value
+        mock_client.ingest.return_value = cached_response
 
         response = _ingest_get_aphia_id_cached_worms("123")
 
         self.assertEqual(response, cached_response)
-        self.mock_post.assert_called_once_with(
-            "http://cached/api/taxa/ingest/",
-            json={"aphia_id": "123"},
-            headers={"Authorization": "Bearer test-token"},
-            timeout=20,
-        )
+        mock_client_class.assert_called_once_with()
+        mock_client.ingest.assert_called_once_with("123")
 
-    def test_returns_error_if_cached_fails(self):
-        """Error is returned for aphia_id if worms cache response is unsuccessful."""
+    @patch("api.serializers.label.CachedWoRMSClient")
+    def test_returns_error_if_cached_fails(self, mock_client_class: Mock):
+        """Return the response from CachedWoRMSClient.ingest when the cache returns an error.
+
+        Args:
+            mock_client_class (Mock): Mock of the CachedWoRMSClient class.
+        """
         cached_response = Mock(status_code=404)
-
-        self.mock_post.side_effect = [cached_response]
+        mock_client = mock_client_class.return_value
+        mock_client.ingest.return_value = cached_response
 
         response = _ingest_get_aphia_id_cached_worms("789")
 
-        self.assertEqual(self.mock_post.call_count, 1)
-        self.mock_post.assert_called_with(
-            "http://cached/api/taxa/ingest/",
-            json={"aphia_id": "789"},
-            headers={"Authorization": "Bearer test-token"},
-            timeout=20,
-        )
         self.assertEqual(response, cached_response)
+        mock_client_class.assert_called_once_with()
+        mock_client.ingest.assert_called_once_with("789")

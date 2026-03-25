@@ -42,7 +42,10 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.data
-        filenames = sorted([item["filename"] for item in data])
+        self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(len(data["results"]), 2)
+        filenames = sorted([item["filename"] for item in data["results"]])
         self.assertEqual(filenames, ["file_a.jpg", "file_b.jpg"])
 
     def test_retrieve_image(self):

@@ -10,25 +10,6 @@ from api.models import Label
 
 from .annotation_set import AnnotationSetFactory
 
-LOWEST_APHIA_ID_LIST = [
-    123349,
-    1292,
-    100698,
-    146142,
-    100684,
-    127137,
-    148427,
-    106835,
-    123084,
-    106738,
-    100793,
-    125166,
-    110835,
-    558,
-    110956,
-    123813,
-]
-
 
 class LabelFactory(DjangoModelFactory):
     """Factory for Label."""
@@ -95,3 +76,41 @@ class LabelFactory(DjangoModelFactory):
             kwargs["annotation_set_id"] = annotation_set_id
 
         return super()._create(model_class, *args, **kwargs)
+
+
+# List of low AphiaIDs to use for generating realistic test data, sourced from the WoRMS database
+LOWEST_APHIA_ID_LIST = [
+    123349,
+    1292,
+    1340,
+    1360,
+    888371,
+    853973,
+    100653,
+    100698,
+    1361,
+    151646,
+    100684,
+    607338,
+    367225,
+    100689,
+    100793,
+    146142,
+    1795,
+    110722,
+    153575,
+    153667,
+    110768,
+    110956,
+    152299,
+    110730,
+    110835,
+    127137,
+    148427,
+    106835,
+    123084,
+    106738,
+    125166,
+    558,
+    123813,
+]
