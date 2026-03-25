@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_remove_unique_name_constraint_from_label'),
+        ('api', '0008_remove_unique_name_constraint_from_label'),
     ]
 
     operations = [
