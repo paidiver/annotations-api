@@ -6,8 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0007'
-                '_label_composite_unique_key_name_and_parent_label_name'),
+        ('api', '0005_label_composite_unique_key_name_and_parent_label_name'),
     ]
 
     operations = [

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_alter_label_lowest_aphia_id_alter_label_name_and_more.py'),
+        ('api', '0004_rename_material_in_imagesetrelatedmaterial_table_to_related_material'),
     ]
 
     operations = [
