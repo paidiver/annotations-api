@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from django.test import TestCase
 
@@ -65,7 +65,7 @@ def make_label_list():
 class InsertAnnotationsSetTests(TestCase):
     """Tests for inserting annotation sets from file upload."""
 
-    def _mock_serializer(self, saved_data, annotation_set_inst):
+    def _mock_serializer(self, saved_data: dict, annotation_set_inst: Mock):
         """Return a mock AnnotationSetSerializer."""
         mock_serializer = MagicMock()
         mock_serializer.is_valid.return_value = True
@@ -74,7 +74,7 @@ class InsertAnnotationsSetTests(TestCase):
         return mock_serializer
 
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_basic_insert_returns_serializer_data(self, MockSerializer):
+    def test_basic_insert_returns_serializer_data(self, mock_serializer: Mock):
         """Test that annotation set data is passed to serializer."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -82,7 +82,7 @@ class InsertAnnotationsSetTests(TestCase):
         annotation_set_inst.image_sets = MagicMock()
 
         expected_data = {"id": str(annotation_set_inst.id), "name": "Test Set"}
-        MockSerializer.return_value = self._mock_serializer(expected_data, annotation_set_inst)
+        mock_serializer.return_value = self._mock_serializer(expected_data, annotation_set_inst)
 
         result = insert_annotations_set(make_annotation_set_data())
 
@@ -90,15 +90,15 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.Creator")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_creators_are_added(self, MockSerializer, MockCreator):
+    def test_creators_are_added(self, mock_serializer: Mock, mock_get_creator: Mock):
         """Test that new creators for annotation set are inserted."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.image_sets = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({"id": str(annotation_set_inst.id)}, annotation_set_inst)
+        mock_serializer.return_value = self._mock_serializer({"id": str(annotation_set_inst.id)}, annotation_set_inst)
         mock_creator = MagicMock()
-        MockCreator.objects.get_or_create.return_value = (mock_creator, True)
+        mock_get_creator.objects.get_or_create.return_value = (mock_creator, True)
 
         data = make_annotation_set_data(
             **{
@@ -108,42 +108,42 @@ class InsertAnnotationsSetTests(TestCase):
         )
         insert_annotations_set(data)
 
-        self.assertEqual(MockCreator.objects.get_or_create.call_count, 2)
+        self.assertEqual(mock_get_creator.objects.get_or_create.call_count, 2)
         self.assertEqual(annotation_set_inst.creators.add.call_count, 2)
 
     @patch("api.utils.annotations_ingest.Creator")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_creators_with_fewer_uris_than_names(self, MockSerializer, MockCreator):
+    def test_creators_with_fewer_uris_than_names(self, mock_serializer: Mock, mock_creator: Mock):
         """Test that missing creator URIs are filled with None."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.image_sets = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({}, annotation_set_inst)
-        MockCreator.objects.get_or_create.return_value = (MagicMock(), True)
+        mock_serializer.return_value = self._mock_serializer({}, annotation_set_inst)
+        mock_creator.objects.get_or_create.return_value = (MagicMock(), True)
 
         data = make_annotation_set_data(
             **{"annotation-creators-names": "Alice, Bob", "annotation-creators-uris": "http://alice.example.com"}
         )
         insert_annotations_set(data)
 
-        calls = MockCreator.objects.get_or_create.call_args_list
+        calls = mock_creator.objects.get_or_create.call_args_list
         self.assertEqual(len(calls), 2)
         # Second creator should have uri=None
         self.assertIsNone(calls[1].kwargs.get("uri") or calls[1][1].get("uri"))
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_image_set_resolved_by_uuid(self, MockSerializer, MockImageSet):
+    def test_image_set_resolved_by_uuid(self, mock_serializer: Mock, mock_get_image_set: Mock):
         """Test that image set for annotation set is retrieved by UUID."""
         image_set_id = uuid.uuid4()
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.creators = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({}, annotation_set_inst)
+        mock_serializer.return_value = self._mock_serializer({}, annotation_set_inst)
         mock_image_set = MagicMock()
-        MockImageSet.objects.filter.return_value.first.return_value = mock_image_set
+        mock_get_image_set.objects.filter.return_value.first.return_value = mock_image_set
 
         data = make_annotation_set_data(
             **{
@@ -157,45 +157,45 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_image_set_resolved_by_name_when_uuid_missing(self, MockSerializer, MockImageSet):
+    def test_image_set_resolved_by_name_when_uuid_missing(self, mock_serializer: Mock, mock_get_image_set: Mock):
         """Test that image set for annotation set is retrieved by name if no UUID given."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.creators = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({}, annotation_set_inst)
+        mock_serializer.return_value = self._mock_serializer({}, annotation_set_inst)
 
         named_image_set = MagicMock()
         named_image_set.id = "12345"
         named_image_set.name = "My Image Set"
 
         # No UUID lookup for empty value; name lookup succeeds
-        MockImageSet.objects.filter.return_value = named_image_set
+        mock_get_image_set.objects.filter.return_value = named_image_set
 
         data = make_annotation_set_data(
             **{"annotation-image-set-uuid": "", "annotation-image-set-name": "My Image Set"}
         )
         insert_annotations_set(data)
 
-        MockImageSet.objects.filter.assert_called_once_with(name="My Image Set")
+        mock_get_image_set.objects.filter.assert_called_once_with(name="My Image Set")
         annotation_set_inst.image_sets.add.assert_called_once()
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_raises_when_image_set_uuid_and_name_mismatch(self, MockSerializer, MockImageSet):
+    def test_raises_when_image_set_uuid_and_name_mismatch(self, mock_serializer: Mock, mock_get_image_set: Mock):
         """Test that a ValueError is found if image set name matches a different UUID than what is given."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.creators = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({}, annotation_set_inst)
+        mock_serializer.return_value = self._mock_serializer({}, annotation_set_inst)
 
         conflicting_record = MagicMock()
         conflicting_record.id = "12345"
         conflicting_record.name = "Image Set Name"
 
         # UUID lookup misses; name lookup hits a *different* record
-        MockImageSet.objects.filter.return_value.first.side_effect = [None, conflicting_record]
+        mock_get_image_set.objects.filter.return_value.first.side_effect = [None, conflicting_record]
 
         data = make_annotation_set_data(
             **{
@@ -211,14 +211,14 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_raises_when_image_set_not_found(self, MockSerializer, MockImageSet):
+    def test_raises_when_image_set_not_found(self, mock_serializer: Mock, mock_get_image_set: Mock):
         """Test that a ValueError is raised when given image set is not found."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
         annotation_set_inst.creators = MagicMock()
 
-        MockSerializer.return_value = self._mock_serializer({}, annotation_set_inst)
-        MockImageSet.objects.filter.return_value.first.return_value = None
+        mock_serializer.return_value = self._mock_serializer({}, annotation_set_inst)
+        mock_get_image_set.objects.filter.return_value.first.return_value = None
 
         data = make_annotation_set_data(
             **{
@@ -235,48 +235,48 @@ class InsertLabelDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_inserts_new_labels(self, MockLabel, MockLabelSerializer):
+    def test_inserts_new_labels(self, mock_get_label: Mock, mock_label_serializer: Mock):
         """Test that new labels for the annotation set are created in DB."""
         annotation_set_id = uuid.uuid4()
-        MockLabel.objects.filter.return_value.first.return_value = None  # no existing labels
+        mock_get_label.objects.filter.return_value.first.return_value = None  # no existing labels
 
         mock_serializer = MagicMock()
         mock_serializer.is_valid.return_value = True
         mock_serializer.data = {"id": str(uuid.uuid4()), "name": "fish"}
-        MockLabelSerializer.return_value = mock_serializer
+        mock_label_serializer.return_value = mock_serializer
 
         labels = make_label_list()
         result = insert_label_data(labels, annotation_set_id)
 
         self.assertEqual(len(result), len(labels))
-        self.assertEqual(MockLabelSerializer.call_count, len(labels))
+        self.assertEqual(mock_label_serializer.call_count, len(labels))
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_skips_existing_labels(self, MockLabel, MockLabelSerializer):
+    def test_skips_existing_labels(self, mock_get_label: Mock, mock_label_serializer: Mock):
         """Test that existing labels for the annotation set are not recreated."""
         annotation_set_id = uuid.uuid4()
         # Simulate all labels already existing
-        MockLabel.objects.filter.return_value.first.return_value = MagicMock()
+        mock_get_label.objects.filter.return_value.first.return_value = MagicMock()
 
         result = insert_label_data(make_label_list(), annotation_set_id)
 
-        MockLabelSerializer.assert_not_called()
+        mock_label_serializer.assert_not_called()
         self.assertEqual(result, [])
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_partial_existing_labels_only_inserts_new(self, MockLabel, MockLabelSerializer):
+    def test_partial_existing_labels_only_inserts_new(self, mock_get_label: Mock, mock_label_serializer: Mock):
         """Test that only required new labels are created for the annotation set if some exist."""
         annotation_set_id = uuid.uuid4()
 
         # First label exists, second does not
-        MockLabel.objects.filter.return_value.first.side_effect = [MagicMock(), None]
+        mock_get_label.objects.filter.return_value.first.side_effect = [MagicMock(), None]
 
         mock_serializer = MagicMock()
         mock_serializer.is_valid.return_value = True
         mock_serializer.data = {"name": "coral"}
-        MockLabelSerializer.return_value = mock_serializer
+        mock_label_serializer.return_value = mock_serializer
 
         labels = [
             {"name": "fish"},
@@ -284,7 +284,7 @@ class InsertLabelDataTests(TestCase):
         ]
         result = insert_label_data(labels, annotation_set_id)
 
-        self.assertEqual(MockLabelSerializer.call_count, 1)
+        self.assertEqual(mock_label_serializer.call_count, 1)
         self.assertEqual(len(result), 1)
 
 
@@ -293,12 +293,12 @@ class InsertAnnotationsDataTests(TestCase):
 
     def _setup_mocks(  # noqa: PLR0913
         self,
-        MockImage,
-        MockLabel,
-        MockAnnotator,
-        MockAnnotationSerializer,
-        MockAnnotationLabelSerializer,
-        MockAnnotatorSerializer,
+        mock_get_image: Mock,
+        mock_get_name: Mock,
+        mock_get_annotator: Mock,
+        mock_annotation_serializer: Mock,
+        mock_annotation_label_serializer: Mock,
+        mock_annotator_serializer: Mock,
     ):
         """Set up mocks for required objects to insert annotation data."""
         image_id = uuid.uuid4()
@@ -307,15 +307,15 @@ class InsertAnnotationsDataTests(TestCase):
 
         mock_image = MagicMock()
         mock_image.id = image_id
-        MockImage.objects.filter.return_value.first.return_value = mock_image
+        mock_get_image.objects.filter.return_value.first.return_value = mock_image
 
         mock_label = MagicMock()
         mock_label.id = label_id
-        MockLabel.objects.filter.return_value.first.return_value = mock_label
+        mock_get_name.objects.filter.return_value.first.return_value = mock_label
 
         mock_annotator = MagicMock()
         mock_annotator.id = annotator_id
-        MockAnnotator.objects.get_or_create.return_value = (mock_annotator, True)
+        mock_get_annotator.objects.get_or_create.return_value = (mock_annotator, True)
 
         mock_anno_obj = MagicMock()
         mock_anno_obj.id = uuid.uuid4()
@@ -323,16 +323,16 @@ class InsertAnnotationsDataTests(TestCase):
         anno_ser.is_valid.return_value = True
         anno_ser.save.return_value = mock_anno_obj
         anno_ser.data = {"id": str(mock_anno_obj.id)}
-        MockAnnotationSerializer.return_value = anno_ser
+        mock_annotation_serializer.return_value = anno_ser
 
         anno_label_ser = MagicMock()
         anno_label_ser.is_valid.return_value = True
         anno_label_ser.data = {}
-        MockAnnotationLabelSerializer.return_value = anno_label_ser
+        mock_annotation_label_serializer.return_value = anno_label_ser
 
         annotator_ser = MagicMock()
         annotator_ser.data = {"name": "Alice"}
-        MockAnnotatorSerializer.return_value = annotator_ser
+        mock_annotator_serializer.return_value = annotator_ser
 
         return mock_image, mock_label, mock_annotator
 
@@ -344,21 +344,21 @@ class InsertAnnotationsDataTests(TestCase):
     @patch("api.utils.annotations_ingest.Image")
     def test_insert_annotations(  # noqa: PLR0913
         self,
-        MockImage,
-        MockLabel,
-        MockAnnotator,
-        MockAnnotationSerializer,
-        MockAnnotationLabelSerializer,
-        MockAnnotatorSerializer,
+        mock_get_image: Mock,
+        mock_get_name: Mock,
+        mock_get_annotator: Mock,
+        mock_annotation_serializer: Mock,
+        mock_annotation_label_serializer: Mock,
+        mock_annotator_serializer: Mock,
     ):
         """Test that annotation data can be inserted successfully."""
         self._setup_mocks(
-            MockImage,
-            MockLabel,
-            MockAnnotator,
-            MockAnnotationSerializer,
-            MockAnnotationLabelSerializer,
-            MockAnnotatorSerializer,
+            mock_get_image,
+            mock_get_name,
+            mock_get_annotator,
+            mock_annotation_serializer,
+            mock_annotation_label_serializer,
+            mock_annotator_serializer,
         )
         annotation_set_id = uuid.uuid4()
         entries = [make_annotation_entry() for _ in range(5)]
@@ -367,9 +367,9 @@ class InsertAnnotationsDataTests(TestCase):
         self.assertEqual(result["created"], 5)
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_image_not_found(self, MockImage):
+    def test_raises_when_image_not_found(self, mock_get_image: Mock):
         """Test that a ValueError is raised when an image within the annotation data isn't found."""
-        MockImage.objects.filter.return_value.first.return_value = None
+        mock_get_image.objects.filter.return_value.first.return_value = None
         annotation_set_id = uuid.uuid4()
 
         with self.assertRaises(ValueError) as ctx:
@@ -378,12 +378,12 @@ class InsertAnnotationsDataTests(TestCase):
         self.assertIn("Image not found", str(ctx.exception))
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_image_uuid_and_filename_conflict(self, MockImage):
+    def test_raises_when_image_uuid_and_filename_conflict(self, mock_get_image: Mock):
         """Test that a ValueError is raised when the image UUID and filename don't point to the same record."""
         conflicting_image = MagicMock()
         conflicting_image.id = uuid.uuid4()
         # UUID miss, name hit (different record)
-        MockImage.objects.filter.return_value.first.side_effect = [None, conflicting_image]
+        mock_get_image.objects.filter.return_value.first.side_effect = [None, conflicting_image]
 
         entry = make_annotation_entry(image_id=str(uuid.uuid4()), image_filename="conflict.jpg")
         with self.assertRaises(ValueError):
@@ -391,11 +391,11 @@ class InsertAnnotationsDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.Label")
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_label_not_found(self, MockImage, MockLabel):
+    def test_raises_when_label_not_found(self, mock_get_image: Mock, mock_get_label: Mock):
         """Test that a ValueError is raised when a label is not found for an annotation."""
         mock_image = MagicMock()
-        MockImage.objects.filter.return_value.first.return_value = mock_image
-        MockLabel.objects.filter.return_value.first.return_value = None
+        mock_get_image.objects.filter.return_value.first.return_value = mock_image
+        mock_get_label.objects.filter.return_value.first.return_value = None
 
         with self.assertRaises(ValueError) as ctx:
             insert_annotations_data([make_annotation_entry()], uuid.uuid4())
@@ -411,29 +411,29 @@ class InsertAnnotationsDataTests(TestCase):
     @patch("api.utils.annotations_ingest.Image")
     def test_creation_datetime_parsed_from_string(  # noqa: PLR0913
         self,
-        MockImage,
-        MockLabel,
-        MockAnnotator,
-        MockAnnotationSerializer,
-        MockAnnotationLabelSerializer,
-        MockAnnotatorSerializer,
+        mock_get_image: Mock,
+        mock_get_name: Mock,
+        mock_get_annotator: Mock,
+        mock_annotation_serializer: Mock,
+        mock_annotation_label_serializer: Mock,
+        mock_annotator_serializer: Mock,
     ):
         """Test that creation datetime for an annotation is parsed correctly."""
         self._setup_mocks(
-            MockImage,
-            MockLabel,
-            MockAnnotator,
-            MockAnnotationSerializer,
-            MockAnnotationLabelSerializer,
-            MockAnnotatorSerializer,
+            mock_get_image,
+            mock_get_name,
+            mock_get_annotator,
+            mock_annotation_serializer,
+            mock_annotation_label_serializer,
+            mock_annotator_serializer,
         )
         entry = make_annotation_entry(creation_datetime="15062023 09:30:00")
         insert_annotations_data([entry], uuid.uuid4())
 
         anno_label_call_data = (
-            MockAnnotationLabelSerializer.call_args[1]["data"]
-            if MockAnnotationLabelSerializer.call_args[1]
-            else MockAnnotationLabelSerializer.call_args[0][0]
+            mock_annotation_label_serializer.call_args[1]["data"]
+            if mock_annotation_label_serializer.call_args[1]
+            else mock_annotation_label_serializer.call_args[0][0]
         )
 
         self.assertIsInstance(anno_label_call_data["creation_datetime"], datetime)
@@ -449,21 +449,21 @@ class InsertAnnotationsDataTests(TestCase):
     @patch("api.utils.annotations_ingest.Image")
     def test_invalid_datetime_falls_back_to_now(  # noqa: PLR0913
         self,
-        MockImage,
-        MockLabel,
-        MockAnnotator,
-        MockAnnotationSerializer,
-        MockAnnotationLabelSerializer,
-        MockAnnotatorSerializer,
+        mock_get_image: Mock,
+        mock_get_name: Mock,
+        mock_get_annotator: Mock,
+        mock_annotation_serializer: Mock,
+        mock_annotation_label_serializer: Mock,
+        mock_annotator_serializer: Mock,
     ):
         """Test that creation datetime for an annotation falls back to now if input data can't be parsed."""
         self._setup_mocks(
-            MockImage,
-            MockLabel,
-            MockAnnotator,
-            MockAnnotationSerializer,
-            MockAnnotationLabelSerializer,
-            MockAnnotatorSerializer,
+            mock_get_image,
+            mock_get_name,
+            mock_get_annotator,
+            mock_annotation_serializer,
+            mock_annotation_label_serializer,
+            mock_annotator_serializer,
         )
         entry = make_annotation_entry(creation_datetime="not-a-date")
         before = datetime.now()
@@ -471,9 +471,9 @@ class InsertAnnotationsDataTests(TestCase):
         after = datetime.now()
 
         anno_label_call_data = (
-            MockAnnotationLabelSerializer.call_args[1]["data"]
-            if MockAnnotationLabelSerializer.call_args[1]
-            else MockAnnotationLabelSerializer.call_args[0][0]
+            mock_annotation_label_serializer.call_args[1]["data"]
+            if mock_annotation_label_serializer.call_args[1]
+            else mock_annotation_label_serializer.call_args[0][0]
         )
 
         dt = anno_label_call_data["creation_datetime"]
@@ -489,29 +489,29 @@ class InsertAnnotationsDataTests(TestCase):
     @patch("api.utils.annotations_ingest.Image")
     def test_annotator_created_if_not_exists(  # noqa: PLR0913
         self,
-        MockImage,
-        MockLabel,
-        MockAnnotator,
-        MockAnnotationSerializer,
-        MockAnnotationLabelSerializer,
-        MockAnnotatorSerializer,
+        mock_get_image: Mock,
+        mock_get_name: Mock,
+        mock_get_annotator: Mock,
+        mock_annotation_serializer: Mock,
+        mock_annotation_label_serializer: Mock,
+        mock_annotator_serializer: Mock,
     ):
         """Test that a record is created for a new annotator."""
         self._setup_mocks(
-            MockImage,
-            MockLabel,
-            MockAnnotator,
-            MockAnnotationSerializer,
-            MockAnnotationLabelSerializer,
-            MockAnnotatorSerializer,
+            mock_get_image,
+            mock_get_name,
+            mock_get_annotator,
+            mock_annotation_serializer,
+            mock_annotation_label_serializer,
+            mock_annotator_serializer,
         )
         insert_annotations_data([make_annotation_entry(annotator_name="NewGuy")], uuid.uuid4())
-        MockAnnotator.objects.get_or_create.assert_called_once_with(name="NewGuy")
+        mock_get_annotator.objects.get_or_create.assert_called_once_with(name="NewGuy")
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_error_message_includes_row_number(self, MockImage):
+    def test_error_message_includes_row_number(self, mock_get_image: Mock):
         """Test that row numbers in error messages are 1-indexed."""
-        MockImage.objects.filter.return_value.first.return_value = None
+        mock_get_image.objects.filter.return_value.first.return_value = None
 
         with self.assertRaises(ValueError) as ctx:
             insert_annotations_data([make_annotation_entry()], uuid.uuid4())
@@ -522,78 +522,72 @@ class InsertAnnotationsDataTests(TestCase):
 class IngestAnnotationDataTests(TestCase):
     """Test for ingesting combined annotation set metadata, annotation data and labels."""
 
-    def test_returns_combined_dict(self):
+    @patch("api.utils.annotations_ingest.insert_annotations_set")
+    @patch("api.utils.annotations_ingest.insert_label_data")
+    @patch("api.utils.annotations_ingest.insert_annotations_data")
+    def test_returns_combined_dict(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock):
         """Test that results of all three inserts are returned."""
-        with (
-            patch("api.utils.annotations_ingest.insert_annotations_set") as mock_set,
-            patch("api.utils.annotations_ingest.insert_label_data") as mock_labels,
-            patch("api.utils.annotations_ingest.insert_annotations_data") as mock_annos,
-        ):
-            annotation_set_id = uuid.uuid4()
-            mock_set.return_value = {"id": str(annotation_set_id), "name": "Test Set"}
-            mock_labels.return_value = [{"name": "fish"}]
-            mock_annos.return_value = {"created": 2, "data": [{}, {}]}
+        annotation_set_id = uuid.uuid4()
+        mock_set.return_value = {"id": str(annotation_set_id), "name": "Test Set"}
+        mock_labels.return_value = [{"name": "fish"}]
+        mock_annos.return_value = {"created": 2, "data": [{}, {}]}
 
-            result = ingest_annotation_data(
-                annotation_set_df=make_annotation_set_data(),
-                label_list=make_label_list(),
-                annotation_data=[make_annotation_entry(), make_annotation_entry()],
-            )
+        result = ingest_annotation_data(
+            annotation_set_df=make_annotation_set_data(),
+            label_list=make_label_list(),
+            annotation_data=[make_annotation_entry(), make_annotation_entry()],
+        )
 
-            self.assertIn("annotation_set", result)
-            self.assertIn("label_set", result)
-            self.assertIn("annotation_data", result)
-            self.assertEqual(result["annotation_data"]["created"], 2)
+        self.assertIn("annotation_set", result)
+        self.assertIn("label_set", result)
+        self.assertIn("annotation_data", result)
+        self.assertEqual(result["annotation_data"]["created"], 2)
 
-    def test_annotation_set_id_forwarded_to_label_and_annotation_inserts(self):
+    @patch("api.utils.annotations_ingest.insert_annotations_set")
+    @patch("api.utils.annotations_ingest.insert_label_data")
+    @patch("api.utils.annotations_ingest.insert_annotations_data")
+    def test_annotation_set_id_forwarded_to_label_and_annotation_inserts(
+        self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock
+    ):
         """Test that newly created annotation set ID is passed to label and annotation data insert operations."""
-        with (
-            patch("api.utils.annotations_ingest.insert_annotations_set") as mock_set,
-            patch("api.utils.annotations_ingest.insert_label_data") as mock_labels,
-            patch("api.utils.annotations_ingest.insert_annotations_data") as mock_annos,
-        ):
-            annotation_set_id = uuid.uuid4()
-            mock_set.return_value = {"id": str(annotation_set_id)}
-            mock_labels.return_value = []
-            mock_annos.return_value = {"created": 0, "data": []}
+        annotation_set_id = uuid.uuid4()
+        mock_set.return_value = {"id": str(annotation_set_id)}
+        mock_labels.return_value = []
+        mock_annos.return_value = {"created": 0, "data": []}
 
+        ingest_annotation_data(
+            annotation_set_df={},
+            label_list=[],
+            annotation_data=[],
+        )
+
+        mock_labels.assert_called_once_with([], str(annotation_set_id))
+        mock_annos.assert_called_once_with([], str(annotation_set_id))
+
+    @patch("api.utils.annotations_ingest.insert_annotations_set")
+    @patch("api.utils.annotations_ingest.insert_label_data")
+    def test_transaction_rolls_back_on_failure(self, mock_labels: Mock, mock_set: Mock):
+        """Test that transaction is rolled back if a sub-call raises."""
+        mock_set.return_value = {"id": str(uuid.uuid4())}
+        mock_labels.side_effect = ValueError("DB exploded")
+
+        with self.assertRaises(ValueError):
             ingest_annotation_data(
                 annotation_set_df={},
                 label_list=[],
                 annotation_data=[],
             )
 
-            mock_labels.assert_called_once_with([], str(annotation_set_id))
-            mock_annos.assert_called_once_with([], str(annotation_set_id))
-
-    def test_transaction_rolls_back_on_failure(self):
-        """Test that transaction is rolled back if a sub-call raises."""
-        with (
-            patch("api.utils.annotations_ingest.insert_annotations_set") as mock_set,
-            patch("api.utils.annotations_ingest.insert_label_data") as mock_labels,
-        ):
-            mock_set.return_value = {"id": str(uuid.uuid4())}
-            mock_labels.side_effect = ValueError("DB exploded")
-
-            with self.assertRaises(ValueError):
-                ingest_annotation_data(
-                    annotation_set_df={},
-                    label_list=[],
-                    annotation_data=[],
-                )
-
-    def test_empty_inputs_do_not_raise(self):
+    @patch("api.utils.annotations_ingest.insert_annotations_set")
+    @patch("api.utils.annotations_ingest.insert_label_data")
+    @patch("api.utils.annotations_ingest.insert_annotations_data")
+    def test_empty_inputs_do_not_raise(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock):
         """Test that empty inputs do not raise a ValueError."""
-        with (
-            patch("api.utils.annotations_ingest.insert_annotations_set") as mock_set,
-            patch("api.utils.annotations_ingest.insert_label_data") as mock_labels,
-            patch("api.utils.annotations_ingest.insert_annotations_data") as mock_annos,
-        ):
-            mock_set.return_value = {"id": str(uuid.uuid4())}
-            mock_labels.return_value = []
-            mock_annos.return_value = {"created": 0, "data": []}
+        mock_set.return_value = {"id": str(uuid.uuid4())}
+        mock_labels.return_value = []
+        mock_annos.return_value = {"created": 0, "data": []}
 
-            result = ingest_annotation_data({}, [], [])
+        result = ingest_annotation_data({}, [], [])
 
-            self.assertEqual(result["label_set"], [])
-            self.assertEqual(result["annotation_data"]["created"], 0)
+        self.assertEqual(result["label_set"], [])
+        self.assertEqual(result["annotation_data"]["created"], 0)

@@ -21,6 +21,20 @@ from api.utils.annotations_parser import (
 class TestAnnotationParsers(TestCase):
     """Parsing tests for annotation."""
 
+    mock_keys = [
+        "annotation-set-name",
+        "annotation-project-name",
+        "annotation-project-uri",
+        "annotation-license-name",
+        "annotation-image-set-name",
+        "annotation-image-set-uuid",
+        "annotation-pi-name",
+        "annotation-pi-uri",
+        "annotation-abstract",
+    ]
+
+    @patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys)
+    @patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3)
     def test_parse_annotation_set_metadata_success(self):
         """Test parsing metadata with merged-cell style and required fields."""
         data = [
@@ -36,29 +50,14 @@ class TestAnnotationParsers(TestCase):
         ]
         df = pd.DataFrame(data)
 
-        mock_keys = [
-            "annotation-set-name",
-            "annotation-project-name",
-            "annotation-project-uri",
-            "annotation-license-name",
-            "annotation-image-set-name",
-            "annotation-image-set-uuid",
-            "annotation-pi-name",
-            "annotation-pi-uri",
-            "annotation-abstract",
-        ]
-
-        with (
-            patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys),
-            patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3),
-        ):
-            result = parse_annotation_set_metadata(df)
+        result = parse_annotation_set_metadata(df)
 
         self.assertEqual(result["annotation-set-name"], "Trial Data")
         self.assertEqual(result["annotation-license-name"], "MIT")
         self.assertEqual(result["annotation-image-set-name"], "Set A")
         self.assertEqual(result["annotation-pi-uri"], "user@example.com")
 
+    @patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7)
     def test_parse_label_set(self):
         """Test parsing label set."""
         data = [
@@ -89,10 +88,7 @@ class TestAnnotationParsers(TestCase):
 
         df = pd.DataFrame(data)
 
-        with (
-            patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7),
-        ):
-            result = parse_label_set(df)
+        result = parse_label_set(df)
 
         self.assertEqual(len(result), 3)
 
@@ -107,6 +103,9 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result[2]["name"], "coarse")
         self.assertEqual(result[2]["parent_label_name"], "habitat")
 
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 3)
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0)
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9)
     @patch("api.utils.annotations_parser._parse_coordinates")
     def test_parse_annotation_data(self, mock_parse_coords):
         """Test parsing the main annotation data sheet based on image structure."""
@@ -153,12 +152,7 @@ class TestAnnotationParsers(TestCase):
 
         df = pd.DataFrame(data)
 
-        with (
-            patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 3),
-            patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0),
-            patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9),
-        ):
-            result = parse_annotation_data(df)
+        result = parse_annotation_data(df)
 
         self.assertEqual(len(result), 2)
 

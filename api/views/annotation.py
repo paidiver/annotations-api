@@ -78,7 +78,7 @@ class UploadAnnotationsView(viewsets.ViewSet):
         try:
             df = pd.read_excel(file, sheet_name="Annotation set metadata")
             label_df = pd.read_excel(file, sheet_name="Label set")
-            annotaion_data = pd.read_excel(file, sheet_name="Annotation data")
+            annotation_df = pd.read_excel(file, sheet_name="Annotation data")
         except Exception:
             return Response(
                 {"error": "Failed to read Excel file."},
@@ -88,7 +88,7 @@ class UploadAnnotationsView(viewsets.ViewSet):
         try:
             annotation_set = parse_annotation_set_metadata(df)
             label_data = parse_label_set(label_df)
-            annotation_data = parse_annotation_data(annotaion_data)
+            annotation_data = parse_annotation_data(annotation_df)
         except ValueError as e:
             return Response(
                 {"error": f"Error parsing annotations template: {e}"},
