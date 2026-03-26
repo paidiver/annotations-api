@@ -17,6 +17,8 @@ from api.models.base import DeploymentEnum, FaunaAttractionEnum, MarineZoneEnum
 from api.serializers.search import GroupedSearchResultRow, SearchResultItem
 from api.services.cached_worms_client import CachedWoRMSClient
 
+MIN_CHARS_FOR_PARTIAL_MATCH = 3
+
 DEPLOYMENT_VALUES = [item.value for item in DeploymentEnum]
 FAUNA_ATTRACTION_VALUES = [item.value for item in FaunaAttractionEnum]
 MARINE_ZONE_VALUES = [item.value for item in MarineZoneEnum]
@@ -264,7 +266,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             .order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
         )
 
-    def _calculate_filters(self, aphia_ids: list[int], request: Request) -> Q:
+    def _calculate_filters(self, aphia_ids: list[int], request: Request) -> Q:  # noqa: PLR0912
         """Calculate the filters to apply to the Annotation queryset based on the query parameters.
 
         Args:
@@ -274,18 +276,10 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             Q: A Django Q object representing the filters to apply to the Annotation queryset.
         """
-        min_lat = self._get_float_query_param(request, "min_lat")
-        max_lat = self._get_float_query_param(request, "max_lat")
-        min_lon = self._get_float_query_param(request, "min_lon")
-        max_lon = self._get_float_query_param(request, "max_lon")
         name_part = request.query_params.get("name_part")
         image_set_name = request.query_params.get("image_set_name")
         project = request.query_params.get("project")
         platform = request.query_params.get("platform")
-        deployment = request.query_params.get("deployment")
-        fauna_attraction = request.query_params.get("fauna_attraction")
-        marine_zone = request.query_params.get("marine_zone")
-
         if aphia_ids and name_part:
             name_part = name_part.strip()
             filters = Q(Q(label__lowest_aphia_id__in=aphia_ids) | Q(label__name__icontains=name_part))
@@ -296,16 +290,38 @@ class AnnotationSearchViewSet(GenericViewSet):
             if name_part:
                 name_part = name_part.strip()
                 filters &= Q(label__name__icontains=name_part)
+
         if image_set_name:
             image_set_name = image_set_name.strip()
             filters &= Q(annotation__image__image_set__name__icontains=image_set_name)
-
         if project:
             project = project.strip()
             filters &= Q(annotation__image__image_set__project__name__icontains=project)
         if platform:
             platform = platform.strip()
             filters &= Q(annotation__image__image_set__platform__name__icontains=platform)
+
+        filters = self._calculate_fields_filters(filters=filters, request=request)
+        return filters
+
+    def _calculate_fields_filters(self, filters: Q, request: Request) -> Q:
+        """Calculate filters for the non-taxonomic fields based on the query parameters.
+
+        Args:
+            filters (Q): The existing filters to add to.
+            request (Request): The incoming HTTP request containing additional query parameters.
+
+        Returns:
+            Q: A Django Q object representing the updated filters to apply to the Annotation queryset.
+        """
+        deployment = request.query_params.get("deployment")
+        fauna_attraction = request.query_params.get("fauna_attraction")
+        marine_zone = request.query_params.get("marine_zone")
+        min_lat = self._get_float_query_param(request, "min_lat")
+        max_lat = self._get_float_query_param(request, "max_lat")
+        min_lon = self._get_float_query_param(request, "min_lon")
+        max_lon = self._get_float_query_param(request, "max_lon")
+
         if deployment:
             deployment = deployment.strip()
             filters &= Q(annotation__image__image_set__deployment=deployment)
@@ -325,14 +341,15 @@ class AnnotationSearchViewSet(GenericViewSet):
             filters &= Q(annotation__image__longitude__lte=max_lon)
         return filters
 
-    def _validate_search_params(self, request: Request) -> Response | None:
+    def _validate_search_params(self, request: Request) -> Response | None:  # noqa: PLR0912
         """Validate the search query parameters.
 
         Args:
             request (Request): The incoming HTTP request containing the query parameters.
 
         Returns:
-            Response | None: A DRF Response object with an error message if validation fails, or None if validation passes.
+            Response | None: A DRF Response object with an error message if validation
+        fails, or None if validation passes.
         """
         choices_map = {
             "deployment": set(DEPLOYMENT_VALUES),
@@ -354,9 +371,26 @@ class AnnotationSearchViewSet(GenericViewSet):
         length_limit_params = ["name_part", "project", "platform", "image_set_name"]
         for param_name in length_limit_params:
             value = request.query_params.get(param_name)
-            if value and len(value.strip()) < 3:
-                errors[param_name] = f"'{param_name}' must contain at least 3 characters."
+            if value and len(value.strip()) < MIN_CHARS_FOR_PARTIAL_MATCH:
+                errors[param_name] = f"'{param_name}' must contain at least {MIN_CHARS_FOR_PARTIAL_MATCH} characters."
 
+        errors = self._validate_bbox_params(request, errors)
+
+        if errors:
+            return Response({"detail": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        return None
+
+    def _validate_bbox_params(self, request: Request, errors: dict) -> dict:
+        """Validate the bounding box query parameters.
+
+        Args:
+            request (Request): The incoming HTTP request containing the query parameters.
+            errors (dict): The current dictionary of validation errors to add to if any bbox parameters are invalid.
+
+        Returns:
+            dict: The updated dictionary of validation errors including any bbox parameter errors.
+        """
         bbox_values = {}
         for param_name in ["min_lat", "max_lat", "min_lon", "max_lon"]:
             raw_value = request.query_params.get(param_name)
@@ -373,24 +407,20 @@ class AnnotationSearchViewSet(GenericViewSet):
         min_lon = bbox_values.get("min_lon")
         max_lon = bbox_values.get("max_lon")
 
-        if min_lat is not None and not (-90 <= min_lat <= 90):
+        if min_lat is not None and not (-90 <= min_lat <= 90):  # noqa: PLR2004
             errors["min_lat"] = "'min_lat' must be between -90 and 90."
-        if max_lat is not None and not (-90 <= max_lat <= 90):
+        if max_lat is not None and not (-90 <= max_lat <= 90):  # noqa: PLR2004
             errors["max_lat"] = "'max_lat' must be between -90 and 90."
-        if min_lon is not None and not (-180 <= min_lon <= 180):
+        if min_lon is not None and not (-180 <= min_lon <= 180):  # noqa: PLR2004
             errors["min_lon"] = "'min_lon' must be between -180 and 180."
-        if max_lon is not None and not (-180 <= max_lon <= 180):
+        if max_lon is not None and not (-180 <= max_lon <= 180):  # noqa: PLR2004
             errors["max_lon"] = "'max_lon' must be between -180 and 180."
 
         if min_lat is not None and max_lat is not None and min_lat > max_lat:
             errors["latitude_range"] = "'min_lat' must be less than or equal to 'max_lat'."
         if min_lon is not None and max_lon is not None and min_lon > max_lon:
             errors["longitude_range"] = "'min_lon' must be less than or equal to 'max_lon'."
-
-        if errors:
-            return Response({"detail": errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        return None
+        return errors
 
     def _get_all_aphia_ids_from_request(self, request: Request) -> list[int] | Response:
         """Extract and validate a list of AphiaIDs from the query parameters, including descendants if requested.
