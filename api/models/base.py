@@ -32,6 +32,27 @@ def enum_choices(py_enum: type[enum.Enum]):
     return [(e.value, e.name) for e in py_enum]
 
 
+class AliasedShapesEnumField(models.CharField):
+    SHAPE_ALIASES = {
+        "point": "single-pixel",
+        "line": "polyline",
+        "bounding box": "rectangle",
+        "bounding_box": "rectangle",
+        "bounding-box": "rectangle",
+        "whole_image": "whole-image",
+    }
+
+    def normaliseAnnotationShapeValue(self, value):
+        if not isinstance(value, str):
+            return value
+        # Check aliases first
+        remapped = self.SHAPE_ALIASES.get(value.lower(), value)
+        return remapped.lower()
+
+    def to_python(self, value):
+        return super().to_python(self.normaliseAnnotationShapeValue(value))
+
+
 class CaseInsensitiveEnum(str, enum.Enum):
     """Base Enum that allows case-insensitive matching."""
 

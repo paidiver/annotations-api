@@ -79,6 +79,56 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("image_id", resp.data)
 
+    def test_create_annotation_with_valid_shape(self):
+        """Test that creating an Annotation with a valid shape is accepted."""
+        valid_shapes_mappings = [
+            ("single-pixel", "single-pixel"),
+            ("Single-Pixel", "single-pixel"),
+            ("polyline", "polyline"),
+            ("polygon", "polygon"),
+            ("circle", "circle"),
+            ("rectangle", "rectangle"),
+            ("ellipse", "ellipse"),
+            ("whole-image", "whole-image"),
+            ("point", "single-pixel"),
+            ("line", "polyline"),
+            ("bounding box", "rectangle"),
+            ("bounding_box", "rectangle"),
+            ("bounding-box", "rectangle"),
+            ("whole_image", "whole-image"),
+        ]
+
+        for input_value, mapped_value in valid_shapes_mappings:
+            with self.subTest(input_value=input_value, mapped_value=mapped_value):
+                payload = {
+                    **self.annotation_data,
+                    "shape": input_value,
+                    "image_id": self.image_a.id,
+                    "annotation_set_id": self.annotation_set.id,
+                }
+
+                resp = self.client.post(self.list_url(), payload, format="json")
+                self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+                self.assertIn("shape", resp.data)
+                self.assertEqual(resp.data["shape"], mapped_value)
+
+    def test_create_annotation_with_invalid_shape_is_rejected(self):
+        """Test that an Annotation can't be created with an invalid shape."""
+        invalid_shapes = ["starfish", 123]
+        for invalid_shape in invalid_shapes:
+            with self.subTest(invalid_shape=invalid_shape):
+                payload = {
+                    **self.annotation_data,
+                    "shape": invalid_shape,
+                    "image_id": self.image_a.id,
+                    "annotation_set_id": self.annotation_set.id,
+                }
+
+                resp = self.client.post(self.list_url(), payload, format="json")
+                self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn("shape", resp.data)
+                self.assertIn("is not a valid shape", resp.data["shape"][0])
+
     def test_patch_annotation(self):
         """Test that PATCHing an Annotation."""
         annotation = Annotation.objects.create(
