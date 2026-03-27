@@ -152,7 +152,6 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         resp = self.client.post(self.ingest_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("items", resp.data)
-        print("Response data:", resp.data)  # Debug print to see the structure of the response
         self.assertIn(str(image.id), resp.data["items"]["1"]["detail"])
 
     def test_ingest_ifdo_missing_ifdo_returns_400(self):
