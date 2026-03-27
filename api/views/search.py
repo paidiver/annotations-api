@@ -23,6 +23,36 @@ DEPLOYMENT_VALUES = [item.value for item in DeploymentEnum]
 FAUNA_ATTRACTION_VALUES = [item.value for item in FaunaAttractionEnum]
 MARINE_ZONE_VALUES = [item.value for item in MarineZoneEnum]
 
+COORD_PARAMS = [
+    OpenApiParameter(
+        name="min_lat",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Minimum latitude in EPSG:4326 degrees.",
+    ),
+    OpenApiParameter(
+        name="max_lat",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Maximum latitude in EPSG:4326 degrees.",
+    ),
+    OpenApiParameter(
+        name="min_lon",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Minimum longitude in EPSG:4326 degrees.",
+    ),
+    OpenApiParameter(
+        name="max_lon",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="Maximum longitude in EPSG:4326 degrees.",
+    ),
+]
 SEARCH_PARAMS = [
     OpenApiParameter(
         name="name_part",
@@ -98,35 +128,9 @@ SEARCH_PARAMS = [
         enum=MARINE_ZONE_VALUES,
         description="Marine zone filter. Must be one of the allowed values.",
     ),
-    OpenApiParameter(
-        name="min_lat",
-        type=OpenApiTypes.FLOAT,
-        location=OpenApiParameter.QUERY,
-        required=False,
-        description="Minimum latitude in EPSG:4326 degrees.",
-    ),
-    OpenApiParameter(
-        name="max_lat",
-        type=OpenApiTypes.FLOAT,
-        location=OpenApiParameter.QUERY,
-        required=False,
-        description="Maximum latitude in EPSG:4326 degrees.",
-    ),
-    OpenApiParameter(
-        name="min_lon",
-        type=OpenApiTypes.FLOAT,
-        location=OpenApiParameter.QUERY,
-        required=False,
-        description="Minimum longitude in EPSG:4326 degrees.",
-    ),
-    OpenApiParameter(
-        name="max_lon",
-        type=OpenApiTypes.FLOAT,
-        location=OpenApiParameter.QUERY,
-        required=False,
-        description="Maximum longitude in EPSG:4326 degrees.",
-    ),
+    *COORD_PARAMS,
 ]
+
 
 PAGINATION_PARAMS = [
     OpenApiParameter(
@@ -277,9 +281,6 @@ class AnnotationSearchViewSet(GenericViewSet):
             Q: A Django Q object representing the filters to apply to the Annotation queryset.
         """
         name_part = request.query_params.get("name_part")
-        image_set_name = request.query_params.get("image_set_name")
-        project = request.query_params.get("project")
-        platform = request.query_params.get("platform")
         if aphia_ids and name_part:
             name_part = name_part.strip()
             filters = Q(Q(label__lowest_aphia_id__in=aphia_ids) | Q(label__name__icontains=name_part))
@@ -291,15 +292,16 @@ class AnnotationSearchViewSet(GenericViewSet):
                 name_part = name_part.strip()
                 filters &= Q(label__name__icontains=name_part)
 
-        if image_set_name:
-            image_set_name = image_set_name.strip()
-            filters &= Q(annotation__image__image_set__name__icontains=image_set_name)
-        if project:
-            project = project.strip()
-            filters &= Q(annotation__image__image_set__project__name__icontains=project)
-        if platform:
-            platform = platform.strip()
-            filters &= Q(annotation__image__image_set__platform__name__icontains=platform)
+        map_fields = {
+            "image_set_name": "annotation__image__image_set__name",
+            "project": "annotation__image__image_set__project__name",
+            "platform": "annotation__image__image_set__platform__name",
+        }
+        for param_name, db_field in map_fields.items():
+            value = request.query_params.get(param_name)
+            if value:
+                value = value.strip()
+                filters &= Q(**{f"{db_field}__icontains": value})
 
         filters = self._calculate_fields_filters(filters=filters, request=request)
         return filters
@@ -314,31 +316,27 @@ class AnnotationSearchViewSet(GenericViewSet):
         Returns:
             Q: A Django Q object representing the updated filters to apply to the Annotation queryset.
         """
-        deployment = request.query_params.get("deployment")
-        fauna_attraction = request.query_params.get("fauna_attraction")
-        marine_zone = request.query_params.get("marine_zone")
-        min_lat = self._get_float_query_param(request, "min_lat")
-        max_lat = self._get_float_query_param(request, "max_lat")
-        min_lon = self._get_float_query_param(request, "min_lon")
-        max_lon = self._get_float_query_param(request, "max_lon")
+        map_fields = {
+            "deployment": "annotation__image__image_set__deployment",
+            "fauna_attraction": "annotation__image__image_set__fauna_attraction",
+            "marine_zone": "annotation__image__image_set__marine_zone",
+        }
+        for field_name, db_field in map_fields.items():
+            value = request.query_params.get(field_name)
+            if value:
+                value = value.strip()
+                filters &= Q(**{f"{db_field}": value})
 
-        if deployment:
-            deployment = deployment.strip()
-            filters &= Q(annotation__image__image_set__deployment=deployment)
-        if fauna_attraction:
-            fauna_attraction = fauna_attraction.strip()
-            filters &= Q(annotation__image__image_set__fauna_attraction=fauna_attraction)
-        if marine_zone:
-            marine_zone = marine_zone.strip()
-            filters &= Q(annotation__image__image_set__marine_zone=marine_zone)
-        if min_lat is not None:
-            filters &= Q(annotation__image__latitude__gte=min_lat)
-        if max_lat is not None:
-            filters &= Q(annotation__image__latitude__lte=max_lat)
-        if min_lon is not None:
-            filters &= Q(annotation__image__longitude__gte=min_lon)
-        if max_lon is not None:
-            filters &= Q(annotation__image__longitude__lte=max_lon)
+        map_location_fields = {
+            "min_lat": "annotation__image__latitude__gte",
+            "max_lat": "annotation__image__latitude__lte",
+            "min_lon": "annotation__image__longitude__gte",
+            "max_lon": "annotation__image__longitude__lte",
+        }
+        for param_name, db_field in map_location_fields.items():
+            value = self._get_float_query_param(request, param_name)
+            if value is not None:
+                filters &= Q(**{db_field: float(value)})
         return filters
 
     def _validate_search_params(self, request: Request) -> Response | None:  # noqa: PLR0912
