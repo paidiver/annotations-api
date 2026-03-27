@@ -231,6 +231,11 @@ def adapt_ifdo_image_set_to_serializer_payload(ifdo: dict[str, Any]) -> dict[str
     if related is not None:
         payload["related_materials"] = related
 
+    # If the iFDO provides an explicit image-set-uuid, use it as the ID for upsert behavior.
+    # Otherwise, we'll rely on the unique constraint on name to avoid duplicates.
+    if "image-set-uuid" in header:
+        payload["id"] = _require_str(header.get("image-set-uuid"), "ifdo.image-set-header.image-set-uuid")
+
     # Drop keys where value is None so DRF doesn't complain about explicit nulls in some places
     return {k: v for k, v in payload.items() if v is not None}
 
@@ -312,5 +317,10 @@ def adapt_ifdo_item_to_image_serializer_payload(
     )
     if creators is not None:
         payload["creators"] = creators
+
+    # If the iFDO provides an explicit image-uuid, use it as the ID for upsert behavior.
+    # Otherwise, we'll rely on the combination of image_set_id + filename to avoid duplicates.
+    if "image-uuid" in item:
+        payload["id"] = _require_str(item.get("image-uuid"), "ifdo.image-set-items[].image-uuid")
 
     return {k: v for k, v in payload.items() if v is not None}
