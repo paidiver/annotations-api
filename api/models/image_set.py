@@ -2,6 +2,7 @@
 
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point, Polygon
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import CheckConstraint, F, Q
 
@@ -258,6 +259,18 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
                 | Q(max_longitude_degrees__isnull=True)
                 | Q(min_longitude_degrees__lt=F("max_longitude_degrees")),
                 name="imageset_min_lon_lt_max_lon",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["latitude"], name="image_set_lat_idx"),
+            models.Index(fields=["longitude"], name="image_set_lon_idx"),
+            models.Index(fields=["deployment"], name="image_set_deployment_idx"),
+            models.Index(fields=["fauna_attraction"], name="image_set_fauna_attraction_idx"),
+            models.Index(fields=["marine_zone"], name="image_set_marine_zone_idx"),
+            GinIndex(
+                name="image_set_name_trgm_idx",
+                fields=["name"],
+                opclasses=["gin_trgm_ops"],
             ),
         ]
 

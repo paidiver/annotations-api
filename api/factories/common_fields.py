@@ -37,7 +37,7 @@ from .fields import (
     ProjectFactory,
     SensorFactory,
 )
-from .utils import enum_choice, rand_lat, rand_lon
+from .utils import rand_lat, rand_lon
 
 
 class CommonFieldsAllFactory(DjangoModelFactory):
@@ -117,17 +117,17 @@ class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     mpeg7_homogeneous_texture = None
     mpeg7_scalable_color = None
 
-    acquisition = factory.LazyFunction(lambda: enum_choice(AcquisitionEnum))
-    quality = factory.LazyFunction(lambda: enum_choice(QualityEnum))
-    deployment = factory.LazyFunction(lambda: enum_choice(DeploymentEnum))
-    navigation = factory.LazyFunction(lambda: enum_choice(NavigationEnum))
-    scale_reference = factory.LazyFunction(lambda: enum_choice(ScaleReferenceEnum))
-    illumination = factory.LazyFunction(lambda: enum_choice(IlluminationEnum))
-    pixel_magnitude = factory.LazyFunction(lambda: enum_choice(PixelMagnitudeEnum))
-    marine_zone = factory.LazyFunction(lambda: enum_choice(MarineZoneEnum))
-    spectral_resolution = factory.LazyFunction(lambda: enum_choice(SpectralResEnum))
-    capture_mode = factory.LazyFunction(lambda: enum_choice(CaptureModeEnum))
-    fauna_attraction = factory.LazyFunction(lambda: enum_choice(FaunaAttractionEnum))
+    acquisition = factory.Iterator([e.value for e in AcquisitionEnum], cycle=True)
+    quality = factory.Iterator([e.value for e in QualityEnum], cycle=True)
+    deployment = factory.Iterator([e.value for e in DeploymentEnum], cycle=True)
+    navigation = factory.Iterator([e.value for e in NavigationEnum], cycle=True)
+    scale_reference = factory.Iterator([e.value for e in ScaleReferenceEnum], cycle=True)
+    illumination = factory.Iterator([e.value for e in IlluminationEnum], cycle=True)
+    pixel_magnitude = factory.Iterator([e.value for e in PixelMagnitudeEnum], cycle=True)
+    marine_zone = factory.Iterator([e.value for e in MarineZoneEnum], cycle=True)
+    spectral_resolution = factory.Iterator([e.value for e in SpectralResEnum], cycle=True)
+    capture_mode = factory.Iterator([e.value for e in CaptureModeEnum], cycle=True)
+    fauna_attraction = factory.Iterator([e.value for e in FaunaAttractionEnum], cycle=True)
     area_square_meters = factory.LazyFunction(lambda: random.uniform(0.1, 1e6))
     meters_above_ground = factory.LazyFunction(lambda: random.uniform(0.0, 200.0))
     acquisition_settings = factory.LazyFunction(
