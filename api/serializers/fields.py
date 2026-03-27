@@ -21,115 +21,108 @@ from api.models.fields import (
 )
 from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFieldsMixin
 
-
-class CreatorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
-    """Serializer for the Creator model."""
-
-    key_field = "name"
+class BaseFieldsSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
 
     class Meta:
+        """Meta class for BaseFieldsSerializer."""
+
+        model = None  # This will be set by subclasses
+        fields = "__all__"
+        validators = []
+        extra_kwargs = {
+            "uri": {"required": False, "allow_null": True, "allow_blank": True}
+        }
+
+class CreatorSerializer(BaseFieldsSerializer):
+    """Serializer for the Creator model."""
+
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for CreatorSerializer."""
 
         model = Creator
-        fields = "__all__"
 
 
-class ContextSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ContextSerializer(BaseFieldsSerializer):
     """Serializer for the Context model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for ContextSerializer."""
 
         model = Context
-        fields = "__all__"
 
 
-class ProjectSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ProjectSerializer(BaseFieldsSerializer):
     """Serializer for Project instances from object payloads."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for ProjectSerializer."""
 
         model = Project
-        fields = "__all__"
 
 
-class PISerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class PISerializer(BaseFieldsSerializer):
     """Serializer for the PI model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for PISerializer."""
 
         model = PI
-        fields = "__all__"
 
 
-class LicenseSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class LicenseSerializer(BaseFieldsSerializer):
     """Serializer for the License model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for LicenseSerializer."""
 
         model = License
-        fields = "__all__"
 
 
-class EventSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class EventSerializer(BaseFieldsSerializer):
     """Serializer for the Event model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for EventSerializer."""
 
         model = Event
-        fields = "__all__"
 
 
-class PlatformSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class PlatformSerializer(BaseFieldsSerializer):
     """Serializer for the Platform model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for PlatformSerializer."""
 
         model = Platform
-        fields = "__all__"
 
 
-class SensorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class SensorSerializer(BaseFieldsSerializer):
     """Serializer for the Sensor model."""
 
-    key_field = "name"
-
-    class Meta:
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for SensorSerializer."""
 
         model = Sensor
-        fields = "__all__"
 
 
-class RelatedMaterialSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class RelatedMaterialSerializer(BaseFieldsSerializer):
     """Serializer for related material that can be represented by either an ID or an object payload."""
 
-    class Meta:
+    key_fields = ["uri", "title", "relation"]  # Override key_fields to use a combination of fields for uniqueness.
+
+    class Meta(BaseFieldsSerializer.Meta):
         """Meta class for RelatedMaterialSerializer."""
 
         model = RelatedMaterial
-        fields = "__all__"
+        extra_kwargs = {
+            "title": {"required": False, "allow_null": True, "allow_blank": True},
+            "relation": {"required": False, "allow_null": True, "allow_blank": True},
+        }
 
-
-class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImageCameraPoseSerializer(BaseFieldsSerializer):
     """Serializer for ImageCameraPose model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImageCameraPoseSerializer."""
@@ -138,8 +131,10 @@ class ImageCameraPoseSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, ser
         fields = "__all__"
 
 
-class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImageCameraHousingViewportSerializer(BaseFieldsSerializer):
     """Serializer for ImageCameraHousingViewport model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImageCameraHousingViewportSerializer."""
@@ -148,8 +143,10 @@ class ImageCameraHousingViewportSerializer(NestedGetOrCreateMixin, ReadOnlyField
         fields = "__all__"
 
 
-class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImageFlatportParameterSerializer(BaseFieldsSerializer):
     """Serializer for ImageFlatportParameter model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImageFlatportParameterSerializer."""
@@ -158,8 +155,10 @@ class ImageFlatportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMix
         fields = "__all__"
 
 
-class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImageDomeportParameterSerializer(BaseFieldsSerializer):
     """Serializer for ImageDomeportParameter model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImageDomeportParameterSerializer."""
@@ -168,8 +167,10 @@ class ImageDomeportParameterSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMix
         fields = "__all__"
 
 
-class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImageCameraCalibrationModelSerializer(BaseFieldsSerializer):
     """Serializer for ImageCameraCalibrationModel model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImageCameraCalibrationModelSerializer."""
@@ -178,8 +179,10 @@ class ImageCameraCalibrationModelSerializer(NestedGetOrCreateMixin, ReadOnlyFiel
         fields = "__all__"
 
 
-class ImagePhotometricCalibrationSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+class ImagePhotometricCalibrationSerializer(BaseFieldsSerializer):
     """Serializer for ImagePhotometricCalibration model."""
+
+    key_fields = None
 
     class Meta:
         """Meta class for ImagePhotometricCalibrationSerializer."""
