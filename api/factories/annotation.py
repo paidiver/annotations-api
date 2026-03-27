@@ -14,7 +14,7 @@ from api.models.base import ShapeEnum
 from .annotation_set import AnnotationSetFactory
 from .image import ImageFactory
 from .label import LabelFactory
-from .utils import coords_for_shape, enum_choice
+from .utils import coords_for_shape
 
 
 class AnnotatorFactory(DjangoModelFactory):
@@ -43,7 +43,7 @@ class AnnotationFactory(DjangoModelFactory):
 
     annotation_platform = factory.LazyFunction(lambda: random.choice([None, "BIIGLE", "VARS", "SQUIDLE+", "custom"]))
 
-    shape = factory.LazyFunction(lambda: enum_choice(ShapeEnum)[0])
+    shape = factory.Iterator([e.value for e in ShapeEnum], cycle=True)
 
     coordinates = factory.LazyAttribute(lambda o: coords_for_shape(o.shape))
 

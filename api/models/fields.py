@@ -2,6 +2,7 @@
 
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex
 
 from .base import DefaultColumns
 
@@ -47,6 +48,13 @@ class Project(NamedURI):
         """Meta class for Project."""
 
         db_table = "projects"
+        indexes = [
+            GinIndex(
+                name="project_name_trgm_idx",
+                fields=["name"],
+                opclasses=["gin_trgm_ops"],
+            ),
+        ]
 
 
 class PI(NamedURI):
@@ -75,8 +83,17 @@ class Event(NamedURI):
 class Platform(NamedURI):
     """Represents a platform on which an image was captured."""
 
-    class Meta:  # noqa: D106
+    class Meta:
+        """Meta class for Platform."""
+
         db_table = "platforms"
+        indexes = [
+            GinIndex(
+                name="platform_name_trgm_idx",
+                fields=["name"],
+                opclasses=["gin_trgm_ops"],
+            ),
+        ]
 
 
 class Sensor(NamedURI):

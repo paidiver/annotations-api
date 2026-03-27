@@ -184,6 +184,13 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
                 name="uq_image_filename_image_set",
             )
         ]
+        indexes = [
+            models.Index(fields=["latitude"], name="images_lat_idx"),
+            models.Index(fields=["longitude"], name="images_lon_idx"),
+            models.Index(fields=["deployment"], name="images_deployment_idx"),
+            models.Index(fields=["fauna_attraction"], name="images_fauna_attraction_idx"),
+            models.Index(fields=["marine_zone"], name="images_marine_zone_idx"),
+        ]
 
     def save(self, *args, **kwargs):  # noqa: D102
         if self.latitude is not None and self.longitude is not None:
