@@ -21,7 +21,9 @@ from api.models.fields import (
 )
 from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFieldsMixin
 
+
 class BaseFieldsSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
+    """Base serializer for the fields models, with common configuration and validation logic."""
 
     class Meta:
         """Meta class for BaseFieldsSerializer."""
@@ -29,9 +31,8 @@ class BaseFieldsSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializ
         model = None  # This will be set by subclasses
         fields = "__all__"
         validators = []
-        extra_kwargs = {
-            "uri": {"required": False, "allow_null": True, "allow_blank": True}
-        }
+        extra_kwargs = {"uri": {"required": False, "allow_null": True, "allow_blank": True}}
+
 
 class CreatorSerializer(BaseFieldsSerializer):
     """Serializer for the Creator model."""
@@ -118,6 +119,7 @@ class RelatedMaterialSerializer(BaseFieldsSerializer):
             "title": {"required": False, "allow_null": True, "allow_blank": True},
             "relation": {"required": False, "allow_null": True, "allow_blank": True},
         }
+
 
 class ImageCameraPoseSerializer(BaseFieldsSerializer):
     """Serializer for ImageCameraPose model."""
