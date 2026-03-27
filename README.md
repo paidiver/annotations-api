@@ -323,11 +323,28 @@ The project includes a management command to create a new user with an auth toke
 python manage.py create_user_with_token <username> <password>
 ```
 
-The created API token is returned in the command output. Please ensure to store this token safely and clear console output if required.
+The created API token is returned in the command output. Please ensure to store this token safely.
+Remove shell history to keep sensitive data like passwords safe.
 
 Example output:
 ```
 User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
+```
+
+Clearing shell history:
+```bash
+paidiver@annotations-api:/app$ python manage.py create_user_with_token <user> <password> 
+User created: <user>. API token (please store this securely): <token>
+paidiver@annotations-api:/app$ history
+    1  python manage.py create_user_with_token <user> <password>
+    2  history
+paidiver@annotations-api-f45db94cc-p2fsm:/app$ history -d 1
+paidiver@annotations-api-f45db94cc-p2fsm:/app$ clear
+paidiver@annotations-api-f45db94cc-p2fsm:/app$ history
+    1  history
+    2  history -d 1
+    3  clear
+    4  history
 ```
 
 ## Fake Data Generation

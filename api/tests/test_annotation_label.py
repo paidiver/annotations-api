@@ -17,7 +17,7 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationLabelViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
@@ -34,15 +34,15 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
 
         self.annotator = Annotator.objects.create(name="Test Annotator")
 
-    def list_url(self):
+    def list_url(self) -> str:
         """Helper to get the list URL for AnnotationLabelViewSet."""
         return reverse("annotation_label-list")
 
-    def detail_url(self, pk):
+    def detail_url(self, pk: uuid) -> str:
         """Helper to get the detail URL for a specific AnnotationLabel."""
         return reverse("annotation_label-detail", kwargs={"pk": pk})
 
-    def test_list_annotation_labels(self):
+    def test_list_annotation_labels(self) -> None:
         """Test listing AnnotationLabels."""
         label1 = Label.objects.create(name="Test Label", annotation_set=self.annotation_set, lowest_aphia_id=12345)
         label2 = Label.objects.create(name="Another Label", annotation_set=self.annotation_set, lowest_aphia_id=12345)
@@ -65,7 +65,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         creation_datetimes = sorted([item["creation_datetime"] for item in data["results"]])
         self.assertEqual(creation_datetimes, ["2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z"])
 
-    def test_retrieve_annotation_label(self):
+    def test_retrieve_annotation_label(self) -> None:
         """Test retrieving a specific AnnotationLabel."""
         annotation_label = AnnotationLabel.objects.create(
             creation_datetime="2024-01-01T00:00:00Z",
@@ -84,7 +84,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         )
         self.assertEqual(self.annotator.__str__(), self.annotator.name)
 
-    def test_create_annotation_label_with_annotator_set_that_does_not_exist(self):
+    def test_create_annotation_label_with_annotator_set_that_does_not_exist(self) -> None:
         """Test that creating an AnnotationLabel with an annotator set that does not exist is rejected."""
         payload = {
             "creation_datetime": "2024-01-01T00:00:00Z",
@@ -97,7 +97,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("annotator_id", resp.data)
 
-    def test_create_annotation_label_with_same_foreign_key(self):
+    def test_create_annotation_label_with_same_foreign_key(self) -> None:
         """Test that creating an AnnotationLabel with same foreign key is rejected."""
         AnnotationLabel.objects.create(
             creation_datetime="2024-01-01T00:00:00Z",
@@ -116,7 +116,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non_field_errors", resp.data)
 
-    def test_create_annotation_label_rejects_object_and_id_together(self):
+    def test_create_annotation_label_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
         payload = {
             "creation_datetime": "2024-01-01T00:00:00Z",
@@ -130,7 +130,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("annotator", resp.data)
 
-    def test_create_annotation_label_with_annotator_object(self):
+    def test_create_annotation_label_with_annotator_object(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
         payload = {
             "creation_datetime": "2024-01-01T00:00:00Z",
@@ -143,7 +143,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertTrue(Annotator.objects.filter(name="New Annotator").exists())
 
-    def test_patch_annotation_label(self):
+    def test_patch_annotation_label(self) -> None:
         """Test that PATCHing an AnnotationLabel."""
         annotation_label = AnnotationLabel.objects.create(
             creation_datetime="2024-01-01T00:00:00Z",
@@ -159,7 +159,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["creation_datetime"], "2024-01-02T00:00:00Z")
 
-    def test_delete_annotation_label(self):
+    def test_delete_annotation_label(self) -> None:
         """Test deleting an AnnotationLabel."""
         annotation_label = AnnotationLabel.objects.create(
             creation_datetime="2024-01-01T00:00:00Z",
@@ -172,7 +172,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(AnnotationLabel.objects.filter(pk=annotation_label.pk).exists())
 
-    def test_anonymous_user_cannot_patch_annotation_label(self):
+    def test_anonymous_user_cannot_patch_annotation_label(self) -> None:
         """Test that an AnnotationLabel can't be PATCHed by an anonymous user."""
         annotation_label = AnnotationLabel.objects.create(
             creation_datetime="2024-01-01T00:00:00Z",

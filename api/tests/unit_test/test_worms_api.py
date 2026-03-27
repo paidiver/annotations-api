@@ -11,7 +11,7 @@ class TestWormsAPI(TestCase):
     """Unit tests for _ingest_get_aphia_id_cached_worms."""
 
     @patch("api.serializers.label.CachedWoRMSClient")
-    def test_returns_cached_if_cached_is_200(self, mock_client_class: Mock):
+    def test_returns_cached_if_cached_is_200(self, mock_client_class: Mock) -> None:
         """Return the response from CachedWoRMSClient.ingest when the cache returns 200.
 
         Args:
@@ -28,7 +28,7 @@ class TestWormsAPI(TestCase):
         mock_client.ingest.assert_called_once_with("123")
 
     @patch("api.serializers.label.CachedWoRMSClient")
-    def test_returns_error_if_cached_fails(self, mock_client_class: Mock):
+    def test_returns_error_if_cached_fails(self, mock_client_class: Mock) -> None:
         """Return the response from CachedWoRMSClient.ingest when the cache returns an error.
 
         Args:

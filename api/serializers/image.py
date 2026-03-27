@@ -326,7 +326,7 @@ class ImageSerializer(BaseSerializer):
             "image_set_id",
         ]
 
-    def validate(self, attrs) -> dict:
+    def validate(self, attrs: dict) -> dict:
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
 
         Args:
@@ -352,7 +352,7 @@ class ImageSerializer(BaseSerializer):
         return attrs
 
     @transaction.atomic
-    def create(self, validated_data) -> Image:
+    def create(self, validated_data: dict) -> Image:
         """Override create to handle nested creation of related objects and setting M2M relationships.
 
         Args:
@@ -373,7 +373,7 @@ class ImageSerializer(BaseSerializer):
         return instance
 
     @transaction.atomic
-    def update(self, instance, validated_data) -> Image:
+    def update(self, instance: Image, validated_data: dict) -> Image:
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:

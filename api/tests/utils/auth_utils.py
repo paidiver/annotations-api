@@ -11,7 +11,7 @@ class AuthenticatedAPITestCase(APITestCase):
     if an unauthenticated user is required for a test.
     """
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up API client with an authenticated user by default."""
         super().setUp()
         self.user = User.objects.create_user(username="test", password="pass")
