@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
@@ -15,7 +15,8 @@ from api.ingest.data_subs_mapping import (
     adapt_ifdo_image_set_to_serializer_payload,
     adapt_ifdo_item_to_image_serializer_payload,
 )
-from api.serializers import ImageSerializer, ImageSetSerializer
+from api.serializers.image import IngestImageSerializer
+from api.serializers.image_set import IngestImageSetSerializer
 
 IngestIFDOSerializer = inline_serializer(
     name="IngestIFDORequest",
@@ -42,7 +43,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     responses={201: IngestIFDOResponseSerializer, 400: serializers.DictField(), 502: serializers.DictField()},
 )
 @api_view(["POST"])
-def ingest_ifdo_image_set(request) -> Response:
+def ingest_ifdo_image_set(request) -> Response:  # noqa: C901, PLR0911
     """Ingest an iFDO image set payload, creating ImageSet and related Images."""
     body: dict[str, Any] = request.data if isinstance(request.data, dict) else {}
 
@@ -61,11 +62,14 @@ def ingest_ifdo_image_set(request) -> Response:
 
     with transaction.atomic():
         # create ImageSet first
-        image_set_ser = ImageSetSerializer(data=image_set_payload)
+        image_set_ser = IngestImageSetSerializer(data=image_set_payload)
         if not image_set_ser.is_valid():
             return Response({"image_set": image_set_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-        image_set = image_set_ser.save()
+        try:
+            image_set = image_set_ser.save()
+        except IntegrityError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # create Images
         created_image_ids: list[int] = []
@@ -82,12 +86,16 @@ def ingest_ifdo_image_set(request) -> Response:
                 item_errors[str(idx)] = {"detail": str(exc)}
                 continue
 
-            img_ser = ImageSerializer(data=img_payload)
+            img_ser = IngestImageSerializer(data=img_payload)
             if not img_ser.is_valid():
                 item_errors[str(idx)] = img_ser.errors
                 continue
 
-            img = img_ser.save(image_set=image_set)
+            try:
+                img = img_ser.save(image_set=image_set)
+            except IntegrityError as exc:
+                item_errors[str(idx)] = {"detail": str(exc)}
+                continue
             created_image_ids.append(img.id)
 
         if item_errors:
