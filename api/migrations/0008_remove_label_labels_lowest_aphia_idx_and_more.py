@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0006_alter_label_lowest_aphia_id_alter_label_name_and_more'),
+        ('api', '0007_alter_label_name_label_unique_label_name_per_parent'),
     ]
 
     operations = [
