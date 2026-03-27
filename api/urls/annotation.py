@@ -2,7 +2,13 @@
 
 from rest_framework.routers import DefaultRouter
 
-from api.views import AnnotationLabelViewSet, AnnotationSetViewSet, AnnotationViewSet, AnnotatorViewSet
+from api.views import (
+    AnnotationLabelViewSet,
+    AnnotationSetViewSet,
+    AnnotationViewSet,
+    AnnotatorViewSet,
+    UploadAnnotationsView,
+)
 from api.views.search import AnnotationSearchViewSet
 
 router_annotation = DefaultRouter()
@@ -30,6 +36,13 @@ router_annotation.register(
     r"annotation_sets",
     AnnotationSetViewSet,
     basename="annotation_set",
+)
+
+# route for uploading annotation data from XLSX file
+router_annotation.register(
+    "upload_annotation",
+    UploadAnnotationsView,
+    basename="upload_annotation",
 )
 
 # annotatiion_set endpoints are registered here

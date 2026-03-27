@@ -115,7 +115,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
     def test_create_label_with_empty_aphia_id(self):
-        """Test that creating a Label with an empty lowest_aphia_id is rejected."""
+        """Test that creating a Label with an empty lowest_aphia_id is accepted."""
         payload = {
             "name": "Valid Aphia Label",
             "annotation_set_id": self.annotation_set.pk,

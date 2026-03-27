@@ -34,7 +34,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
         ]
 
     def _validate_aphia_id(self, attrs: dict, errors: dict) -> dict:
-        """Custom validation to ensure lowest_aphid_id matches to an existing aphia_id in WoRMS API.
+        """Custom validation to ensure lowest_aphid_id (if given) matches to an existing aphia_id in WoRMS API.
 
         Args:
             attrs (dict): The attributes to validate.
@@ -44,6 +44,8 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             dict: The updated errors dictionary with any new errors added.
         """
         aphia_id = attrs.get("lowest_aphia_id")
+        if aphia_id is None:
+            return errors
 
         aphia_cache = self.context.setdefault("aphia_validation_error_cache", {})
 
