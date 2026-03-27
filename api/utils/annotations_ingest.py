@@ -77,7 +77,7 @@ def insert_annotations_set(data: pd.DataFrame) -> dict:
     return serializer.data
 
 
-def insert_label_data(label_list, annotation_set_id: uuid.UUID) -> list[dict]:
+def insert_label_data(label_list: list, annotation_set_id: uuid.UUID) -> list[dict]:
     """Inserts a list of label dictionaries into the Label table.
 
     Args:

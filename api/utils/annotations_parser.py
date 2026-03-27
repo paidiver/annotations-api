@@ -61,7 +61,7 @@ def parse_annotation_set_metadata(annotation_df: pd.DataFrame) -> dict:
     return annotation_data
 
 
-def _empty_to_none(value):
+def _empty_to_none(value: str) -> str | None:
     """Helper to convert blank strings to None."""
     if value is None:
         return None

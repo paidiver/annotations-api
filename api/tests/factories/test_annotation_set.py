@@ -10,7 +10,7 @@ from api.factories.image_set import ImageSetFactory
 class AnnotationSetFactoryCoverageTests(TestCase):
     """Tests for the AnnotationSetFactory, ensuring that it correctly handles related fields and image sets."""
 
-    def test_with_relations_does_nothing_on_build(self):
+    def test_with_relations_does_nothing_on_build(self) -> None:
         """Test that building an AnnotationSetFactory with with_relations=True does not set related fields."""
         aset = AnnotationSetFactory.build(with_relations=True)
         self.assertIsNone(aset.context)
@@ -18,7 +18,7 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         self.assertIsNone(aset.pi)
         self.assertIsNone(aset.license)
 
-    def test_with_relations_does_nothing_when_disabled(self):
+    def test_with_relations_does_nothing_when_disabled(self) -> None:
         """Test that creating an AnnotationSetFactory with with_relations=False does not set related fields."""
         aset = AnnotationSetFactory(with_relations=False)
         self.assertIsNone(aset.context)
@@ -26,7 +26,7 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         self.assertIsNone(aset.pi)
         self.assertIsNone(aset.license)
 
-    def test_with_relations_sets_all_related_fields_when_enabled(self):
+    def test_with_relations_sets_all_related_fields_when_enabled(self) -> None:
         """Test that creating an AnnotationSetFactory with with_relations=True sets all related fields."""
         aset = AnnotationSetFactory(with_relations=True)
         self.assertIsNotNone(aset.context)
@@ -34,18 +34,18 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         self.assertIsNotNone(aset.pi)
         self.assertIsNotNone(aset.license)
 
-    def test_creators_when_enabled(self):
+    def test_creators_when_enabled(self) -> None:
         """Test that creating an AnnotationSetFactory with a list of creators sets those creators on the instance."""
         creator = CreatorFactory()
         aset = AnnotationSetFactory(creators=[creator])
         self.assertIn(creator, aset.creators.all())
 
-    def test_creators_equal0(self):
+    def test_creators_equal0(self) -> None:
         """Test that creating an AnnotationSetFactory with creators=0 results in no creators being associated."""
         aset = AnnotationSetFactory(creators=0)
         self.assertEqual(aset.creators.count(), 0)
 
-    def test_image_sets_uses_extracted_list(self):
+    def test_image_sets_uses_extracted_list(self) -> None:
         """Test that creating an AnnotationSet with a list of image sets associates the image sets with the instance."""
         img1 = ImageSetFactory()
         img2 = ImageSetFactory()
@@ -54,7 +54,7 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         ids = set(aset.image_sets.values_list("id", flat=True))
         self.assertEqual(ids, {img1.id, img2.id})
 
-    def test_image_sets_uses_image_sets_count_when_no_extracted(self):
+    def test_image_sets_uses_image_sets_count_when_no_extracted(self) -> None:
         """AnnotationSet with image_sets set to an integer associates that many image sets with the instance."""
         aset = AnnotationSetFactory(image_sets=3)
         self.assertEqual(aset.image_sets.count(), 3)
@@ -62,7 +62,7 @@ class AnnotationSetFactoryCoverageTests(TestCase):
         aset = AnnotationSetFactory(image_sets=0)
         self.assertEqual(aset.image_sets.count(), 0)
 
-    def test_image_sets_raises_runtimeerror_when_fk_to_self_not_found(self):
+    def test_image_sets_raises_runtimeerror_when_fk_to_self_not_found(self) -> None:
         """Creating an AnnotationSet with image_sets specified raises a RuntimeError."""
         aset = AnnotationSetFactory()
 

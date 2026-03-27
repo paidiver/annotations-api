@@ -93,7 +93,7 @@ class DebugDatabaseDumpView(APIView):
     Only enabled when DEBUG=True
     """
 
-    def get(self, request: Request, *args, **kwargs):
+    def get(self, request: Request, *args, **kwargs) -> Response:
         """Handle GET request to dump database contents.
 
         Args:

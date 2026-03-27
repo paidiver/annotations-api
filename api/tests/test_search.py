@@ -20,7 +20,7 @@ from api.views.search import AnnotationSearchViewSet, _get_aphia_ids_by_name_par
 class AnnotationSearchViewSetTests(APITestCase):
     """Integration tests for AnnotationSearchViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         self.annotation_set_1 = AnnotationSet.objects.create(name="Annotation Set 1")
         self.annotation_set_2 = AnnotationSet.objects.create(name="Annotation Set 2")
@@ -108,7 +108,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.list_url = reverse("search-list")
         self.grouped_url = reverse("search-list-grouped")
 
-    def test_list_requires_aphia_ids_or_name_part(self):
+    def test_list_requires_aphia_ids_or_name_part(self) -> None:
         """Test that list rejects requests without aphia_ids[] or name_part."""
         resp = self.client.get(self.list_url)
 
@@ -118,7 +118,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
-    def test_list_filters_by_aphia_ids(self):
+    def test_list_filters_by_aphia_ids(self) -> None:
         """Test listing search results filtered by aphia_ids[]."""
         resp = self.client.get(self.list_url, {"aphia_ids[]": [1001]})
 
@@ -147,7 +147,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(str(row["image_set_uuid"]), str(self.image_set_1.id))
         self.assertEqual(row["image_set_name"], "Image Set 1")
 
-    def test_list_returns_summary_when_requested(self):
+    def test_list_returns_summary_when_requested(self) -> None:
         """Test list includes summary when calculate_summary=true."""
         resp = self.client.get(
             self.list_url,
@@ -167,7 +167,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(len(data["results"]["annotations"]), 2)
 
-    def test_list_ignores_invalid_aphia_ids_in_query(self):
+    def test_list_ignores_invalid_aphia_ids_in_query(self) -> None:
         """Test invalid aphia_ids[] values are ignored and valid ones are still used."""
         resp = self.client.get(
             self.list_url,
@@ -179,7 +179,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.data["results"]["annotations"][0]["label_aphia_id"], 1001)
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
-    def test_list_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock):
+    def test_list_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock) -> None:
         """Test listing search results using name_part lookup.
 
         Args:
@@ -199,7 +199,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_list_filters_by_label_name_when_name_part_finds_no_aphia_ids(
         self,
         mocked_get_aphia_ids_by_name_part: Mock,
-    ):
+    ) -> None:
         """Test list falls back to label name search when name_part produces no AphiaIDs.
 
         Args:
@@ -218,7 +218,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_list_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
         self,
         mocked_get_aphia_ids_by_name_part: Mock,
-    ):
+    ) -> None:
         """Test list returns 404 when neither AphiaIDs nor label names match.
 
         Args:
@@ -234,7 +234,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search._get_descendant_aphia_ids")
-    def test_list_include_descendants_adds_results(self, mocked_get_descendant_aphia_ids: Mock):
+    def test_list_include_descendants_adds_results(self, mocked_get_descendant_aphia_ids: Mock) -> None:
         """Test include_descendants=true includes descendant AphiaIDs in the search.
 
         Args:
@@ -261,7 +261,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self,
         mocked_get_descendant_aphia_ids: Mock,
         mocked_get_aphia_ids_by_name_part: Mock,
-    ):
+    ) -> None:
         """Test AphiaIDs are deduplicated before querying.
 
         Args:
@@ -286,7 +286,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"]["annotations"])
         self.assertEqual(returned_aphia_ids, [1001, 2002])
 
-    def test_grouped_requires_aphia_ids_or_name_part(self):
+    def test_grouped_requires_aphia_ids_or_name_part(self) -> None:
         """Test grouped rejects requests without aphia_ids[] or name_part."""
         resp = self.client.get(self.grouped_url)
 
@@ -296,7 +296,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
-    def test_grouped_filters_by_aphia_ids(self):
+    def test_grouped_filters_by_aphia_ids(self) -> None:
         """Test grouped endpoint returns grouped rows keyed by annotation set id."""
         resp = self.client.get(self.grouped_url, {"aphia_ids[]": [1001]})
 
@@ -324,7 +324,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(row["annotation_dimension_pixels"], 123)
         self.assertEqual(row["annotator_name"], "Test Annotator")
 
-    def test_grouped_returns_summary_when_requested(self):
+    def test_grouped_returns_summary_when_requested(self) -> None:
         """Test grouped includes summary when calculate_summary=true."""
         resp = self.client.get(
             self.grouped_url,
@@ -346,7 +346,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(set(grouped.keys()), {str(self.annotation_set_1.id), str(self.annotation_set_2.id)})
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
-    def test_grouped_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock):
+    def test_grouped_filters_by_name_part(self, mocked_get_aphia_ids_by_name_part: Mock) -> None:
         """Test grouped endpoint supports name_part lookup.
 
         Args:
@@ -367,7 +367,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_grouped_filters_by_label_name_when_name_part_finds_no_aphia_ids(
         self,
         mocked_get_aphia_ids_by_name_part: Mock,
-    ):
+    ) -> None:
         """Test grouped falls back to label name search when name_part produces no AphiaIDs.
 
         Args:
@@ -388,7 +388,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_grouped_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
         self,
         mocked_get_aphia_ids_by_name_part: Mock,
-    ):
+    ) -> None:
         """Test grouped returns 404 when neither AphiaIDs nor label names match.
 
         Args:
@@ -404,7 +404,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.CachedWoRMSClient")
-    def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock):
+    def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock) -> None:
         """Test descendant helper returns empty list when the WoRMS client raises RequestException.
 
         Args:
@@ -419,7 +419,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         mocked_client.descendants_aphia_ids.assert_called_once_with([1001])
 
     @patch("api.views.search.CachedWoRMSClient")
-    def test_get_aphia_ids_by_name_part_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock):
+    def test_get_aphia_ids_by_name_part_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock) -> None:
         """Test name-part helper returns empty list when the WoRMS client raises RequestException.
 
         Args:
@@ -437,7 +437,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_list_filters_by_name_part_with_no_pagination(
         self, mocked_get_aphia_ids_by_name_part: Mock, mocked_paginator: Mock
-    ):
+    ) -> None:
         """Test listing search results using name_part lookup.
 
         Args:
@@ -472,7 +472,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_list_returns_response_from_get_all_aphia_ids_from_request(
         self,
         mocked_get_all_aphia_ids: Mock,
-    ):
+    ) -> None:
         """Test list returns the Response object from _get_all_aphia_ids_from_request when it returns a Response.
 
         Args:
@@ -492,7 +492,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     def test_grouped_returns_response_from_get_all_aphia_ids_from_request(
         self,
         mocked_get_all_aphia_ids: Mock,
-    ):
+    ) -> None:
         """Test grouped returns the Response object from _get_all_aphia_ids_from_request when it returns a Response.
 
         Args:
@@ -508,7 +508,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(resp.data, {"detail": "mocked error"})
 
-    def test_list_filters_by_all_optional_query_params(self):
+    def test_list_filters_by_all_optional_query_params(self) -> None:
         """Test listing search results filtered by all optional query parameters together."""
         resp = self.client.get(
             self.list_url,
@@ -534,7 +534,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             1001,
         )
 
-    def test_list_rejects_invalid_choice_params(self):
+    def test_list_rejects_invalid_choice_params(self) -> None:
         """Test list rejects invalid values for choice-based query parameters."""
         resp = self.client.get(
             self.list_url,
@@ -551,7 +551,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertIn("fauna_attraction", resp.data["detail"])
         self.assertIn("marine_zone", resp.data["detail"])
 
-    def test_list_rejects_short_length_params(self):
+    def test_list_rejects_short_length_params(self) -> None:
         """Test list rejects values for string-based query parameters that are too short."""
         resp = self.client.get(
             self.list_url,
@@ -582,7 +582,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             "'image_set_name' must contain at least 3 characters.",
         )
 
-    def test_list_rejects_non_numeric_bbox_params(self):
+    def test_list_rejects_non_numeric_bbox_params(self) -> None:
         """Test list rejects non-numeric values for bounding box query parameters."""
         resp = self.client.get(
             self.list_url,
@@ -601,7 +601,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.data["detail"]["min_lon"], "'min_lon' must be a valid number.")
         self.assertEqual(resp.data["detail"]["max_lon"], "'max_lon' must be a valid number.")
 
-    def test_list_rejects_invalid_bbox_ranges(self):
+    def test_list_rejects_invalid_bbox_ranges(self) -> None:
         """Test list rejects values for bounding box query parameters that are out of valid ranges."""
         resp = self.client.get(
             self.list_url,
@@ -628,7 +628,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             "'min_lon' must be less than or equal to 'max_lon'.",
         )
 
-    def test_get_float_query_param_returns_none_and_float(self):
+    def test_get_float_query_param_returns_none_and_float(self) -> None:
         """Test _get_float_query_param returns None for missing or empty params and returns float for valid input."""
         factory = APIRequestFactory()
         view = AnnotationSearchViewSet()

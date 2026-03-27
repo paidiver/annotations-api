@@ -274,7 +274,7 @@ class ImageSet(CommonFieldsAll, CommonFieldsImagesImageSets, DefaultColumns):
             ),
         ]
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Save method to update geom and limits fields."""
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)

@@ -47,7 +47,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
     )
     shape = serializers.CharField()  # Accept any string, validate manually below
 
-    def validate_shape(self, value):
+    def validate_shape(self, value: str) -> str:
         """Manual validation of shape to allow for value mappings."""
         normalised = AliasedShapesEnumField().normaliseAnnotationShapeValue(value)
         valid_values = [v for v, _ in enum_choices(ShapeEnum)]
@@ -150,7 +150,7 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         return errors
 
     @transaction.atomic
-    def create(self, validated_data) -> AnnotationLabel:
+    def create(self, validated_data: dict) -> AnnotationLabel:
         """Override create to handle nested creation of related objects and setting M2M relationships.
 
         Args:
@@ -164,7 +164,7 @@ class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
         return super().create(validated_data)
 
     @transaction.atomic
-    def update(self, instance, validated_data) -> AnnotationLabel:
+    def update(self, instance: AnnotationLabel, validated_data: dict) -> AnnotationLabel:
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:

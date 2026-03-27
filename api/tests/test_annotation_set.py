@@ -1,5 +1,7 @@
 """Tests for AnnotationSetViewSet."""
 
+import uuid
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -11,7 +13,7 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for AnnotationSetViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
         self.creators_payload = [
@@ -23,15 +25,15 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
 
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
 
-    def list_url(self):
+    def list_url(self) -> str:
         """Helper to get the list URL for AnnotationSetViewSet."""
         return reverse("annotation_set-list")
 
-    def detail_url(self, pk):
+    def detail_url(self, pk: uuid) -> str:
         """Helper to get the detail URL for a specific AnnotationSet."""
         return reverse("annotation_set-detail", kwargs={"pk": pk})
 
-    def test_list_annotation_sets(self):
+    def test_list_annotation_sets(self) -> None:
         """Test listing AnnotationSets."""
         annotation_set_a = AnnotationSet.objects.create(name="Set A")
         annotation_set_a.image_sets.set([self.image_set])
@@ -49,7 +51,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         names = sorted([item["name"] for item in data["results"]])
         self.assertEqual(names, ["Set A", "Set B"])
 
-    def test_retrieve_annotation_set(self):
+    def test_retrieve_annotation_set(self) -> None:
         """Test retrieving a specific AnnotationSet."""
         annotation_set = AnnotationSet.objects.create(name="Set A")
         annotation_set.image_sets.set([self.image_set])
@@ -64,7 +66,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.data["id"], str(annotation_set.pk))
         self.assertEqual(resp.data["name"], "Set A")
 
-    def test_create_annotation_set_with_nested_creators(self):
+    def test_create_annotation_set_with_nested_creators(self) -> None:
         """Test creating an AnnotationSet with nested creators."""
         payload = {
             "name": "Created Set",
@@ -85,7 +87,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
 
         self.assertEqual(annotation_set.image_sets.count(), 1)
 
-    def test_create_annotation_set_rejects_object_and_id_together(self):
+    def test_create_annotation_set_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
         existing = Project.objects.create(name="Existing Project", uri="https://example.com/existing")
 
@@ -99,7 +101,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("project", resp.data)
 
-    def test_create_annotation_set_rejects_object_and_id_together_list(self):
+    def test_create_annotation_set_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
         existing = Creator.objects.create(name="Existing Creator", uri="https://example.com/existing")
 
@@ -113,7 +115,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("creators", resp.data)
 
-    def test_create_annotation_set_with_existing_ids(self):
+    def test_create_annotation_set_with_existing_ids(self) -> None:
         """Test creating an AnnotationSet with existing creator IDs."""
         c1 = Creator.objects.create(name="Existing Creator 1", uri="https://example.com/c1")
         p1 = Project.objects.create(name="Existing Project 1", uri="https://example.com/p1")
@@ -132,7 +134,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(annotation_set.creators.first().pk, c1.pk)
         self.assertEqual(annotation_set.project.pk, p1.pk)
 
-    def test_patch_annotation_set_replaces_one2m_with_nested_objects(self):
+    def test_patch_annotation_set_replaces_one2m_with_nested_objects(self) -> None:
         """Test that PATCHing an AnnotationSet with nested creators replaces the M2M relationships."""
         annotation_set = AnnotationSet.objects.create(name="Original")
         annotation_set.image_sets.set([self.image_set])
@@ -152,7 +154,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(annotation_set.project.name, "New Project")
         self.assertEqual(annotation_set.project.uri, "https://example.com/new")
 
-    def test_patch_annotation_set_replaces_m2m_with_nested_objects(self):
+    def test_patch_annotation_set_replaces_m2m_with_nested_objects(self) -> None:
         """Test that PATCHing an AnnotationSet with nested creators replaces the M2M relationships."""
         annotation_set = AnnotationSet.objects.create(name="Original")
         annotation_set.image_sets.set([self.image_set])
@@ -172,7 +174,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(annotation_set.creators.count(), 1)
         self.assertEqual(annotation_set.creators.first().name, "New Creator")
 
-    def test_delete_annotation_set(self):
+    def test_delete_annotation_set(self) -> None:
         """Test deleting an AnnotationSet."""
         annotation_set = AnnotationSet.objects.create(name="To Delete")
         annotation_set.image_sets.set([self.image_set])
@@ -181,7 +183,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(AnnotationSet.objects.filter(pk=annotation_set.pk).exists())
 
-    def test_anonymous_user_cannot_create_annotation_set(self):
+    def test_anonymous_user_cannot_create_annotation_set(self) -> None:
         """Test that an AnnotationSet can't be created by an anonymous user."""
         payload = {
             "name": "Created Set via IDs",

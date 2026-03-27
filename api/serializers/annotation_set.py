@@ -176,7 +176,7 @@ class AnnotationSetSerializer(BaseSerializer):
         return instance
 
     @transaction.atomic
-    def update(self, instance, validated_data: dict) -> AnnotationSet:
+    def update(self, instance: AnnotationSet, validated_data: dict) -> AnnotationSet:
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:
