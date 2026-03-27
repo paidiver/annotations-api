@@ -6,7 +6,7 @@ from rest_framework import serializers
 from api.models import Annotation, Annotator
 from api.models.annotation import AnnotationLabel
 from api.models.annotation_set import AnnotationSet
-from api.models.base import AliasedShapesEnumField, enum_choices, ShapeEnum
+from api.models.base import AliasedShapesEnumField, ShapeEnum, enum_choices
 from api.models.image import Image
 from api.models.label import Label
 from api.serializers.base import (
@@ -48,6 +48,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
     shape = serializers.CharField()  # Accept any string, validate manually below
 
     def validate_shape(self, value):
+        """Manual validation of shape to allow for value mappings."""
         normalised = AliasedShapesEnumField().normaliseAnnotationShapeValue(value)
         valid_values = [v for v, _ in enum_choices(ShapeEnum)]
         if normalised not in valid_values:

@@ -33,6 +33,8 @@ def enum_choices(py_enum: type[enum.Enum]):
 
 
 class AliasedShapesEnumField(models.CharField):
+    """CharField that allows additional values to be mapped to the iFDO schema fields for annotation shape."""
+
     SHAPE_ALIASES = {
         "point": "single-pixel",
         "line": "polyline",
@@ -43,6 +45,7 @@ class AliasedShapesEnumField(models.CharField):
     }
 
     def normaliseAnnotationShapeValue(self, value):
+        """Process shape value by converting to lower case and returning a mapped ShapeEnum value for aliases."""
         if not isinstance(value, str):
             return value
         # Check aliases first
@@ -50,6 +53,7 @@ class AliasedShapesEnumField(models.CharField):
         return remapped.lower()
 
     def to_python(self, value):
+        """Override Django to_python method to run value through normalise function first."""
         return super().to_python(self.normaliseAnnotationShapeValue(value))
 
 
