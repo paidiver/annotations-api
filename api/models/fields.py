@@ -10,43 +10,48 @@ from .base import DefaultColumns
 class NamedURI(DefaultColumns):
     """Mixin for models that have a name and a URI."""
 
-    name = models.CharField(max_length=255, unique=True)
-    uri = models.CharField(max_length=2048, null=True, blank=True)
+    name = models.CharField(max_length=255)
+    uri = models.CharField(max_length=2048, default="", blank=True)
 
     class Meta:
         """Meta class for NamedURI."""
 
         abstract = True
-
-    def __str__(self):
-        """String representation of the instance."""
-        return self.name
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "uri"],
+                name="unique_name_uri_%(app_label)s_%(class)s",
+            )
+        ]
 
 
 class Creator(NamedURI):
     """The creator of the images, image_sets or annotation_sets."""
 
-    class Meta:
+    class Meta(NamedURI.Meta):
         """Meta class for Creator."""
 
+        abstract = False
         db_table = "creators"
 
 
 class Context(NamedURI):
     """The context in which images were captured."""
 
-    class Meta:
+    class Meta(NamedURI.Meta):
         """Meta class for Context."""
 
+        abstract = False
         db_table = "contexts"
 
 
 class Project(NamedURI):
     """The project under which images were captured."""
 
-    class Meta:
+    class Meta(NamedURI.Meta):
         """Meta class for Project."""
 
+        abstract = False
         db_table = "projects"
         indexes = [
             GinIndex(
@@ -60,32 +65,40 @@ class Project(NamedURI):
 class PI(NamedURI):
     """The principal investigator associated with the images."""
 
-    class Meta:
+    class Meta(NamedURI.Meta):
         """Meta class for PI."""
 
+        abstract = False
         db_table = "pis"
 
 
 class License(NamedURI):
     """The license under which images are made available."""
 
-    class Meta:  # noqa: D106
+    class Meta(NamedURI.Meta):
+        """Meta class for License."""
+
+        abstract = False
         db_table = "licenses"
 
 
 class Event(NamedURI):
     """Represents an event related to image."""
 
-    class Meta:  # noqa: D106
+    class Meta(NamedURI.Meta):
+        """Meta class for Event."""
+
+        abstract = False
         db_table = "events"
 
 
 class Platform(NamedURI):
     """Represents a platform on which an image was captured."""
 
-    class Meta:
+    class Meta(NamedURI.Meta):
         """Meta class for Platform."""
 
+        abstract = False
         db_table = "platforms"
         indexes = [
             GinIndex(
@@ -99,7 +112,10 @@ class Platform(NamedURI):
 class Sensor(NamedURI):
     """Represents a sensor used to capture an image."""
 
-    class Meta:  # noqa: D106
+    class Meta(NamedURI.Meta):
+        """Meta class for Sensor."""
+
+        abstract = False
         db_table = "sensors"
 
 
@@ -108,17 +124,22 @@ class RelatedMaterial(DefaultColumns):
 
     uri = models.CharField(max_length=255, help_text="The URI pointing to a related resource")
     title = models.CharField(
-        null=True, blank=True, max_length=255, help_text="A name characterising the resource that is pointed to"
+        default="", blank=True, max_length=255, help_text="A name characterising the resource that is pointed to"
     )
     relation = models.TextField(
-        null=True, blank=True, help_text="A textual explanation how this material is related to this image set"
+        default="", blank=True, help_text="A textual explanation how this material is related to this image set"
     )
 
-    class Meta:  # noqa: D106
-        db_table = "related_materials"
+    class Meta:
+        """Meta class for RelatedMaterial."""
 
-    def __str__(self) -> str:  # noqa: D105
-        return self.title
+        db_table = "related_materials"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["uri", "title", "relation"],
+                name="unique_related_material_uri_title_relation",
+            )
+        ]
 
 
 class ImageCameraPose(DefaultColumns):

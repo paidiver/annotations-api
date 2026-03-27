@@ -80,7 +80,7 @@ class BaseSerializer(serializers.ModelSerializer):
 class NestedGetOrCreateMixin:
     """Mixin for nested serializers to get-or-create related instances based on a unique key field (e.g., name)."""
 
-    key_field = "name"
+    key_fields = ["name", "uri"]  # Fields that can be used to identify an existing instance for get-or-create logic.
     exclude_compare_fields = {"id", "created_at", "updated_at"}
 
     def get_fields(self):
@@ -107,11 +107,11 @@ class NestedGetOrCreateMixin:
                 return Model.objects.create(**validated_data)
 
         except IntegrityError as err:
-            key_value = validated_data.get(self.key_field)
-            if key_value is None:
-                raise
+            if not self.key_fields:
+                raise serializers.ValidationError("An object with these details already exists.") from err
+            key_value = {field: validated_data.get(field, "") for field in self.key_fields}
+            existing = Model.objects.filter(**key_value).first()
 
-            existing = Model.objects.filter(**{self.key_field: key_value}).first()
             if existing is None:
                 raise
 
@@ -120,7 +120,7 @@ class NestedGetOrCreateMixin:
                     continue
                 if getattr(existing, field) != incoming:
                     raise serializers.ValidationError(
-                        {field: f"{Model.__name__} with {self.key_field}={key_value!r} already exists but differs."}
+                        {field: f"{Model.__name__} with {key_value!r} already exists but differs."}
                     ) from err
 
             return existing
