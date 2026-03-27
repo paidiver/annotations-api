@@ -452,3 +452,9 @@ class ImageSetSerializer(BaseSerializer):
             instance.related_materials.set(self._materialize_deferred_list(related_deferred))
 
         return instance
+
+
+class IngestImageSetSerializer(ImageSetSerializer):
+    """Serializer for ingesting ImageSet data from iFDO payloads."""
+
+    id = serializers.UUIDField(required=False)
