@@ -50,9 +50,9 @@ def insert_annotations_set(data: pd.DataFrame) -> dict:
         if data.get("annotation-creators-names"):
             names_list = [n.strip() for n in data.get("annotation-creators-names", "").split(",") if n.strip()]
             uris_list = [u.strip() for u in data.get("annotation-creators-uris", "").split(",") if u.strip()]
-
             for name, uri in zip_longest(names_list, uris_list, fillvalue=None):
-                creator, _ = Creator.objects.get_or_create(name=name, uri=uri)
+                uri_not_null = uri or ""
+                creator, _ = Creator.objects.get_or_create(name=name, uri=uri_not_null)
                 annotation_set.creators.add(creator)
 
         # Handle Many-to-Many image-sets
