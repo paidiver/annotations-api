@@ -2,7 +2,7 @@
 
 import os
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ class TestAnnotationParsers(TestCase):
 
     @patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys)
     @patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3)
-    def test_parse_annotation_set_metadata_success(self):
+    def test_parse_annotation_set_metadata_success(self) -> None:
         """Test parsing metadata with merged-cell style and required fields."""
         data = [
             ["annotation-set-name", np.nan, "Trial Data"],
@@ -58,7 +58,7 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result["annotation-pi-uri"], "user@example.com")
 
     @patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7)
-    def test_parse_label_set(self):
+    def test_parse_label_set(self) -> None:
         """Test parsing label set."""
         data = [
             [
@@ -107,7 +107,7 @@ class TestAnnotationParsers(TestCase):
     @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0)
     @patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9)
     @patch("api.utils.annotations_parser._parse_coordinates")
-    def test_parse_annotation_data(self, mock_parse_coords):
+    def test_parse_annotation_data(self, mock_parse_coords: Mock) -> None:
         """Test parsing the main annotation data sheet based on image structure."""
         mock_parse_coords.return_value = [1427, 8163]
 
@@ -166,7 +166,7 @@ class TestAnnotationParsers(TestCase):
 
         self.assertTrue(mock_parse_coords.called)
 
-    def test_full_template_parsing(self):
+    def test_full_template_parsing(self) -> None:
         """Verify that the parsers work with the actual Excel file structure without mocking constants."""
         test_file_path = os.path.join(
             settings.BASE_DIR, "api", "tests", "test_data", "annotation_metadata_template_v1.xlsx"
@@ -207,19 +207,19 @@ class TestAnnotationParsers(TestCase):
 class TestParseCoordinates(TestCase):
     """Test for parsing coordinates."""
 
-    def test_parse_comma_separated_string(self):
+    def test_parse_comma_separated_string(self) -> None:
         """Test standard 'x, y' string format."""
         input_val = "1427.5, 8163.2"
         expected = [[1427.5, 8163.2]]
         self.assertEqual(_parse_coordinates(input_val), expected)
 
-    def test_parse_json_list_format(self):
+    def test_parse_json_list_format(self) -> None:
         """Test if it handles stringified JSON lists (common in some exports)."""
         input_val = "[10, 20, 30, 40]"
         expected = [10, 20, 30, 40]
         self.assertEqual(_parse_coordinates(input_val), expected)
 
-    def test_parse_empty_or_nan(self):
+    def test_parse_empty_or_nan(self) -> None:
         """Test that empty inputs return an empty list."""
         self.assertEqual(_parse_coordinates(""), [])
         self.assertEqual(_parse_coordinates(None), [])
@@ -231,7 +231,9 @@ class TestIngestAnnotationData(TransactionTestCase):
     @patch("api.utils.annotations_ingest.insert_annotations_set")
     @patch("api.utils.annotations_ingest.insert_label_data")
     @patch("api.utils.annotations_ingest.insert_annotations_data")
-    def test_ingest_annotation_data_success(self, mock_insert_annot, mock_insert_label, mock_insert_set):
+    def test_ingest_annotation_data_success(
+        self, mock_insert_annot: Mock, mock_insert_label: Mock, mock_insert_set: Mock
+    ) -> None:
         """Test the orchestration of the ingestion process."""
         mock_insert_set.return_value = {"id": 1, "name": "Test Set"}
         mock_insert_label.return_value = [{"id": 10, "name": "Coral"}]

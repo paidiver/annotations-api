@@ -2,7 +2,7 @@
 
 from django.contrib.gis.db import models
 
-from api.models.base import DefaultColumns, ShapeEnum, enum_choices
+from api.models.base import AliasedShapesEnumField, DefaultColumns, ShapeEnum, enum_choices
 
 
 class Annotator(DefaultColumns):
@@ -41,7 +41,7 @@ class Annotation(DefaultColumns):
         help_text="The platform used to create the annotation, e.g., 'BIIGLE', 'VARS', 'SQUIDLE+', none",
     )
 
-    shape = models.CharField(
+    shape = AliasedShapesEnumField(
         max_length=32,
         choices=enum_choices(ShapeEnum),
         help_text="The annotation shape is specified by a keyword.",

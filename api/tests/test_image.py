@@ -12,7 +12,7 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class ImageViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for ImageViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
         self.creators_payload = [
@@ -24,15 +24,15 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
 
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
 
-    def list_url(self):
+    def list_url(self) -> str:
         """Helper to get the list URL for ImageViewSet."""
         return reverse("image-list")
 
-    def detail_url(self, pk):
+    def detail_url(self, pk: uuid) -> str:
         """Helper to get the detail URL for a specific Image."""
         return reverse("image-detail", kwargs={"pk": pk})
 
-    def test_list_images(self):
+    def test_list_images(self) -> None:
         """Test listing Images."""
         Image.objects.create(filename="file_a.jpg", image_set=self.image_set)
         Image.objects.create(filename="file_b.jpg", image_set=self.image_set)
@@ -48,7 +48,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         filenames = sorted([item["filename"] for item in data["results"]])
         self.assertEqual(filenames, ["file_a.jpg", "file_b.jpg"])
 
-    def test_retrieve_image(self):
+    def test_retrieve_image(self) -> None:
         """Test retrieving a specific Image."""
         image = Image.objects.create(filename="file_a.jpg", image_set=self.image_set)
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
@@ -59,7 +59,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.data["filename"], "file_a.jpg")
         self.assertEqual(image.__str__(), "file_a.jpg")
 
-    def test_create_image_with_nested_creators(self):
+    def test_create_image_with_nested_creators(self) -> None:
         """Test creating an Image with nested creators."""
         payload = {
             "filename": "created_file.jpg",
@@ -82,7 +82,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
 
         self.assertIsNotNone(image.geom)
 
-    def test_create_image_rejects_geom(self):
+    def test_create_image_rejects_geom(self) -> None:
         """Test that creating an Image with a geom field is rejected, since geom is computed server-side."""
         payload = {
             "filename": "bad_image.jpg",
@@ -93,7 +93,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("geom", resp.data)
 
-    def test_create_image_rejects_object_and_id_together(self):
+    def test_create_image_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
         existing = Project.objects.create(name="Existing Project", uri="https://example.com/existing")
 
@@ -107,7 +107,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("project", resp.data)
 
-    def test_create_image_rejects_object_and_id_together_list(self):
+    def test_create_image_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
         existing = Creator.objects.create(name="Existing Creator", uri="https://example.com/existing")
 
@@ -121,7 +121,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("creators", resp.data)
 
-    def test_create_image_with_existing_ids(self):
+    def test_create_image_with_existing_ids(self) -> None:
         """Test creating an Image with existing creator IDs."""
         c1 = Creator.objects.create(name="Existing Creator 1", uri="https://example.com/c1")
         p1 = Project.objects.create(name="Existing Project 1", uri="https://example.com/p1")
@@ -140,7 +140,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image.creators.first().pk, c1.pk)
         self.assertEqual(image.project.pk, p1.pk)
 
-    def test_create_image_with_same_filename(self):
+    def test_create_image_with_same_filename(self) -> None:
         """Test that creating an Image with the same filename in the same ImageSet is rejected."""
         Image.objects.create(filename="file.jpg", image_set=self.image_set)
 
@@ -152,7 +152,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("non_field_errors", resp.data)
 
-    def test_create_image_with_image_set_that_does_not_exist(self):
+    def test_create_image_with_image_set_that_does_not_exist(self) -> None:
         """Test that creating an Image with an image_set_id that does not exist is rejected."""
         payload = {
             "filename": "file.jpg",
@@ -162,7 +162,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("image_set_id", resp.data)
 
-    def test_patch_image_replaces_one2m_with_nested_objects(self):
+    def test_patch_image_replaces_one2m_with_nested_objects(self) -> None:
         """Test that PATCHing an Image with nested creators replaces the M2M relationships."""
         image = Image.objects.create(filename="original_file.jpg", image_set=self.image_set)
         old_project = Project.objects.create(name="Old Project", uri="https://example.com/old")
@@ -182,7 +182,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image.project.name, "New Project")
         self.assertEqual(image.project.uri, "https://example.com/new")
 
-    def test_patch_image_replaces_m2m_with_nested_objects(self):
+    def test_patch_image_replaces_m2m_with_nested_objects(self) -> None:
         """Test that PATCHing an Image with nested creators and related materials replaces the M2M relationships."""
         image = Image.objects.create(filename="original_file.jpg", image_set=self.image_set)
         old_creator = Creator.objects.create(name="Old Creator", uri="https://example.com/old")
@@ -202,7 +202,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image.creators.count(), 1)
         self.assertEqual(image.creators.first().name, "New Creator")
 
-    def test_delete_image(self):
+    def test_delete_image(self) -> None:
         """Test deleting an Image."""
         image = Image.objects.create(filename="to_delete.jpg", image_set=self.image_set)
 
@@ -210,7 +210,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Image.objects.filter(pk=image.pk).exists())
 
-    def test_anonymous_user_cannot_create_image(self):
+    def test_anonymous_user_cannot_create_image(self) -> None:
         """Test that an Image can't be PATCHed by an anonymous user."""
         payload = {
             "filename": "created_file_via_ids.jpg",

@@ -1,9 +1,13 @@
 """Base serializers for the API."""
 
+from typing import TypeVar
+
 from attr import dataclass
 from django.db import IntegrityError, transaction
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
+M = TypeVar("M")  # model type variable
 
 
 class BaseSerializer(serializers.ModelSerializer):
@@ -83,7 +87,7 @@ class NestedGetOrCreateMixin:
     key_fields = ["name", "uri"]  # Fields that can be used to identify an existing instance for get-or-create logic.
     exclude_compare_fields = {"id", "created_at", "updated_at"}
 
-    def get_fields(self):
+    def get_fields(self) -> dict[str, serializers.Field]:
         """Override to remove UniqueValidator from the key field, since we handle uniqueness in create()."""
         fields = super().get_fields()
         for f in fields.values():
@@ -91,7 +95,7 @@ class NestedGetOrCreateMixin:
                 f.validators = [v for v in f.validators if not isinstance(v, UniqueValidator)]
         return fields
 
-    def create(self, validated_data: dict):
+    def create(self, validated_data: dict) -> M:
         """Try to create a new instance. If it violates unique constraint, fetch existing and compare fields.
 
         Args:
@@ -133,7 +137,7 @@ class StrictPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         "invalid": "Expected an integer id.",
     }
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data):  # noqa: ANN001, ANN201
         """Reject dict/object payloads and only accept PK values."""
         if isinstance(data, dict):
             self.fail("invalid")
@@ -147,7 +151,7 @@ class DeferredCreate:
     serializer_class: type[serializers.Serializer]
     validated_data: dict[str, any]
 
-    def save(self, *, context):
+    def save(self, *, context: dict) -> None:
         """Perform the actual creation of the related instance using the serializer class and validated data."""
         ser = self.serializer_class(data=self.validated_data, context=context)
         ser.is_valid(raise_exception=True)
@@ -165,11 +169,11 @@ class CreateOnlyRelatedField(serializers.Field):
         "id_not_allowed": "Do not include 'id' here. Use the *_id field to reference an existing object.",
     }
 
-    def __init__(self, *, create_serializer_class, **kwargs):
+    def __init__(self, *, create_serializer_class: type[serializers.Serializer], **kwargs):
         super().__init__(**kwargs)
         self.create_serializer_class = create_serializer_class
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data) -> DeferredCreate:  # noqa: ANN001
         """Create the related object using the provided serializer."""
         if not isinstance(data, dict):
             self.fail("invalid")
@@ -184,7 +188,7 @@ class CreateOnlyRelatedField(serializers.Field):
             validated_data=ser.validated_data,
         )
 
-    def to_representation(self, value):
+    def to_representation(self, value) -> None:  # noqa: ANN001
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
 
@@ -201,11 +205,11 @@ class CreateOnlyRelatedListField(serializers.Field):
         "id_not_allowed": "Do not include 'id' inside items. Use the *_ids field to reference existing objects.",
     }
 
-    def __init__(self, *, create_serializer_class, **kwargs):
+    def __init__(self, *, create_serializer_class: type[serializers.Serializer], **kwargs):
         super().__init__(**kwargs)
         self.create_serializer_class = create_serializer_class
 
-    def to_internal_value(self, data) -> list:
+    def to_internal_value(self, data) -> list:  # noqa: ANN001
         """Create the related object using the provided serializer."""
         if not isinstance(data, list):
             self.fail("invalid")
@@ -240,7 +244,7 @@ class CreateOnlyRelatedListField(serializers.Field):
 
         return deferred
 
-    def to_representation(self, value):
+    def to_representation(self, value) -> None:  # noqa: ANN001
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
 

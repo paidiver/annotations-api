@@ -14,7 +14,7 @@ from api.ingest.data_subs_mapping import (
 class TestDataSubsMapping(TestCase):
     """Unit tests for api.ingest.data_subs_mapping."""
 
-    def _base_ifdo(self, **header_overrides):
+    def _base_ifdo(self, **header_overrides) -> dict:
         header = {
             "image-set-name": "Set A",
             "image-set-handle": "h1",
@@ -24,7 +24,7 @@ class TestDataSubsMapping(TestCase):
         header.update(header_overrides)
         return {"image-set-header": header, "image-set-items": []}
 
-    def test_imageset_requires_header(self):
+    def test_imageset_requires_header(self) -> None:
         """Missing/empty image-set-header should raise."""
         with self.assertRaises(IFDOAdaptError) as ctx:
             adapt_ifdo_image_set_to_serializer_payload({})
@@ -34,7 +34,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_image_set_to_serializer_payload({"image-set-header": {}})
         self.assertIn("ifdo.image-set-header is required", str(ctx2.exception))
 
-    def test_imageset_requires_name_and_strips(self):
+    def test_imageset_requires_name_and_strips(self) -> None:
         """image-set-name must be a non-empty string and should be stripped."""
         payload = adapt_ifdo_image_set_to_serializer_payload(self._base_ifdo(**{"image-set-name": "  My Set  "}))
         self.assertEqual(payload["name"], "My Set")
@@ -47,7 +47,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_image_set_to_serializer_payload(self._base_ifdo(**{"image-set-name": 123}))
         self.assertIn("must be a string", str(ctx2.exception))
 
-    def test_imageset_converts_numbers_and_drops_none_keys(self):
+    def test_imageset_converts_numbers_and_drops_none_keys(self) -> None:
         """Float/int-like strings should be converted; None values should be dropped."""
         ifdo = self._base_ifdo(
             **{
@@ -65,7 +65,7 @@ class TestDataSubsMapping(TestCase):
 
         self.assertNotIn("max_latitude_degrees", payload)
 
-    def test_imageset_conditional_keys_only_added_if_present(self):
+    def test_imageset_conditional_keys_only_added_if_present(self) -> None:
         """spatial/temporal/local_path keys are only considered if present in header."""
         ifdo = self._base_ifdo(
             **{
@@ -80,7 +80,7 @@ class TestDataSubsMapping(TestCase):
         self.assertNotIn("temporal_constraints", payload)
         self.assertNotIn("local_path", payload)
 
-    def test_imageset_named_uri_objects_string_and_dict(self):
+    def test_imageset_named_uri_objects_string_and_dict(self) -> None:
         """Named/URI fields accept string or dict{name, uri?}."""
         ifdo = self._base_ifdo(
             **{
@@ -92,14 +92,14 @@ class TestDataSubsMapping(TestCase):
         self.assertEqual(payload["project"], {"name": "Project X"})
         self.assertEqual(payload["platform"], {"name": "ROV", "uri": "https://example.com/rov"})
 
-    def test_imageset_named_uri_object_dict_requires_name(self):
+    def test_imageset_named_uri_object_dict_requires_name(self) -> None:
         """If dict is provided, name is required."""
         ifdo = self._base_ifdo(**{"image-project": {"uri": "https://example.com/p"}})
         with self.assertRaises(IFDOAdaptError) as ctx:
             adapt_ifdo_image_set_to_serializer_payload(ifdo)
         self.assertIn("ifdo.image-set-header.image-project.name must be a string", str(ctx.exception))
 
-    def test_imageset_creators_list_happy_path_and_errors(self):
+    def test_imageset_creators_list_happy_path_and_errors(self) -> None:
         """image-creators should become nested creators list; errors for bad types/blank items."""
         ifdo = self._base_ifdo(
             **{
@@ -125,7 +125,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_image_set_to_serializer_payload(ifdo_blank_item)
         self.assertIn(".name is required", str(ctx2.exception))
 
-    def test_imageset_related_materials_happy_path_and_errors(self):
+    def test_imageset_related_materials_happy_path_and_errors(self) -> None:
         """image-set-related-material becomes related_materials; validate types and required name."""
         ifdo = self._base_ifdo(
             **{
@@ -155,7 +155,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_image_set_to_serializer_payload(ifdo_bad_item)
         self.assertIn("must be an object or string", str(ctx3.exception))
 
-    def test_imageset_datetime_parsing_iso(self):
+    def test_imageset_datetime_parsing_iso(self) -> None:
         """Datetime should parse ISO via pandas and EXIF-like format via strptime."""
         ifdo_iso = self._base_ifdo(**{"image-set-start-datetime": "2024-01-02T03:04:05Z"})
         payload = adapt_ifdo_image_set_to_serializer_payload(ifdo_iso)
@@ -171,7 +171,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_image_set_to_serializer_payload(ifdo_bad)
         self.assertIn("Expected datetime-like value", str(ctx.exception))
 
-    def test_item_requires_filename(self):
+    def test_item_requires_filename(self) -> None:
         """image-filename is required and must be string."""
         with self.assertRaises(IFDOAdaptError) as ctx:
             adapt_ifdo_item_to_image_serializer_payload({"image-filename": "   "}, image_set_id=1)
@@ -181,7 +181,7 @@ class TestDataSubsMapping(TestCase):
             adapt_ifdo_item_to_image_serializer_payload({"image-filename": 123}, image_set_id=1)
         self.assertIn("must be a string", str(ctx2.exception))
 
-    def test_item_basic_fields_and_drop_none(self):
+    def test_item_basic_fields_and_drop_none(self) -> None:
         """Item adapter should convert types and drop None keys."""
         item = {
             "image-filename": "a.jpg",
@@ -205,7 +205,7 @@ class TestDataSubsMapping(TestCase):
 
         self.assertNotIn("longitude", payload)
 
-    def test_item_type_validation_errors(self):
+    def test_item_type_validation_errors(self) -> None:
         """List/dict/int/float validators should raise IFDOAdaptError on bad types."""
         with self.assertRaises(IFDOAdaptError) as ctx_list:
             adapt_ifdo_item_to_image_serializer_payload(
@@ -235,7 +235,7 @@ class TestDataSubsMapping(TestCase):
             )
         self.assertIn("Expected a float-like value", str(ctx_float.exception))
 
-    def test_item_named_uri_and_creator_fallback(self):
+    def test_item_named_uri_and_creator_fallback(self) -> None:
         """Item adapter should map named/uri objects and prefer image-annotation-creators over image-creators."""
         item = {
             "image-filename": "a.jpg",
@@ -250,7 +250,7 @@ class TestDataSubsMapping(TestCase):
         self.assertEqual(payload["creators"], [{"name": "Ann", "uri": "https://example.com/a"}])
         self.assertEqual(payload["camera_pose"], {"name": "Pose 1"})
 
-    def test_item_maybe_string(self):
+    def test_item_maybe_string(self) -> None:
         """Fields that can be string or dict should be handled correctly, and dicts should require a name."""
         item = {
             "image-filename": "a.jpg",
@@ -260,7 +260,7 @@ class TestDataSubsMapping(TestCase):
 
         self.assertEqual(payload["copyright"], "111111")
 
-    def test_imageset_datetime_accepts_datetime_instance(self):
+    def test_imageset_datetime_accepts_datetime_instance(self) -> None:
         """A datetime instance should be returned unchanged by the adapter."""
         dt = datetime(2024, 1, 2, 3, 4, 5)
 
@@ -268,7 +268,7 @@ class TestDataSubsMapping(TestCase):
 
         self.assertIs(payload["date_time"], dt)
 
-    def test_imageset_named_uri_object_rejects_invalid_type(self):
+    def test_imageset_named_uri_object_rejects_invalid_type(self) -> None:
         """Named/URI fields should reject non-string, non-dict values."""
         ifdo = self._base_ifdo(**{"image-project": 123})
 

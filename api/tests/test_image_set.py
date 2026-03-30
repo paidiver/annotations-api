@@ -1,5 +1,7 @@
 """Tests for ImageSetViewSet."""
 
+import uuid
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -10,7 +12,7 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class ImageSetViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for ImageSetViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
         self.creators_payload = [
@@ -24,15 +26,15 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
 
         self.project_payload = {"name": "Project 1", "uri": "https://example.com/project1"}
 
-    def list_url(self):
+    def list_url(self) -> str:
         """Helper to get the list URL for ImageSetViewSet."""
         return reverse("image_set-list")
 
-    def detail_url(self, pk):
+    def detail_url(self, pk: uuid) -> str:
         """Helper to get the detail URL for a specific ImageSet."""
         return reverse("image_set-detail", kwargs={"pk": pk})
 
-    def test_list_image_sets(self):
+    def test_list_image_sets(self) -> None:
         """Test listing ImageSets."""
         ImageSet.objects.create(name="Set A")
         ImageSet.objects.create(name="Set B")
@@ -47,7 +49,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         names = sorted([item["name"] for item in data["results"]])
         self.assertEqual(names, ["Set A", "Set B"])
 
-    def test_retrieve_image_set(self):
+    def test_retrieve_image_set(self) -> None:
         """Test retrieving a specific ImageSet."""
         image_set = ImageSet.objects.create(name="Set A")
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
@@ -58,7 +60,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.data["name"], "Set A")
         self.assertEqual(image_set.__str__(), "Set A")
 
-    def test_create_image_set_with_nested_creators_and_materials(self):
+    def test_create_image_set_with_nested_creators_and_materials(self) -> None:
         """Test creating an ImageSet with nested creators and related materials."""
         payload = {
             "name": "Created Set",
@@ -88,7 +90,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         # limits is computed in ImageSet.save() when bbox is present
         self.assertIsNotNone(image_set.limits)
 
-    def test_create_image_set_with_an_existing_creator_and_project(self):
+    def test_create_image_set_with_an_existing_creator_and_project(self) -> None:
         """Test creating an ImageSet with an existing creator and project by ID."""
         existing_project = Project.objects.create(**self.project_payload)
         existing_creator = Creator.objects.create(**self.creators_payload[0])
@@ -115,7 +117,31 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image_set.project.pk, existing_project.pk)
         self.assertEqual(image_set.creators.first().pk, existing_creator.pk)
 
-    def test_create_image_set_rejects_geom(self):
+    def test_create_image_set_with_an_wrong_creator_and_project(self) -> None:
+        """Test creating an ImageSet with an existing creator and project by ID."""
+        Project.objects.create(**self.project_payload)
+        Creator.objects.create(**self.creators_payload[0])
+        wrong_creator_payload = {**self.creators_payload[0], "uri": "https://example.com/people/wrong"}
+        wrong_project_payload = {**self.project_payload, "uri": "https://example.com/wrong-project"}
+
+        payload = {
+            "name": "Created Set",
+            "related_materials": [],
+            "min_latitude_degrees": -10.0,
+            "max_latitude_degrees": 10.0,
+            "min_longitude_degrees": 20.0,
+            "max_longitude_degrees": 30.0,
+        }
+
+        resp = self.client.post(self.list_url(), {**payload, "project": wrong_project_payload}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("uri", resp.data)
+
+        resp = self.client.post(self.list_url(), {**payload, "creators": [wrong_creator_payload]}, format="json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("uri", resp.data)
+
+    def test_create_image_set_rejects_geom(self) -> None:
         """Test that creating an ImageSet with a geom field is rejected, since geom is computed server-side."""
         payload = {
             "name": "Bad Set",
@@ -125,7 +151,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("geom", resp.data)
 
-    def test_create_image_set_rejects_object_and_id_together(self):
+    def test_create_image_set_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
         existing = Project.objects.create(name="Existing Project", uri="https://example.com/existing")
 
@@ -138,7 +164,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("project", resp.data)
 
-    def test_create_image_set_rejects_object_and_id_together_list(self):
+    def test_create_image_set_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
         existing = Creator.objects.create(name="Existing Creator", uri="https://example.com/existing")
 
@@ -151,7 +177,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("creators", resp.data)
 
-    def test_create_image_set_with_existing_ids(self):
+    def test_create_image_set_with_existing_ids(self) -> None:
         """Test creating an ImageSet with existing creator and related material IDs."""
         c1 = Creator.objects.create(name="Existing Creator 1", uri="https://example.com/c1")
         m1 = RelatedMaterial.objects.create(uri="https://example.com/m1", title="M1")
@@ -173,7 +199,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image_set.related_materials.first().pk, m1.pk)
         self.assertEqual(image_set.project.pk, p1.pk)
 
-    def test_patch_image_set_replaces_one2m_with_nested_objects(self):
+    def test_patch_image_set_replaces_one2m_with_nested_objects(self) -> None:
         """Test that PATCHing an ImageSet with nested creators and related materials replaces the M2M relationships."""
         image_set = ImageSet.objects.create(name="Original")
         old_project = Project.objects.create(name="Old Project", uri="https://example.com/old")
@@ -192,7 +218,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image_set.project.name, "New Project")
         self.assertEqual(image_set.project.uri, "https://example.com/new")
 
-    def test_patch_image_set_replaces_m2m_with_nested_objects(self):
+    def test_patch_image_set_replaces_m2m_with_nested_objects(self) -> None:
         """Test that PATCHing an ImageSet with nested creators and related materials replaces the M2M relationships."""
         image_set = ImageSet.objects.create(name="Original")
         old_creator = Creator.objects.create(name="Old Creator", uri="https://example.com/old")
@@ -217,7 +243,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image_set.creators.first().name, "New Creator")
         self.assertEqual(image_set.related_materials.first().uri, "https://example.com/new-m")
 
-    def test_patch_image_set_rejects_min_max_lat_lon(self):
+    def test_patch_image_set_rejects_min_max_lat_lon(self) -> None:
         """Test that PATCHing an ImageSet with invalid min/max latitude values is rejected."""
         image_set = ImageSet.objects.create(name="Original")
 
@@ -237,7 +263,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("min_longitude_degrees", resp.data)
 
-    def test_delete_image_set(self):
+    def test_delete_image_set(self) -> None:
         """Test deleting an ImageSet."""
         image_set = ImageSet.objects.create(name="To Delete")
 
@@ -245,7 +271,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(ImageSet.objects.filter(pk=image_set.pk).exists())
 
-    def test_anonymous_user_cannot_create_image_set(self):
+    def test_anonymous_user_cannot_create_image_set(self) -> None:
         """Test that an ImageSet  can't be created by an anonymous user."""
         payload = {
             "name": "Created Set via IDs",

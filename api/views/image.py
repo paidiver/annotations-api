@@ -16,7 +16,7 @@ class ImageViewSet(viewsets.ModelViewSet):
     serializer_class = ImageSerializer
 
     @transaction.atomic
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: ImageSerializer) -> None:
         """Override perform_create to handle nested creation of related objects.
 
         This method is wrapped in a transaction to ensure atomicity. If any part of the creation process fails (e.g.,
@@ -29,7 +29,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         serializer.save()
 
     @transaction.atomic
-    def perform_update(self, serializer):
+    def perform_update(self, serializer: ImageSerializer) -> None:
         """Override perform_update to handle nested updates of related objects.
 
         This method is wrapped in a transaction to ensure atomicity. If any part of the update process fails (e.g.,

@@ -53,7 +53,7 @@ class AnnotationFactory(DjangoModelFactory):
     annotation_set = None
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs):
+    def _create(cls, model_class: type[Annotation], *args, **kwargs) -> Annotation:
         image = kwargs.pop("image", None)
         image_id = kwargs.pop("image_id", None)
         annotation_set = kwargs.pop("annotation_set", None)
@@ -99,7 +99,7 @@ class AnnotationLabelFactory(DjangoModelFactory):
     annotator = None
 
     @classmethod
-    def _create(cls, model_class, *args, **kwargs):
+    def _create(cls, model_class: type[AnnotationLabel], *args, **kwargs) -> AnnotationLabel:
         """Override creation to handle label/annotation/annotator logic and uniqueness constraints.
 
         Args:

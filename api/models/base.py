@@ -20,7 +20,7 @@ class DefaultColumns(models.Model):
         abstract = True
 
 
-def enum_choices(py_enum: type[enum.Enum]):
+def enum_choices(py_enum: type[enum.Enum]) -> list[tuple]:
     """Convert a Python Enum into Django choices.
 
     Args:
@@ -30,6 +30,31 @@ def enum_choices(py_enum: type[enum.Enum]):
         A list of tuples suitable for Django model field 'choices' parameter.
     """
     return [(e.value, e.name) for e in py_enum]
+
+
+class AliasedShapesEnumField(models.CharField):
+    """CharField that allows additional values to be mapped to the iFDO schema fields for annotation shape."""
+
+    SHAPE_ALIASES = {
+        "point": "single-pixel",
+        "line": "polyline",
+        "bounding box": "rectangle",
+        "bounding_box": "rectangle",
+        "bounding-box": "rectangle",
+        "whole_image": "whole-image",
+    }
+
+    def normaliseAnnotationShapeValue(self, value: str) -> str:
+        """Process shape value by converting to lower case and returning a mapped ShapeEnum value for aliases."""
+        if not isinstance(value, str):
+            return value
+        # Check aliases first
+        remapped = self.SHAPE_ALIASES.get(value.lower(), value)
+        return remapped.lower()
+
+    def to_python(self, value: str) -> str:
+        """Override Django to_python method to run value through normalise function first."""
+        return super().to_python(self.normaliseAnnotationShapeValue(value))
 
 
 class CaseInsensitiveEnum(str, enum.Enum):
