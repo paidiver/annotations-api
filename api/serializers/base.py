@@ -1,6 +1,6 @@
 """Base serializers for the API."""
 
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from attr import dataclass
 from django.db import IntegrityError, transaction
@@ -137,7 +137,7 @@ class StrictPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         "invalid": "Expected an integer id.",
     }
 
-    def to_internal_value(self, data: Any) -> Any:
+    def to_internal_value(self, data):  # noqa: ANN001, ANN201
         """Reject dict/object payloads and only accept PK values."""
         if isinstance(data, dict):
             self.fail("invalid")
@@ -173,7 +173,7 @@ class CreateOnlyRelatedField(serializers.Field):
         super().__init__(**kwargs)
         self.create_serializer_class = create_serializer_class
 
-    def to_internal_value(self, data: Any) -> DeferredCreate:
+    def to_internal_value(self, data) -> DeferredCreate:  # noqa: ANN001
         """Create the related object using the provided serializer."""
         if not isinstance(data, dict):
             self.fail("invalid")
@@ -188,7 +188,7 @@ class CreateOnlyRelatedField(serializers.Field):
             validated_data=ser.validated_data,
         )
 
-    def to_representation(self, value: Any) -> None:
+    def to_representation(self, value) -> None:  # noqa: ANN001
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
 
@@ -209,7 +209,7 @@ class CreateOnlyRelatedListField(serializers.Field):
         super().__init__(**kwargs)
         self.create_serializer_class = create_serializer_class
 
-    def to_internal_value(self, data: Any) -> list:
+    def to_internal_value(self, data) -> list:  # noqa: ANN001
         """Create the related object using the provided serializer."""
         if not isinstance(data, list):
             self.fail("invalid")
@@ -244,7 +244,7 @@ class CreateOnlyRelatedListField(serializers.Field):
 
         return deferred
 
-    def to_representation(self, value: Any) -> None:
+    def to_representation(self, value) -> None:  # noqa: ANN001
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
 
