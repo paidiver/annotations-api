@@ -342,7 +342,7 @@ class ImageSetSerializer(BaseSerializer):
             "related_materials",
         ]
 
-    def validate(self, attrs) -> dict:
+    def validate(self, attrs: dict) -> dict:
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
 
         Args:
@@ -370,7 +370,7 @@ class ImageSetSerializer(BaseSerializer):
 
         return attrs
 
-    def _validate_min_max_lat_lon(self, attrs, errors):
+    def _validate_min_max_lat_lon(self, attrs: dict, errors: dict) -> dict:
         """Validate that min_latitude <= max_latitude and min_longitude <= max_longitude.
 
         Args:
@@ -381,7 +381,7 @@ class ImageSetSerializer(BaseSerializer):
             The updated errors dictionary with any new errors added.
         """
 
-        def get_val(name):
+        def get_val(name: str) -> str | None:
             if name in attrs:
                 return attrs.get(name)
             if self.instance is not None:
@@ -403,7 +403,7 @@ class ImageSetSerializer(BaseSerializer):
         return errors
 
     @transaction.atomic
-    def create(self, validated_data) -> ImageSet:
+    def create(self, validated_data: dict) -> ImageSet:
         """Override create to handle nested creation of related objects and setting M2M relationships.
 
         Args:
@@ -428,7 +428,7 @@ class ImageSetSerializer(BaseSerializer):
         return instance
 
     @transaction.atomic
-    def update(self, instance, validated_data) -> ImageSet:
+    def update(self, instance: ImageSet, validated_data: dict) -> ImageSet:
         """Override update to handle nested updates of related objects and setting M2M relationships.
 
         Args:

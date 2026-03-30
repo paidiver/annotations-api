@@ -13,13 +13,13 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class IngestIFDOViewTests(AuthenticatedAPITestCase):
     """Integration tests for ingest_ifdo_image_set endpoint."""
 
-    def ingest_url(self):
+    def ingest_url(self) -> str:
         """Helper to get the ingest URL."""
         return "/api/ingest/image-set"
 
     @patch("api.views.ingest_imagery.adapt_ifdo_item_to_image_serializer_payload")
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")
-    def test_ingest_ifdo_success_creates_imageset_and_images(self, mock_adapt_set: Mock, mock_adapt_item: Mock):
+    def test_ingest_ifdo_success_creates_imageset_and_images(self, mock_adapt_set: Mock, mock_adapt_item: Mock) -> None:
         """POST should create ImageSet and Images and return 201.
 
         Args:
@@ -55,7 +55,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         mock_adapt_set.assert_called_once()
         self.assertEqual(mock_adapt_item.call_count, 2)
 
-    def test_ingest_ifdo_with_image_set_uuid_success_creates_imageset_and_images(self):
+    def test_ingest_ifdo_with_image_set_uuid_success_creates_imageset_and_images(self) -> None:
         """POST should create ImageSet and Images and return 201, even if image_set_uuid is provided.
 
         It should be used to be the id of the created ImageSet).
@@ -83,7 +83,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         filenames = sorted(Image.objects.filter(image_set=image_set).values_list("filename", flat=True))
         self.assertEqual(filenames, ["a.jpg", "b.jpg"])
 
-    def test_ingest_ifdo_with_image_set_uuid_already_exists_error(self):
+    def test_ingest_ifdo_with_image_set_uuid_already_exists_error(self) -> None:
         """POST should return an error if the provided image_set_uuid already exists."""
         image_set = ImageSet.objects.create(name="Existing Set")
 
@@ -99,7 +99,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(str(image_set.id), resp.data["detail"])
 
-    def test_ingest_ifdo_with_image_uuid_success_creates_imageset_and_images(self):
+    def test_ingest_ifdo_with_image_uuid_success_creates_imageset_and_images(self) -> None:
         """POST should create ImageSet and Images and return 201, even if image_set_uuid is provided.
 
         It should be used to be the id of the created ImageSet.
@@ -133,7 +133,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertIn(str(uuids[0]), [uuid_image_str1, uuid_image_str2])
         self.assertIn(str(uuids[1]), [uuid_image_str1, uuid_image_str2])
 
-    def test_ingest_ifdo_with_image_uuid_already_exists_error(self):
+    def test_ingest_ifdo_with_image_uuid_already_exists_error(self) -> None:
         """POST should return an error if the provided image_uuid already exists."""
         image_set = ImageSet.objects.create(name="Existing Set")
         image = Image.objects.create(image_set=image_set, filename="existing.jpg")
@@ -154,20 +154,20 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertIn("items", resp.data)
         self.assertIn(str(image.id), resp.data["items"]["1"]["detail"])
 
-    def test_ingest_ifdo_missing_ifdo_returns_400(self):
+    def test_ingest_ifdo_missing_ifdo_returns_400(self) -> None:
         """POST without ifdo object should return 400."""
         resp = self.client.post(self.ingest_url(), {"submission_id": "sub-123"}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(resp.data["detail"], "Missing or invalid 'ifdo' object")
 
-    def test_ingest_ifdo_ifdo_not_dict_returns_400(self):
+    def test_ingest_ifdo_ifdo_not_dict_returns_400(self) -> None:
         """POST with non-dict ifdo should return 400."""
         resp = self.client.post(self.ingest_url(), {"ifdo": "nope"}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(resp.data["detail"], "Missing or invalid 'ifdo' object")
 
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")
-    def test_ingest_ifdo_adapter_error_on_imageset_returns_400(self, mock_adapt_set: Mock):
+    def test_ingest_ifdo_adapter_error_on_imageset_returns_400(self, mock_adapt_set: Mock) -> None:
         """If ImageSet adapter raises IFDOAdaptError, return 400.
 
         Args:
@@ -179,7 +179,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(resp.data["detail"], "bad header")
 
-    def test_ingest_ifdo_items_not_list_returns_400(self):
+    def test_ingest_ifdo_items_not_list_returns_400(self) -> None:
         """ifdo.image-set-items must be a list."""
         resp = self.client.post(
             self.ingest_url(),
@@ -190,7 +190,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.data["detail"], "ifdo.image-set-items must be a list")
 
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")
-    def test_ingest_ifdo_imageset_serializer_invalid_returns_400(self, mock_adapt_set: Mock):
+    def test_ingest_ifdo_imageset_serializer_invalid_returns_400(self, mock_adapt_set: Mock) -> None:
         """If ImageSetSerializer fails validation, return 400 with image_set errors.
 
         Args:
@@ -210,7 +210,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
     @patch("api.views.ingest_imagery.adapt_ifdo_item_to_image_serializer_payload")
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")
-    def test_ingest_ifdo_item_errors_roll_back_everything(self, mock_adapt_set: Mock, mock_adapt_item: Mock):
+    def test_ingest_ifdo_item_errors_roll_back_everything(self, mock_adapt_set: Mock, mock_adapt_item: Mock) -> None:
         """If any item fails, view should return 400 and rollback ImageSet + Images.
 
         Args:
@@ -241,7 +241,9 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
     @patch("api.views.ingest_imagery.adapt_ifdo_item_to_image_serializer_payload")
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")
-    def test_ingest_ifdo_non_dict_item_is_reported_and_rolls_back(self, mock_adapt_set: Mock, mock_adapt_item: Mock):
+    def test_ingest_ifdo_non_dict_item_is_reported_and_rolls_back(
+        self, mock_adapt_set: Mock, mock_adapt_item: Mock
+    ) -> None:
         """Non-dict items should be reported and cause rollback.
 
         Args:
@@ -266,7 +268,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         self.assertEqual(ImageSet.objects.count(), 0)
         self.assertEqual(Image.objects.count(), 0)
 
-    def test_anonymous_user_cannot_ingest_ifdo(self):
+    def test_anonymous_user_cannot_ingest_ifdo(self) -> None:
         """Test that an anonymous user can't create ImageSet and Images ."""
         payload = {
             "submission_id": "sub-123",

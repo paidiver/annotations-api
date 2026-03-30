@@ -8,6 +8,7 @@ from django.db import IntegrityError, transaction
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from api.ingest.data_subs_mapping import (
@@ -43,7 +44,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     responses={201: IngestIFDOResponseSerializer, 400: serializers.DictField(), 502: serializers.DictField()},
 )
 @api_view(["POST"])
-def ingest_ifdo_image_set(request) -> Response:  # noqa: C901, PLR0911
+def ingest_ifdo_image_set(request: Request) -> Response:
     """Ingest an iFDO image set payload, creating ImageSet and related Images."""
     body: dict[str, Any] = request.data if isinstance(request.data, dict) else {}
 
