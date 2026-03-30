@@ -1,6 +1,9 @@
 """Custom schema extensions for drf-spectacular to document custom serializer fields."""
 
+from typing import Any
+
 from drf_spectacular.extensions import OpenApiSerializerFieldExtension
+from drf_spectacular.openapi import AutoSchema
 
 FALLBACK_OBJECT_SCHEMA = {"type": "object", "additionalProperties": True}
 
@@ -10,7 +13,7 @@ class CreateOnlyRelatedFieldExtension(OpenApiSerializerFieldExtension):
 
     target_class = "api.serializers.base.CreateOnlyRelatedField"
 
-    def map_serializer_field(self, auto_schema, direction):
+    def map_serializer_field(self, auto_schema: AutoSchema, direction: str) -> dict[str, Any]:
         """This extension maps CreateOnlyRelatedField to the schema of the serializer used for creation.
 
         This allows the API documentation to show the expected fields for creating related objects, rather than just
@@ -39,7 +42,7 @@ class CreateOnlyRelatedListFieldExtension(OpenApiSerializerFieldExtension):
 
     target_class = "api.serializers.base.CreateOnlyRelatedListField"
 
-    def map_serializer_field(self, auto_schema, direction):
+    def map_serializer_field(self, auto_schema: AutoSchema, direction: str) -> dict[str, Any]:
         """This extension maps CreateOnlyRelatedListField to the schema of the serializer used for creation.
 
         This allows the API documentation to show the expected fields for creating related objects, rather than just

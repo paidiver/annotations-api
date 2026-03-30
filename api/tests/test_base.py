@@ -8,7 +8,7 @@ from rest_framework.test import APITestCase
 class HealthTests(APITestCase):
     """Integration tests for LabelViewSet endpoints."""
 
-    def test_health_endpoint(self):
+    def test_health_endpoint(self) -> None:
         """Test the health endpoint."""
         resp = self.client.get(reverse("Health"))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

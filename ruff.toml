@@ -50,6 +50,9 @@ select = [
     "W",
     "C",
     "W391", # too-many-newlines-at-end-of-file
+    "ANN001", # missing-type-function-argument
+    "ANN201", # missing-return-type-undocumented-public-function
+    "ANN202", # missing-return-type-private-function
 ]
 preview = true
 explicit-preview-rules = true

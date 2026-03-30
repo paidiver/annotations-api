@@ -192,7 +192,7 @@ class Image(DefaultColumns, CommonFieldsAll, CommonFieldsImagesImageSets):
             models.Index(fields=["marine_zone"], name="images_marine_zone_idx"),
         ]
 
-    def save(self, *args, **kwargs):  # noqa: D102
+    def save(self, *args, **kwargs) -> None:  # noqa: D102
         if self.latitude is not None and self.longitude is not None:
             self.geom = Point(self.longitude, self.latitude, srid=4326)
         super().save(*args, **kwargs)

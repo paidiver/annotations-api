@@ -16,7 +16,7 @@ APHIA_IDS_TO_RETURN = [10, 20, 30, 40]
 class CachedWoRMSClientTests(SimpleTestCase):
     """Tests for CachedWoRMSClient using mocked requests.Session."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up a CachedWoRMSClient instance for testing."""
         self.client = CachedWoRMSClient(base_url="https://worms.example")
 
@@ -38,7 +38,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         cm.__exit__.return_value = None
         return cm, session
 
-    def test_session_creates_session_with_retries(self):
+    def test_session_creates_session_with_retries(self) -> None:
         """Test that _session() creates a requests Session with the expected retry configuration."""
         session = self.client._session()
 
@@ -51,7 +51,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         self.assertEqual(adapter.max_retries.status_forcelist, (429, 500, 502, 503, 504))
         self.assertEqual(adapter.max_retries.allowed_methods, ("GET",))
 
-    def test_get_returns_json_for_200(self):
+    def test_get_returns_json_for_200(self) -> None:
         """Test that _get() returns the JSON-decoded response for a successful 200 response from the WoRMS API."""
         response = MagicMock(name="response")
         response.status_code = 200
@@ -67,7 +67,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         session.get.assert_called_once_with("https://worms.example/example", timeout=20)
         response.raise_for_status.assert_called_once()
 
-    def test_get_returns_none_for_204(self):
+    def test_get_returns_none_for_204(self) -> None:
         """Test that _get() returns None for a 204 No Content response from the WoRMS API."""
         response = MagicMock(name="response")
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -81,7 +81,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         response.raise_for_status.assert_not_called()
         response.json.assert_not_called()
 
-    def test_get_raises_for_non_204_http_error(self):
+    def test_get_raises_for_non_204_http_error(self) -> None:
         """Test that _get() raises an HTTPError for a non-204 with an HTTP error status code from the WoRMS API."""
         response = MagicMock(name="response")
         response.status_code = 500
@@ -95,7 +95,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         session.get.assert_called_once()
         response.raise_for_status.assert_called_once()
 
-    def test_descendants_aphia_ids_builds_correct_path(self):
+    def test_descendants_aphia_ids_builds_correct_path(self) -> None:
         """Test that descendants_aphia_ids() builds the correct API path and returns the expected result."""
         with patch.object(CachedWoRMSClient, "_get", return_value=APHIA_IDS_TO_RETURN) as mock_get:
             out = self.client.descendants_aphia_ids([1, 2])
@@ -103,7 +103,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         self.assertEqual(out, APHIA_IDS_TO_RETURN)
         mock_get.assert_called_once_with("/taxa/ids_with_descendants/?aphia_ids[]=1&aphia_ids[]=2")
 
-    def test_aphia_ids_by_name_part_builds_correct_path(self):
+    def test_aphia_ids_by_name_part_builds_correct_path(self) -> None:
         """Test that aphia_ids_by_name_part() builds the correct API path and returns the expected result."""
         with patch.object(CachedWoRMSClient, "_get", return_value=APHIA_IDS_TO_RETURN) as mock_get:
             out = self.client.aphia_ids_by_name_part("example")
@@ -111,7 +111,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
         self.assertEqual(out, APHIA_IDS_TO_RETURN)
         mock_get.assert_called_once_with("/taxa/ajax_by_name_part/only_ids/example/?combine_vernaculars=false")
 
-    def test_post_returns_response(self):
+    def test_post_returns_response(self) -> None:
         """Test that _post() returns None for a 204 No Content response from the WoRMS API."""
         response = MagicMock(name="response")
         response.status_code = status.HTTP_204_NO_CONTENT
@@ -128,7 +128,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
             timeout=20,
         )
 
-    def test_ingest_aphia_id_builds_correct_path(self):
+    def test_ingest_aphia_id_builds_correct_path(self) -> None:
         """Test that ingest_aphia_id() builds the correct API path and returns the expected result."""
         return_value = [{"AphiaID": aphia_id} for aphia_id in APHIA_IDS_TO_RETURN]
         with patch.object(CachedWoRMSClient, "_post", return_value=return_value) as mock_post:

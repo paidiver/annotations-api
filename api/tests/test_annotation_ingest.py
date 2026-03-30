@@ -14,7 +14,7 @@ from api.utils.annotations_ingest import (
 )
 
 
-def make_annotation_set_data(**overrides):
+def make_annotation_set_data(**overrides) -> dict:
     """Helper function to create input data for annotation set."""
     base = {
         "annotation-set-name": "Test Set",
@@ -37,7 +37,7 @@ def make_annotation_set_data(**overrides):
     return base
 
 
-def make_annotation_entry(**overrides):
+def make_annotation_entry(**overrides) -> dict:
     """Helper function to create input data for new annotation."""
     base = {
         "image_id": str(uuid.uuid4()),
@@ -54,7 +54,7 @@ def make_annotation_entry(**overrides):
     return base
 
 
-def make_label_list():
+def make_label_list() -> list[dict]:
     """Helper function to create input data for labels."""
     return [
         {"name": "fish"},
@@ -65,7 +65,7 @@ def make_label_list():
 class InsertAnnotationsSetTests(TestCase):
     """Tests for inserting annotation sets from file upload."""
 
-    def _mock_serializer(self, saved_data: dict, annotation_set_inst: Mock):
+    def _mock_serializer(self, saved_data: dict, annotation_set_inst: Mock) -> MagicMock:
         """Return a mock AnnotationSetSerializer."""
         mock_serializer = MagicMock()
         mock_serializer.is_valid.return_value = True
@@ -74,7 +74,7 @@ class InsertAnnotationsSetTests(TestCase):
         return mock_serializer
 
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_basic_insert_returns_serializer_data(self, mock_serializer: Mock):
+    def test_basic_insert_returns_serializer_data(self, mock_serializer: Mock) -> None:
         """Test that annotation set data is passed to serializer."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -90,7 +90,7 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.Creator")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_creators_are_added(self, mock_serializer: Mock, mock_get_creator: Mock):
+    def test_creators_are_added(self, mock_serializer: Mock, mock_get_creator: Mock) -> None:
         """Test that new creators for annotation set are inserted."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -113,7 +113,7 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.Creator")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_creators_with_fewer_uris_than_names(self, mock_serializer: Mock, mock_creator: Mock):
+    def test_creators_with_fewer_uris_than_names(self, mock_serializer: Mock, mock_creator: Mock) -> None:
         """Test that missing creator URIs are filled with None."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -134,7 +134,7 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_image_set_resolved_by_uuid(self, mock_serializer: Mock, mock_get_image_set: Mock):
+    def test_image_set_resolved_by_uuid(self, mock_serializer: Mock, mock_get_image_set: Mock) -> None:
         """Test that image set for annotation set is retrieved by UUID."""
         image_set_id = uuid.uuid4()
         annotation_set_inst = MagicMock()
@@ -157,7 +157,9 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_image_set_resolved_by_name_when_uuid_missing(self, mock_serializer: Mock, mock_get_image_set: Mock):
+    def test_image_set_resolved_by_name_when_uuid_missing(
+        self, mock_serializer: Mock, mock_get_image_set: Mock
+    ) -> None:
         """Test that image set for annotation set is retrieved by name if no UUID given."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -182,7 +184,9 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_raises_when_image_set_uuid_and_name_mismatch(self, mock_serializer: Mock, mock_get_image_set: Mock):
+    def test_raises_when_image_set_uuid_and_name_mismatch(
+        self, mock_serializer: Mock, mock_get_image_set: Mock
+    ) -> None:
         """Test that a ValueError is found if image set name matches a different UUID than what is given."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -211,7 +215,7 @@ class InsertAnnotationsSetTests(TestCase):
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
-    def test_raises_when_image_set_not_found(self, mock_serializer: Mock, mock_get_image_set: Mock):
+    def test_raises_when_image_set_not_found(self, mock_serializer: Mock, mock_get_image_set: Mock) -> None:
         """Test that a ValueError is raised when given image set is not found."""
         annotation_set_inst = MagicMock()
         annotation_set_inst.id = uuid.uuid4()
@@ -235,7 +239,7 @@ class InsertLabelDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_inserts_new_labels(self, mock_get_label: Mock, mock_label_serializer: Mock):
+    def test_inserts_new_labels(self, mock_get_label: Mock, mock_label_serializer: Mock) -> None:
         """Test that new labels for the annotation set are created in DB."""
         annotation_set_id = uuid.uuid4()
         mock_get_label.objects.filter.return_value.first.return_value = None  # no existing labels
@@ -253,7 +257,7 @@ class InsertLabelDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_skips_existing_labels(self, mock_get_label: Mock, mock_label_serializer: Mock):
+    def test_skips_existing_labels(self, mock_get_label: Mock, mock_label_serializer: Mock) -> None:
         """Test that existing labels for the annotation set are not recreated."""
         annotation_set_id = uuid.uuid4()
         # Simulate all labels already existing
@@ -266,7 +270,7 @@ class InsertLabelDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.LabelSerializer")
     @patch("api.utils.annotations_ingest.Label")
-    def test_partial_existing_labels_only_inserts_new(self, mock_get_label: Mock, mock_label_serializer: Mock):
+    def test_partial_existing_labels_only_inserts_new(self, mock_get_label: Mock, mock_label_serializer: Mock) -> None:
         """Test that only required new labels are created for the annotation set if some exist."""
         annotation_set_id = uuid.uuid4()
 
@@ -299,7 +303,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_annotation_serializer: Mock,
         mock_annotation_label_serializer: Mock,
         mock_annotator_serializer: Mock,
-    ):
+    ) -> tuple[Mock, Mock, Mock]:
         """Set up mocks for required objects to insert annotation data."""
         image_id = uuid.uuid4()
         label_id = uuid.uuid4()
@@ -350,7 +354,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_annotation_serializer: Mock,
         mock_annotation_label_serializer: Mock,
         mock_annotator_serializer: Mock,
-    ):
+    ) -> None:
         """Test that annotation data can be inserted successfully."""
         self._setup_mocks(
             mock_get_image,
@@ -367,7 +371,7 @@ class InsertAnnotationsDataTests(TestCase):
         self.assertEqual(result["created"], 5)
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_image_not_found(self, mock_get_image: Mock):
+    def test_raises_when_image_not_found(self, mock_get_image: Mock) -> None:
         """Test that a ValueError is raised when an image within the annotation data isn't found."""
         mock_get_image.objects.filter.return_value.first.return_value = None
         annotation_set_id = uuid.uuid4()
@@ -378,7 +382,7 @@ class InsertAnnotationsDataTests(TestCase):
         self.assertIn("Image not found", str(ctx.exception))
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_image_uuid_and_filename_conflict(self, mock_get_image: Mock):
+    def test_raises_when_image_uuid_and_filename_conflict(self, mock_get_image: Mock) -> None:
         """Test that a ValueError is raised when the image UUID and filename don't point to the same record."""
         conflicting_image = MagicMock()
         conflicting_image.id = uuid.uuid4()
@@ -391,7 +395,7 @@ class InsertAnnotationsDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.Label")
     @patch("api.utils.annotations_ingest.Image")
-    def test_raises_when_label_not_found(self, mock_get_image: Mock, mock_get_label: Mock):
+    def test_raises_when_label_not_found(self, mock_get_image: Mock, mock_get_label: Mock) -> None:
         """Test that a ValueError is raised when a label is not found for an annotation."""
         mock_image = MagicMock()
         mock_get_image.objects.filter.return_value.first.return_value = mock_image
@@ -417,7 +421,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_annotation_serializer: Mock,
         mock_annotation_label_serializer: Mock,
         mock_annotator_serializer: Mock,
-    ):
+    ) -> None:
         """Test that creation datetime for an annotation is parsed correctly."""
         self._setup_mocks(
             mock_get_image,
@@ -455,7 +459,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_annotation_serializer: Mock,
         mock_annotation_label_serializer: Mock,
         mock_annotator_serializer: Mock,
-    ):
+    ) -> None:
         """Test that creation datetime for an annotation falls back to now if input data can't be parsed."""
         self._setup_mocks(
             mock_get_image,
@@ -495,7 +499,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_annotation_serializer: Mock,
         mock_annotation_label_serializer: Mock,
         mock_annotator_serializer: Mock,
-    ):
+    ) -> None:
         """Test that a record is created for a new annotator."""
         self._setup_mocks(
             mock_get_image,
@@ -509,7 +513,7 @@ class InsertAnnotationsDataTests(TestCase):
         mock_get_annotator.objects.get_or_create.assert_called_once_with(name="NewGuy")
 
     @patch("api.utils.annotations_ingest.Image")
-    def test_error_message_includes_row_number(self, mock_get_image: Mock):
+    def test_error_message_includes_row_number(self, mock_get_image: Mock) -> None:
         """Test that row numbers in error messages are 1-indexed."""
         mock_get_image.objects.filter.return_value.first.return_value = None
 
@@ -525,7 +529,7 @@ class IngestAnnotationDataTests(TestCase):
     @patch("api.utils.annotations_ingest.insert_annotations_set")
     @patch("api.utils.annotations_ingest.insert_label_data")
     @patch("api.utils.annotations_ingest.insert_annotations_data")
-    def test_returns_combined_dict(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock):
+    def test_returns_combined_dict(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock) -> None:
         """Test that results of all three inserts are returned."""
         annotation_set_id = uuid.uuid4()
         mock_set.return_value = {"id": str(annotation_set_id), "name": "Test Set"}
@@ -548,7 +552,7 @@ class IngestAnnotationDataTests(TestCase):
     @patch("api.utils.annotations_ingest.insert_annotations_data")
     def test_annotation_set_id_forwarded_to_label_and_annotation_inserts(
         self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock
-    ):
+    ) -> None:
         """Test that newly created annotation set ID is passed to label and annotation data insert operations."""
         annotation_set_id = uuid.uuid4()
         mock_set.return_value = {"id": str(annotation_set_id)}
@@ -566,7 +570,7 @@ class IngestAnnotationDataTests(TestCase):
 
     @patch("api.utils.annotations_ingest.insert_annotations_set")
     @patch("api.utils.annotations_ingest.insert_label_data")
-    def test_transaction_rolls_back_on_failure(self, mock_labels: Mock, mock_set: Mock):
+    def test_transaction_rolls_back_on_failure(self, mock_labels: Mock, mock_set: Mock) -> None:
         """Test that transaction is rolled back if a sub-call raises."""
         mock_set.return_value = {"id": str(uuid.uuid4())}
         mock_labels.side_effect = ValueError("DB exploded")
@@ -581,7 +585,7 @@ class IngestAnnotationDataTests(TestCase):
     @patch("api.utils.annotations_ingest.insert_annotations_set")
     @patch("api.utils.annotations_ingest.insert_label_data")
     @patch("api.utils.annotations_ingest.insert_annotations_data")
-    def test_empty_inputs_do_not_raise(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock):
+    def test_empty_inputs_do_not_raise(self, mock_annos: Mock, mock_labels: Mock, mock_set: Mock) -> None:
         """Test that empty inputs do not raise a ValueError."""
         mock_set.return_value = {"id": str(uuid.uuid4())}
         mock_labels.return_value = []

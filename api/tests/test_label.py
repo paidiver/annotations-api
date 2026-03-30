@@ -17,7 +17,7 @@ from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 class LabelViewSetTests(AuthenticatedAPITestCase):
     """Integration tests for LabelViewSet endpoints."""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
@@ -30,15 +30,15 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         self.mocked_worms.return_value = Mock(status_code=200)
 
-    def list_url(self):
+    def list_url(self) -> str:
         """Helper to get the list URL for LabelViewSet."""
         return reverse("label-list")
 
-    def detail_url(self, pk):
+    def detail_url(self, pk: uuid) -> str:
         """Helper to get the detail URL for a specific Label."""
         return reverse("label-detail", kwargs={"pk": pk})
 
-    def test_create_label_rejects_invalid_lowest_aphia_id(self):
+    def test_create_label_rejects_invalid_lowest_aphia_id(self) -> None:
         """Test that creating a Label with an invalid lowest_aphia_id is rejected."""
         payload = {
             "name": "Label With Aphia",
@@ -67,7 +67,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
             ["Unable to validate lowest_aphia_id right now (status 500). Please try again later."],
         )
 
-    def test_create_label_rejects_timeout(self):
+    def test_create_label_rejects_timeout(self) -> None:
         """Test that creating a Label when the WoRMS API times out is rejected."""
         self.mocked_worms.side_effect = Timeout()
         payload = {
@@ -81,7 +81,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertIn("lowest_aphia_id", resp.data)
         self.assertIn(resp.data["lowest_aphia_id"][0], ["WoRMS API is currently unavailable. Please try again later."])
 
-    def test_create_label_rejects_different_error(self):
+    def test_create_label_rejects_different_error(self) -> None:
         """Test that creating a Label when the WoRMS API returns a different error is rejected."""
         self.mocked_worms.return_value = Mock(status_code=418)
         payload = {
@@ -100,7 +100,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         )
         self.assertEqual(str(resp.data["lowest_aphia_id"][0]), expected_msg)
 
-    def test_create_label_accepts_valid_lowest_aphia_id(self):
+    def test_create_label_accepts_valid_lowest_aphia_id(self) -> None:
         """Test that creating a Label with a valid lowest_aphia_id is accepted."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
@@ -114,7 +114,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-    def test_create_label_with_empty_aphia_id(self):
+    def test_create_label_with_empty_aphia_id(self) -> None:
         """Test that creating a Label with an empty lowest_aphia_id is accepted."""
         payload = {
             "name": "Valid Aphia Label",
@@ -125,7 +125,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
 
-    def test_list_labels(self):
+    def test_list_labels(self) -> None:
         """Test listing Labels."""
         Label.objects.create(
             name="Test Label",
@@ -151,7 +151,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         names = sorted([item["name"] for item in data["results"]])
         self.assertEqual(names, ["Another Label", "Test Label"])
 
-    def test_retrieve_label(self):
+    def test_retrieve_label(self) -> None:
         """Test retrieving a specific Label."""
         label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
@@ -160,7 +160,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.data["id"], str(label.pk))
         self.assertEqual(resp.data["name"], "Test Label")
 
-    def test_create_label_with_annotation_set_that_does_not_exist(self):
+    def test_create_label_with_annotation_set_that_does_not_exist(self) -> None:
         """Test that creating an Label with an annotation set that does not exist is rejected."""
         payload = {
             "name": "Test Label",
@@ -172,7 +172,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("annotation_set_id", resp.data)
 
-    def test_patch_label(self):
+    def test_patch_label(self) -> None:
         """Test that PATCHing an Label."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
@@ -188,7 +188,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         label.refresh_from_db()
         self.assertEqual(label.name, "Updated Label")
 
-    def test_delete_label(self):
+    def test_delete_label(self) -> None:
         """Test deleting an Label."""
         label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
 
@@ -196,7 +196,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Label.objects.filter(pk=label.pk).exists())
 
-    def test_validate_aphia_id_uses_context_cache(self):
+    def test_validate_aphia_id_uses_context_cache(self) -> None:
         """Test that the same aphia_id is only validated once per shared serializer context."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
@@ -225,7 +225,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.assertIn(12345, shared_context["aphia_validation_error_cache"])
         self.assertIsNone(shared_context["aphia_validation_error_cache"][12345])
 
-    def test_validate_aphia_id_caches_invalid_result(self):
+    def test_validate_aphia_id_caches_invalid_result(self) -> None:
         """Test that an invalid aphia_id result is cached and not requested twice."""
         self.mocked_worms.return_value = Mock(status_code=400)
 
@@ -250,7 +250,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
             "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
         )
 
-    def test_anonymous_user_cannot_patch_label(self):
+    def test_anonymous_user_cannot_patch_label(self) -> None:
         """Test that a Label can't be PATCHed by an anonymous user.."""
         label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12346")
         payload = {

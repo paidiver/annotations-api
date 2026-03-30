@@ -1,6 +1,7 @@
 """Management command to seed demo data for testing and development."""
 
 import random
+from argparse import ArgumentParser
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -32,7 +33,7 @@ class Command(BaseCommand):
         "- 100 annotation_labels (random)\n"
     )
 
-    def add_arguments(self, parser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         """Add command-line arguments for configurable seeding.
 
         Args:

@@ -1,5 +1,7 @@
 """Management command to create a new user with an API token."""
 
+from argparse import ArgumentParser
+
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -11,7 +13,7 @@ class Command(BaseCommand):
 
     help = "Create a new user. Returns the new user's API token."
 
-    def add_arguments(self, parser) -> None:
+    def add_arguments(self, parser: ArgumentParser) -> None:
         """Add command-line arguments for user options.
 
         Args:

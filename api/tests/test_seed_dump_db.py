@@ -23,7 +23,7 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         return reverse("debug-db-dump")
 
     @override_settings(DEBUG=True)
-    def test_debug_dump_returns_payload_when_debug_true(self):
+    def test_debug_dump_returns_payload_when_debug_true(self) -> None:
         """Test that the debug database dump endpoint returns data when DEBUG is True."""
         image_set = ImageSetFactory(
             with_relations=True, with_limits=True, creators=1, related_materials=1, with_camera_models=True
@@ -84,7 +84,7 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         self.assertGreaterEqual(len(data["annotation_labels"]), 1)
 
     @override_settings(DEBUG=False)
-    def test_debug_dump_returns_404_when_debug_false(self):
+    def test_debug_dump_returns_404_when_debug_false(self) -> None:
         """Test that the debug database dump endpoint returns 404 when DEBUG is False."""
         resp = self.client.get(self.url())
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
@@ -92,7 +92,7 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
 
     @override_settings(DEBUG=True)
     @patch("api.views.debug.tables_to_models_and_serializers", new={})
-    def test_debug_dump_with_no_tables_returns_empty_payload(self):
+    def test_debug_dump_with_no_tables_returns_empty_payload(self) -> None:
         """Test that the debug database dump endpoint returns an empty payload if no tables are configured."""
         resp = self.client.get(self.url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

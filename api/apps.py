@@ -8,6 +8,6 @@ class ApiConfig(AppConfig):
 
     name = "api"
 
-    def ready(self):
+    def ready(self) -> None:
         """Import signal handlers."""
         import api.schema  # noqa: F401
