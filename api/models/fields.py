@@ -18,10 +18,6 @@ class NamedURI(DefaultColumns):
 
         abstract = True
 
-    def __str__(self):
-        """String representation of the instance."""
-        return self.name
-
 
 class Creator(NamedURI):
     """The creator of the images, image_sets or annotation_sets."""
@@ -116,9 +112,6 @@ class RelatedMaterial(DefaultColumns):
 
     class Meta:  # noqa: D106
         db_table = "related_materials"
-
-    def __str__(self) -> str:  # noqa: D105
-        return self.title
 
 
 class ImageCameraPose(DefaultColumns):

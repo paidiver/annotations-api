@@ -393,3 +393,9 @@ class ImageSerializer(BaseSerializer):
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
 
         return instance
+
+
+class IngestImageSerializer(ImageSerializer):
+    """Serializer for ingesting Image data from iFDO payloads."""
+
+    id = serializers.UUIDField(required=False)
