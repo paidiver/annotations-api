@@ -44,7 +44,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     responses={201: IngestIFDOResponseSerializer, 400: serializers.DictField(), 502: serializers.DictField()},
 )
 @api_view(["POST"])
-def ingest_ifdo_image_set(request: Request) -> Response:
+def ingest_ifdo_image_set(request: Request) -> Response:  # noqa: C901, PLR0911
     """Ingest an iFDO image set payload, creating ImageSet and related Images."""
     body: dict[str, Any] = request.data if isinstance(request.data, dict) else {}
 
