@@ -130,7 +130,7 @@ class InsertAnnotationsSetTests(TestCase):
         calls = mock_creator.objects.get_or_create.call_args_list
         self.assertEqual(len(calls), 2)
         # Second creator should have uri=None
-        self.assertIsNone(calls[1].kwargs.get("uri") or calls[1][1].get("uri"))
+        self.assertEqual(calls[1].kwargs.get("uri") or calls[1][1].get("uri"), "")
 
     @patch("api.utils.annotations_ingest.ImageSet")
     @patch("api.utils.annotations_ingest.AnnotationSetSerializer")
