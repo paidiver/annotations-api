@@ -254,19 +254,29 @@ Follow the steps described in [Initialise PostGIS](#9-initialise-postgis) to fin
 ---
 ### 12. Initialise PostGIS
 
+
 PostGIS extends the capabilities of the PostgreSQL relational database by adding support for storing, indexing, and querying geospatial data. For further information, refer to the [official PostGIS documentation](https://postgis.net/).
-1. [Connect to Postgres](#connect-to-postgres) as the postgres user.
+1. Get the password for the Postgres user from the secret:
 
+```bash
+kubectl -n $NAMESPACE get secrets/$POSTGRES_SECRET_NAME -o jsonpath="{.data.postgres-password}" | base64 --decode
+```
 
-2. Verify that the PostGIS extension is installed:
+2. Connect to the Postgres database using the `psql` command-line tool:
+
+```bash
+kubectl exec -it -n $NAMESPACE annotations-api-postgresql-0 -- psql -U postgres -d $POSTGRES_DB
+```
+
+3. Verify that the PostGIS extension is installed:
     ```bash
     SELECT * FROM pg_available_extensions WHERE name = 'postgis';
     ```
-3. Initialize PostGIS:
+4. Initialize PostGIS:
     ```bash
     CREATE EXTENSION postgis;
     ```
-4. Verify that PostGIS is properly initialized:
+5. Verify that PostGIS is properly initialized:
     ```bash
     SELECT PostGIS_Full_Version();
     ```

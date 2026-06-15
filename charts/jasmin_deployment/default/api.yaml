@@ -42,6 +42,6 @@ ingress:
   api:
     path: ""
     pathType: Prefix
-  ingressClassName: bodc-nginx
+  ingressClassName: nginx
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
