@@ -20,6 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
       - name: Extract and validate version
         id: version
         run: |
@@ -43,3 +48,25 @@ jobs:
           docker tag $CI_REGISTRY_IMAGE:${{ github.sha }} $CI_REGISTRY_IMAGE:${{ steps.version.outputs.version }}
           docker push $CI_REGISTRY_IMAGE:${{ steps.version.outputs.version }}
           docker push $CI_REGISTRY_IMAGE:${{ github.sha }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.1
+
+      - name: add dependency repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq &&\
+          chmod +x yq
+
+      - name: Update Chart.yaml version
+        run: |
+          yq -i '.version = "${{ steps.version.outputs.version }}"' charts/api/Chart.yaml
+          yq -i '.appVersion = "${{ steps.version.outputs.version }}"' charts/api/Chart.yaml
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
