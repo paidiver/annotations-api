@@ -6,18 +6,8 @@ environments:
   live:
     values:
       - name: live
-        context: livkraken-live-1
+        context: seai-admin@seai
         config: live/values.yaml
-  staging:
-    values:
-      - name: staging
-        context: livkraken-staging-1
-        config: staging/values.yaml
-  dev:
-    values:
-      - name: dev
-        context: livkraken-dev-1
-        config: dev/values.yaml
 
 helmDefaults:
   # Limit the maximum number of revisions saved per release. Creates a secret per revision.
@@ -30,14 +20,14 @@ releases:
     namespace: {{ requiredEnv "NAMESPACE"}}
     createNamespace: false
     chart: paidiver-annotations/api
-    version: 1.0.5-dev2
+    version: {{ env "CHART_VERSION" | default "0.0.2" | quote }}
     values:
       - {{ .Environment.Values.config }}
       - default/postgres.yaml
       - default/api.yaml
       - api:
           image:
-            tag: 1.0.5-10507-2
+            tag: {{ env "API_IMAGE_TAG" | default "1.0.5-10507-2" | quote }}
             imagePullSecret: {{ requiredEnv "GHCR_SECRET_NAME" }}
           env:
             djangoSecretKey:
