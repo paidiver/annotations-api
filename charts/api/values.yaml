@@ -63,14 +63,17 @@ fullnameOverride: ""
 global:
   defaultStorageClass: ""
 
-postgresql:
+migrateJob:
+  enabled: true
+  runOnInstall: true
+  runOnUpgrade: true
+  backoffLimit: 3
   image:
-    digest: sha256:8c7f26a8ba4257fcbf4445bd50e156cbc7d8114942fb3d6523320c7732781b54
-  auth:
-    enablePostgresUser: true
-    username: ""
-    existingSecret: ""
-    database: ""
-  primary:
-    service:
-      port: "5432"
+    repository: ghcr.io/paidiver/annotations-api
+    tag: latest
+    pullPolicy: Always
+    imagePullSecret: ""
+
+db:
+  host: "postgres-postgresql"
+  port: "5432"
