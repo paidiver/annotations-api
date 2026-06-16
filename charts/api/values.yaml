@@ -75,7 +75,7 @@ migrateJob:
     imagePullSecret: ""
 
 db:
-  host: "postgres-postgresql"
+  host: "postgres-postgresql-annotations-api"
   port: "5432"
   auth:
     username: ""
