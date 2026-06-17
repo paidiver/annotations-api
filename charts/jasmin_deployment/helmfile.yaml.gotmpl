@@ -43,6 +43,11 @@ releases:
           primary:
             persistence:
               existingClaim: {{ requiredEnv "POSTGRES_PVC_NAME"}}
+      - migrateJob:
+          postgis:
+            enabled: true
+            adminExistingSecret: {{ requiredEnv "POSTGRES_SECRET_NAME" }}
+            adminPasswordKey: postgres-password
       - global:
           postgresql:
             auth:
