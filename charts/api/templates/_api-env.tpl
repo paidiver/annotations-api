@@ -19,6 +19,15 @@ PostgreSQL connection credentials used by all api-*.yaml files
   {{- else }}
   value: {{ .Values.auth.password }}
   {{ end }}
+- name: POSTGRES_ROOT_PASSWORD
+  {{- if .Values.auth.existingSecret }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.auth.existingSecret }}
+      key: postgres-password
+  {{- else }}
+  value: {{ .Values.auth.password }}
+  {{ end }}
 - name: DB_HOST
   value: {{ .Values.db.host | quote }}
 - name: DB_PORT

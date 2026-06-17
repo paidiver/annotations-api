@@ -41,9 +41,9 @@ spec:
               done
               # create the PostGIS extension if it doesn't exist
               echo "Creating PostGIS extension if it doesn't exist..."
-              psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+              psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=postgres password=$POSTGRES_ROOT_PASSWORD" -c "CREATE EXTENSION IF NOT EXISTS postgis;"
               echo "Waiting for PostGIS extension to exist..."
-              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
+              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=postgres password=$POSTGRES_ROOT_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
                 sleep 2
               done
           env:
