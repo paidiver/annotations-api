@@ -17,10 +17,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="CREATE EXTENSION IF NOT EXISTS postgis",
-            reverse_sql="DROP EXTENSION IF EXISTS postgis",
-        ),
         migrations.CreateModel(
             name='Annotation',
             fields=[
