@@ -106,6 +106,18 @@ class CachedWoRMSClient:
             f"/taxa/ajax_by_name_part/only_id_info/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}&id_only={str(id_only).lower()}"
         )
 
+    def ajax_by_name_part(self, name_part: str, combine_vernaculars: bool = False) -> list[dict | int] | None:
+        """Fetch the AphiaIDs for a given name part.
+
+        Args:
+            name_part: The partial name to search for.
+            combine_vernaculars: Whether to combine vernacular names in the search.
+
+        Returns:
+            A list of dictionaries or integers representing the AphiaIDs, or None if not found.
+        """
+        return self._get(f"/taxa/ajax_by_name_part/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}")
+
     def get_taxa(self, aphia_ids: list[int]) -> list[dict] | None:
         """Fetch the taxonomic information for a given list of AphiaIDs.
 

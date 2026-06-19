@@ -113,6 +113,14 @@ class CachedWoRMSClientTests(SimpleTestCase):
             "/taxa/ajax_by_name_part/only_id_info/example/?combine_vernaculars=false&id_only=false"
         )
 
+    def test_ajax_by_name_part_builds_correct_path(self) -> None:
+        """Test that ajax_by_name_part() builds the correct API path and returns the expected result."""
+        with patch.object(CachedWoRMSClient, "_get", return_value=APHIA_IDS_TO_RETURN) as mock_get:
+            out = self.client.ajax_by_name_part("example")
+
+        self.assertEqual(out, APHIA_IDS_TO_RETURN)
+        mock_get.assert_called_once_with("/taxa/ajax_by_name_part/example/?combine_vernaculars=false")
+
     def test_post_returns_response(self) -> None:
         """Test that _post() returns None for a 204 No Content response from the WoRMS API."""
         response = MagicMock(name="response")
