@@ -11,6 +11,7 @@ from django.test import TransactionTestCase
 
 from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
+    _empty_to_none,
     _parse_coordinates,
     parse_annotation_data,
     parse_annotation_set_metadata,
@@ -56,6 +57,30 @@ class TestAnnotationParsers(TestCase):
         self.assertEqual(result["annotation-license-name"], "MIT")
         self.assertEqual(result["annotation-image-set-name"], "Set A")
         self.assertEqual(result["annotation-pi-uri"], "user@example.com")
+
+    @patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys)
+    @patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3)
+    def test_parse_annotation_set_metadata_skips_until_main_key(self) -> None:
+        """Rows before the first main key should be ignored."""
+        data = [
+            [np.nan, "name", "ignored"],
+            ["annotation-set", "name", "Trial Data"],
+            ["annotation-license", "name", "MIT"],
+            ["annotation-image-set", "name", "Set A"],
+            ["annotation-image-set", "uuid", "0000-0000"],
+        ]
+        df = pd.DataFrame(data)
+
+        result = parse_annotation_set_metadata(df)
+
+        self.assertEqual(result["annotation-set-name"], "Trial Data")
+        self.assertNotIn("-name", result)
+
+    def test_parse_label_set_raises_when_header_value_missing(self) -> None:
+        """Label parser should fail if the marker row is absent."""
+        df = pd.DataFrame([["Header", "foo"], ["Another", "bar"]])
+        with self.assertRaises(ValueError):
+            parse_label_set(df)
 
     @patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7)
     def test_parse_label_set(self) -> None:
@@ -223,6 +248,61 @@ class TestParseCoordinates(TestCase):
         """Test that empty inputs return an empty list."""
         self.assertEqual(_parse_coordinates(""), [])
         self.assertEqual(_parse_coordinates(None), [])
+
+    def test_parse_invalid_coordinate_string_returns_empty_list(self) -> None:
+        """Malformed coordinate strings should be safely ignored."""
+        self.assertEqual(_parse_coordinates("not-a-number,still-bad"), [])
+
+
+class TestParserHelpers(TestCase):
+    """Tests for helper functions in annotations_parser."""
+
+    def test_empty_to_none_handles_none_and_blank(self) -> None:
+        """_empty_to_none should normalize None/blank input."""
+        self.assertIsNone(_empty_to_none(None))
+        self.assertIsNone(_empty_to_none("  "))
+        self.assertEqual(_empty_to_none("value"), "value")
+
+
+class _MutableStringValue:
+    """Value whose string representation changes over consecutive calls."""
+
+    def __init__(self, values: list[str]) -> None:
+        self.values = values
+        self.index = 0
+
+    def __str__(self) -> str:
+        value = self.values[min(self.index, len(self.values) - 1)]
+        self.index += 1
+        return value
+
+
+class TestAnnotationDataEdgeCases(TestCase):
+    """Additional edge tests for parse_annotation_data."""
+
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 0)
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0)
+    @patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9)
+    def test_parse_annotation_data_raises_for_missing_identifier_row(self) -> None:
+        """Cover validation branch where both image uuid and filename are treated as missing."""
+        tricky_filename = _MutableStringValue(["", "visible_filename"])
+        data = [
+            [
+                "",
+                "ImagePro",
+                tricky_filename,
+                "Noelie Benoist",
+                "31122012",
+                "reteporella",
+                "rectangle",
+                "1427,8163",
+                5850,
+            ],
+        ]
+
+        df = pd.DataFrame(data)
+        with self.assertRaises(ValueError):
+            parse_annotation_data(df)
 
 
 class TestIngestAnnotationData(TransactionTestCase):

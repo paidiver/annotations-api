@@ -287,6 +287,9 @@ Format code using Ruff:
 
 ```bash
 tox -e format
+
+# or using Docker
+docker compose -f docker/docker-compose.yml run --rm api tox -e format
 ```
 
 ### Linting
@@ -295,6 +298,9 @@ Run lint checks:
 
 ```bash
 tox -e lint
+
+# or using Docker
+docker compose -f docker/docker-compose.yml run --rm api tox -e lint
 ```
 
 ### Tests
@@ -333,7 +339,7 @@ User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b9
 
 Clearing shell history:
 ```bash
-paidiver@annotations-api:/app$ python manage.py create_user_with_token <user> <password> 
+paidiver@annotations-api:/app$ python manage.py create_user_with_token <user> <password>
 User created: <user>. API token (please store this securely): <token>
 paidiver@annotations-api:/app$ history
     1  python manage.py create_user_with_token <user> <password>
