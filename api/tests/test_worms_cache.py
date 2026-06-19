@@ -29,7 +29,7 @@ class WormsCacheAjaxViewSetTests(APITestCase):
                 "valid_AphiaID": None,
                 "modified": None,
                 "cached_at": None,
-                "parent_AphiaID": 10
+                "parent_AphiaID": 10,
             }
         ]
 
