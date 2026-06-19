@@ -83,12 +83,14 @@ class AnnotationSearchViewSetTests(APITestCase):
             annotation_set=self.annotation_set_1,
             name="Cod",
             parent_label_name="Fish",
+            lowest_taxonomic_name="Gadus morhua",
             lowest_aphia_id=1001,
         )
         self.label_2 = Label.objects.create(
             annotation_set=self.annotation_set_2,
             name="Crab",
             parent_label_name="Crustacean",
+            lowest_taxonomic_name="Cancer pagurus",
             lowest_aphia_id=2002,
         )
 
@@ -532,6 +534,93 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(
             resp.data["results"]["annotations"][0]["label_aphia_id"],
             1001,
+        )
+
+    def test_list_exclude_aphia_ids_filters_results(self) -> None:
+        """Test list excludes annotations matching exclude_aphia_ids[]."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "exclude_aphia_ids[]": [1001],
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["results"]["annotations"][0]["label_aphia_id"], 2002)
+
+    def test_list_exclude_annotation_set_filters_results(self) -> None:
+        """Test list excludes annotations matching exclude_annotation_set[]."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "exclude_annotation_set[]": [str(self.annotation_set_1.id)],
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(
+            str(resp.data["results"]["annotations"][0]["annotation_set_uuid"]),
+            str(self.annotation_set_2.id),
+        )
+
+    def test_list_exclude_image_set_filters_results(self) -> None:
+        """Test list excludes annotations matching exclude_image_set[]."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "exclude_image_set[]": [str(self.image_set_2.id)],
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(
+            str(resp.data["results"]["annotations"][0]["image_set_uuid"]),
+            str(self.image_set_1.id),
+        )
+
+    def test_list_return_image_annotation_name_info_includes_info_block(self) -> None:
+        """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs."""
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "return_image_annotation_name_info": "true",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        info = resp.data["results"]["info"]
+
+        self.assertEqual(len(info["image_sets"]), 2)
+        self.assertEqual(
+            {(item["name"], str(item["uuid"])) for item in info["image_sets"]},
+            {
+                ("Image Set 1", str(self.image_set_1.id)),
+                ("Image Set 2", str(self.image_set_2.id)),
+            },
+        )
+
+        self.assertEqual(len(info["annotation_sets"]), 2)
+        self.assertEqual(
+            {(item["name"], str(item["uuid"])) for item in info["annotation_sets"]},
+            {
+                ("Annotation Set 1", str(self.annotation_set_1.id)),
+                ("Annotation Set 2", str(self.annotation_set_2.id)),
+            },
+        )
+
+        self.assertEqual(
+            info["aphia_ids"],
+            [
+                {"aphia_id": 1001, "scientific_name": "Gadus morhua"},
+                {"aphia_id": 2002, "scientific_name": "Cancer pagurus"},
+            ],
         )
 
     def test_list_rejects_invalid_choice_params(self) -> None:

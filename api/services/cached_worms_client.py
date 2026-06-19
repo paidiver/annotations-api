@@ -89,16 +89,31 @@ class CachedWoRMSClient:
         aphia_ids = [str(aphia_id) for aphia_id in aphia_ids]
         return self._get(f"/taxa/ids_with_descendants/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}")
 
-    def aphia_ids_by_name_part(self, name_part: str, combine_vernaculars: bool = False) -> list[dict] | None:
+    def aphia_ids_by_name_part(self,
+                               name_part: str,
+                               combine_vernaculars: bool = False,
+                               id_only: bool = False) -> list[dict | int] | None:
         """Fetch the AphiaIDs for a given name part.
 
         Args:
             name_part: The partial name to search for.
             combine_vernaculars: Whether to combine vernacular names in the search.
+            id_only: Whether to return only the IDs.
 
         Returns:
-            A list of dictionaries representing the AphiaIDs, or None if not found.
+            A list of dictionaries or integers representing the AphiaIDs, or None if not found.
         """
         return self._get(
-            f"/taxa/ajax_by_name_part/only_ids/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}"
+            f"/taxa/ajax_by_name_part/only_id_info/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}&id_only={str(id_only).lower()}"
         )
+
+    def get_taxa(self, aphia_ids: list[int]) -> list[dict] | None:
+        """Fetch the taxonomic information for a given list of AphiaIDs.
+
+        Args:
+            aphia_ids: A list of AphiaIDs for which to fetch taxonomic information.
+
+        Returns:
+            A list of dictionaries containing taxonomic information for the given AphiaIDs, or None if not found.
+        """
+        return self._get(f"/taxa/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}")

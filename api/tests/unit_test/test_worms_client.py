@@ -109,7 +109,7 @@ class CachedWoRMSClientTests(SimpleTestCase):
             out = self.client.aphia_ids_by_name_part("example")
 
         self.assertEqual(out, APHIA_IDS_TO_RETURN)
-        mock_get.assert_called_once_with("/taxa/ajax_by_name_part/only_ids/example/?combine_vernaculars=false")
+        mock_get.assert_called_once_with("/taxa/ajax_by_name_part/only_id_info/example/?combine_vernaculars=false")
 
     def test_post_returns_response(self) -> None:
         """Test that _post() returns None for a 204 No Content response from the WoRMS API."""
