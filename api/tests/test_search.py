@@ -120,8 +120,12 @@ class AnnotationSearchViewSetTests(APITestCase):
             {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
-    def test_list_filters_by_aphia_ids(self) -> None:
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_list_filters_by_aphia_ids(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
         """Test listing search results filtered by aphia_ids[]."""
+        mocked_get_all_aphia_ids_from_request.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
+        }
         resp = self.client.get(self.list_url, {"aphia_ids[]": [1001]})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -130,8 +134,8 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(set(data.keys()), {"count", "next", "previous", "results"})
         self.assertEqual(data["count"], 1)
         results = data["results"]
-        self.assertEqual(set(results.keys()), {"summary", "annotations"})
-        self.assertIsNone(results["summary"])
+        self.assertEqual(set(results.keys()), {"annotations"})
+        self.assertIsNone(results.get("summary"))
         self.assertEqual(len(results["annotations"]), 1)
 
         row = results["annotations"][0]
@@ -149,13 +153,22 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(str(row["image_set_uuid"]), str(self.image_set_1.id))
         self.assertEqual(row["image_set_name"], "Image Set 1")
 
-    def test_list_returns_summary_when_requested(self) -> None:
-        """Test list includes summary when calculate_summary=true."""
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_list_returns_summary_when_requested(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
+        """Test list includes summary when calculate_summary=true.
+
+        Args:
+            mocked_get_all_aphia_ids_from_request (Mock): Mock of the _get_all_aphia_ids_from_request method.
+        """
+        mocked_get_all_aphia_ids_from_request.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+
         resp = self.client.get(
             self.list_url,
             {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
         )
-
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         data = resp.data
@@ -169,8 +182,16 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(len(data["results"]["annotations"]), 2)
 
-    def test_list_ignores_invalid_aphia_ids_in_query(self) -> None:
-        """Test invalid aphia_ids[] values are ignored and valid ones are still used."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_ignores_invalid_aphia_ids_in_query(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test invalid aphia_ids[] values are ignored and valid ones are still used.
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
+        }
         resp = self.client.get(
             self.list_url,
             [("aphia_ids[]", "not-an-int"), ("aphia_ids[]", "1001"), ("aphia_ids[]", "also-bad")],
@@ -187,13 +208,15 @@ class AnnotationSearchViewSetTests(APITestCase):
         Args:
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = [1001]
+        mocked_get_aphia_ids_by_name_part.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
+        }
 
         resp = self.client.get(self.list_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 1)
-        self.assertIsNone(resp.data["results"]["summary"])
+        self.assertIsNone(resp.data["results"].get("summary"))
         self.assertEqual(resp.data["results"]["annotations"][0]["label_name"], "Cod")
         mocked_get_aphia_ids_by_name_part.assert_called_once_with("cod")
 
@@ -207,7 +230,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         Args:
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = []
+        mocked_get_aphia_ids_by_name_part.return_value = {}
 
         resp = self.client.get(self.list_url, {"name_part": "cod"})
 
@@ -217,32 +240,43 @@ class AnnotationSearchViewSetTests(APITestCase):
         mocked_get_aphia_ids_by_name_part.assert_called_once_with("cod")
 
     @patch("api.views.search._get_aphia_ids_by_name_part")
+    @patch("api.views.search._get_aphia_ids_info")
     def test_list_returns_404_when_name_part_finds_no_aphia_ids_or_label_name(
         self,
         mocked_get_aphia_ids_by_name_part: Mock,
+        mocked_get_aphia_ids_info: Mock,
     ) -> None:
         """Test list returns 404 when neither AphiaIDs nor label names match.
 
         Args:
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = []
+        mocked_get_aphia_ids_by_name_part.return_value = {}
+        mocked_get_aphia_ids_info.return_value = {}
 
         resp = self.client.get(self.list_url, {"name_part": "does-not-exist"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            resp.data, {"count": 0, "next": None, "previous": None, "results": {"summary": None, "annotations": []}}
-        )
+        self.assertEqual(resp.data, {"count": 0, "next": None, "previous": None, "results": {"annotations": []}})
 
     @patch("api.views.search._get_descendant_aphia_ids")
-    def test_list_include_descendants_adds_results(self, mocked_get_descendant_aphia_ids: Mock) -> None:
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_include_descendants_adds_results(
+        self, mocked_get_descendant_aphia_ids: Mock, mocked_get_aphia_ids_info: Mock
+    ) -> None:
         """Test include_descendants=true includes descendant AphiaIDs in the search.
 
         Args:
             mocked_get_descendant_aphia_ids (Mock): Mock of the _get_descendant_aphia_ids function.
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
         """
-        mocked_get_descendant_aphia_ids.return_value = [2002]
+        mocked_get_descendant_aphia_ids.return_value = {
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"}
+        }
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+        }
 
         resp = self.client.get(
             self.list_url,
@@ -251,7 +285,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["count"], 2)
-        self.assertIsNone(resp.data["results"]["summary"])
+        self.assertIsNone(resp.data["results"].get("summary"))
 
         returned_aphia_ids = sorted(item["label_aphia_id"] for item in resp.data["results"]["annotations"])
         self.assertEqual(returned_aphia_ids, [1001, 2002])
@@ -270,8 +304,14 @@ class AnnotationSearchViewSetTests(APITestCase):
             mocked_get_descendant_aphia_ids (Mock): Mock of the _get_descendant_aphia_ids function.
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = [1001, 2002]
-        mocked_get_descendant_aphia_ids.return_value = [1001, 2002]
+        mocked_get_aphia_ids_by_name_part.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+        mocked_get_descendant_aphia_ids.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
 
         resp = self.client.get(
             self.list_url,
@@ -298,8 +338,17 @@ class AnnotationSearchViewSetTests(APITestCase):
             {"query": "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."},
         )
 
-    def test_grouped_filters_by_aphia_ids(self) -> None:
-        """Test grouped endpoint returns grouped rows keyed by annotation set id."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_grouped_filters_by_aphia_ids(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test grouped endpoint returns grouped rows keyed by annotation set id.
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+        }
+
         resp = self.client.get(self.grouped_url, {"aphia_ids[]": [1001]})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -326,8 +375,18 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(row["annotation_dimension_pixels"], 123)
         self.assertEqual(row["annotator_name"], "Test Annotator")
 
-    def test_grouped_returns_summary_when_requested(self) -> None:
-        """Test grouped includes summary when calculate_summary=true."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_grouped_returns_summary_when_requested(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test grouped includes summary when calculate_summary=true.
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+
         resp = self.client.get(
             self.grouped_url,
             {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
@@ -354,7 +413,9 @@ class AnnotationSearchViewSetTests(APITestCase):
         Args:
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = [2002]
+        mocked_get_aphia_ids_by_name_part.return_value = {
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"}
+        }
 
         resp = self.client.get(self.grouped_url, {"name_part": "cra"})
 
@@ -401,9 +462,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         resp = self.client.get(self.grouped_url, {"name_part": "does-not-exist"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            resp.data, {"count": 0, "next": None, "previous": None, "results": {"summary": None, "annotations": {}}}
-        )
+        self.assertEqual(resp.data, {"count": 0, "next": None, "previous": None, "results": {"annotations": {}}})
 
     @patch("api.views.search.CachedWoRMSClient")
     def test_get_descendant_aphia_ids_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock) -> None:
@@ -417,12 +476,12 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         result = _get_descendant_aphia_ids([1001])
 
-        self.assertEqual(result, [])
+        self.assertEqual(result, {})
         mocked_client.descendants_aphia_ids.assert_called_once_with([1001])
 
     @patch("api.views.search.CachedWoRMSClient")
-    def test_get_aphia_ids_by_name_part_returns_empty_list_on_request_exception(self, mocked_client_cls: Mock) -> None:
-        """Test name-part helper returns empty list when the WoRMS client raises RequestException.
+    def test_get_aphia_ids_by_name_part_returns_empty_dict_on_request_exception(self, mocked_client_cls: Mock) -> None:
+        """Test name-part helper returns empty dict when the WoRMS client raises RequestException.
 
         Args:
             mocked_client_cls (Mock): Mock of the CachedWoRMSClient class.
@@ -432,8 +491,8 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         result = _get_aphia_ids_by_name_part("cod")
 
-        self.assertEqual(result, [])
-        mocked_client.aphia_ids_by_name_part.assert_called_once_with("cod", combine_vernaculars=True)
+        self.assertEqual(result, {})
+        mocked_client.aphia_ids_by_name_part.assert_called_once_with("cod", combine_vernaculars=True, id_only=False)
 
     @patch("api.views.search.AnnotationSearchViewSet.paginator", new_callable=PropertyMock)
     @patch("api.views.search._get_aphia_ids_by_name_part")
@@ -446,8 +505,9 @@ class AnnotationSearchViewSetTests(APITestCase):
             mocked_get_aphia_ids_by_name_part (Mock): Mock of the _get_aphia_ids_by_name_part function.
             mocked_paginator (Mock): Mock of the paginator property.
         """
-        mocked_get_aphia_ids_by_name_part.return_value = [1001]
-
+        mocked_get_aphia_ids_by_name_part.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
+        }
         fake_paginator = Mock()
         fake_paginator.paginate_queryset.return_value = None
         mocked_paginator.return_value = fake_paginator
@@ -455,7 +515,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         resp = self.client.get(self.list_url, {"name_part": "cod"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertIsNone(resp.data["summary"])
+        self.assertIsNone(resp.data.get("summary"))
         annotations = resp.data["annotations"]
 
         self.assertIsInstance(annotations, list)
@@ -510,8 +570,16 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(resp.data, {"detail": "mocked error"})
 
-    def test_list_filters_by_all_optional_query_params(self) -> None:
-        """Test listing search results filtered by all optional query parameters together."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_filters_by_all_optional_query_params(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test listing search results filtered by all optional query parameters together.
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
+        }
         resp = self.client.get(
             self.list_url,
             {
@@ -536,8 +604,17 @@ class AnnotationSearchViewSetTests(APITestCase):
             1001,
         )
 
-    def test_list_exclude_aphia_ids_filters_results(self) -> None:
-        """Test list excludes annotations matching exclude_aphia_ids[]."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_exclude_aphia_ids_filters_results(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test list excludes annotations matching exclude_aphia_ids[].
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
         resp = self.client.get(
             self.list_url,
             {
@@ -550,8 +627,17 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.data["count"], 1)
         self.assertEqual(resp.data["results"]["annotations"][0]["label_aphia_id"], 2002)
 
-    def test_list_exclude_annotation_set_filters_results(self) -> None:
-        """Test list excludes annotations matching exclude_annotation_set[]."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_exclude_annotation_set_filters_results(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test list excludes annotations matching exclude_annotation_set[].
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
         resp = self.client.get(
             self.list_url,
             {
@@ -567,8 +653,17 @@ class AnnotationSearchViewSetTests(APITestCase):
             str(self.annotation_set_2.id),
         )
 
-    def test_list_exclude_image_set_filters_results(self) -> None:
-        """Test list excludes annotations matching exclude_image_set[]."""
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_list_exclude_image_set_filters_results(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """Test list excludes annotations matching exclude_image_set[].
+
+        Args:
+            mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
+        """
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
         resp = self.client.get(
             self.list_url,
             {
@@ -584,8 +679,20 @@ class AnnotationSearchViewSetTests(APITestCase):
             str(self.image_set_1.id),
         )
 
-    def test_list_return_image_annotation_name_info_includes_info_block(self) -> None:
-        """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs."""
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_list_return_image_annotation_name_info_includes_info_block(
+        self, mocked_get_all_aphia_ids_from_request: Mock
+    ) -> None:
+        """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs.
+
+        Args:
+            mocked_get_all_aphia_ids_from_request (Mock): Mock of the _get_all_aphia_ids_from_request method.
+        """
+        mocked_get_all_aphia_ids_from_request.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+
         resp = self.client.get(
             self.list_url,
             {
@@ -614,12 +721,41 @@ class AnnotationSearchViewSetTests(APITestCase):
                 ("Annotation Set 2", str(self.annotation_set_2.id)),
             },
         )
-
         self.assertEqual(
-            info["aphia_ids"],
+            list(info["aphia_ids"]),
             [
-                {"aphia_id": 1001, "scientific_name": "Gadus morhua"},
-                {"aphia_id": 2002, "scientific_name": "Cancer pagurus"},
+                {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+                {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+            ],
+        )
+
+    @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
+    def test_grouped_return_image_annotation_name_info_includes_info_block(
+        self, mocked_get_all_aphia_ids_from_request: Mock
+    ) -> None:
+        """Test grouped includes info payload when return_image_annotation_name_info=true."""
+        mocked_get_all_aphia_ids_from_request.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+
+        resp = self.client.get(
+            self.grouped_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "return_image_annotation_name_info": "true",
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        info = resp.data["results"]["info"]
+        self.assertEqual(len(info["image_sets"]), 2)
+        self.assertEqual(len(info["annotation_sets"]), 2)
+        self.assertEqual(
+            list(info["aphia_ids"]),
+            [
+                {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+                {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
             ],
         )
 
@@ -730,3 +866,64 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         request = Request(factory.get("/fake", {"min_lat": "12.5"}))
         self.assertEqual(view._get_float_query_param(request, "min_lat"), 12.5)
+
+    def test_get_uuid_list_query_param_ignores_invalid_values(self) -> None:
+        """UUID parser should skip invalid UUID values and keep valid ones."""
+        factory = APIRequestFactory()
+        view = AnnotationSearchViewSet()
+        valid_id = str(self.annotation_set_1.id)
+
+        request = Request(
+            factory.get(
+                "/fake",
+                [("exclude_annotation_set[]", valid_id), ("exclude_annotation_set[]", "not-a-uuid")],
+            )
+        )
+        result = view._get_uuid_list_query_param(request, "exclude_annotation_set[]")
+        self.assertEqual(len(result), 1)
+        self.assertEqual(str(result[0]), valid_id)
+
+    @patch("api.views.search.CachedWoRMSClient")
+    def test_get_descendant_aphia_ids_success(self, mocked_client_cls: Mock) -> None:
+        """Descendant helper should map WoRMS response fields into API structure."""
+        mocked_client = mocked_client_cls.return_value
+        mocked_client.descendants_aphia_ids.return_value = [
+            {"AphiaID": 123, "scientificname": "Species A", "rank": "Species"}
+        ]
+
+        result = _get_descendant_aphia_ids([123])
+
+        self.assertEqual(
+            result,
+            {123: {"aphia_id": 123, "scientific_name": "Species A", "rank": "Species"}},
+        )
+
+    @patch("api.views.search.CachedWoRMSClient")
+    def test_get_aphia_ids_by_name_part_success(self, mocked_client_cls: Mock) -> None:
+        """Name-part helper should map WoRMS response fields into API structure."""
+        mocked_client = mocked_client_cls.return_value
+        mocked_client.aphia_ids_by_name_part.return_value = [
+            {"aphia_id": 456, "scientific_name": "Species B", "rank": "Genus"}
+        ]
+
+        result = _get_aphia_ids_by_name_part("spec")
+
+        self.assertEqual(
+            result,
+            {456: {"aphia_id": 456, "scientific_name": "Species B", "rank": "Genus"}},
+        )
+
+    @patch("api.views.search.CachedWoRMSClient")
+    def test_get_aphia_ids_info_success(self, mocked_client_cls: Mock) -> None:
+        """Taxa info helper should map WoRMS response fields into API structure."""
+        mocked_client = mocked_client_cls.return_value
+        mocked_client.get_taxa.return_value = [{"AphiaID": 789, "scientificname": "Species C", "rank": "Family"}]
+
+        result = AnnotationSearchViewSet()._get_all_aphia_ids_from_request(
+            Request(APIRequestFactory().get("/fake", [("aphia_ids[]", "789")]))
+        )
+
+        self.assertEqual(
+            result,
+            {789: {"aphia_id": 789, "scientific_name": "Species C", "rank": "Family"}},
+        )

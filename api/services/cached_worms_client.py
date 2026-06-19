@@ -87,12 +87,11 @@ class CachedWoRMSClient:
             A list of descendant AphiaIDs for the given list of AphiaIDs, or None if not found.
         """
         aphia_ids = [str(aphia_id) for aphia_id in aphia_ids]
-        return self._get(f"/taxa/ids_with_descendants/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}")
+        return self._get(f"/taxa/ids_with_descendants/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}&id_only=false")
 
-    def aphia_ids_by_name_part(self,
-                               name_part: str,
-                               combine_vernaculars: bool = False,
-                               id_only: bool = False) -> list[dict | int] | None:
+    def aphia_ids_by_name_part(
+        self, name_part: str, combine_vernaculars: bool = False, id_only: bool = False
+    ) -> list[dict | int] | None:
         """Fetch the AphiaIDs for a given name part.
 
         Args:
@@ -116,4 +115,5 @@ class CachedWoRMSClient:
         Returns:
             A list of dictionaries containing taxonomic information for the given AphiaIDs, or None if not found.
         """
+        aphia_ids = [str(aphia_id) for aphia_id in aphia_ids]
         return self._get(f"/taxa/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}")
