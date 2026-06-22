@@ -22,7 +22,16 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         - name: wait-for-postgres
-          image: bitnami/postgresql@{{ .Values.postgresql.image.digest }}
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command:
             - sh
             - -ec
@@ -34,25 +43,23 @@ spec:
                 -U $POSTGRES_USER; do
                 sleep 2
               done
-              echo "Waiting for PostGIS extension to exist..."
-              until psql "host=$POSTGRES_HOST port=$POSTGRES_PORT dbname=$POSTGRES_DB user=$POSTGRES_USER password=$POSTGRES_PASSWORD" -tAc "SELECT 1 FROM pg_extension WHERE extname = 'postgis'" | grep -q 1; do
-                sleep 2
-              done
-          securityContext:
-            {{- toYaml .Values.api.initContainer.securityContext | nindent 12 }}
-            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
-          env: {{ include "api.postgresEnv" . | nindent 12 }}
+          env:
+            {{- include "paidiver-annotations-api.dbEnv" . | nindent 12 }}
+          resources:
+            requests:
+              cpu: "20m"
+              memory: "64Mi"
+            limits:
+              cpu: "50m"
+              memory: "128Mi"
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.api.port }}
-          {{- if .Values.api.resources }}
-          resources:
-            {{- toYaml .Values.api.resources | nindent 12 }}
-          {{- end }}
           env:
+            {{- include "paidiver-annotations-api.dbEnv" . | nindent 12 }}
             - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -73,15 +80,17 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.api.env.cachedWormsApiToken.secretName }}
                   key: {{ .Values.api.env.cachedWormsApiToken.secretKey }}
-            {{ include "api.postgresEnv" . | nindent 12 }}
           command:
             - sh
             - -c
             - |
-              python manage.py migrate &&
               poetry run gunicorn config.wsgi:application -w {{ .Values.api.workers }} -b 0.0.0.0:{{ .Values.api.port }} --timeout {{ .Values.api.timeout }} --error-logfile - --log-level {{ .Values.api.logLevel }}{{ if .Values.api.accessLogsEnabled }} --access-logfile -{{ end }}
           securityContext:
             {{- toYaml .Values.api.securityContext | nindent 12 }}
             {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- if .Values.api.resources }}
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          {{- end }}
       imagePullSecrets:
         - name: {{ .Values.api.image.imagePullSecret }}
