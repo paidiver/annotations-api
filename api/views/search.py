@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 import requests
 from django.db.models import F, Q, QuerySet
 from drf_spectacular.types import OpenApiTypes
@@ -22,6 +24,30 @@ MIN_CHARS_FOR_PARTIAL_MATCH = 3
 DEPLOYMENT_VALUES = [item.value for item in DeploymentEnum]
 FAUNA_ATTRACTION_VALUES = [item.value for item in FaunaAttractionEnum]
 MARINE_ZONE_VALUES = [item.value for item in MarineZoneEnum]
+
+EXCLUDE_PARAMS = [
+    OpenApiParameter(
+        name="exclude_aphia_ids[]",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="List of AphiaIDs to exclude from the search results.",
+    ),
+    OpenApiParameter(
+        name="exclude_annotation_set[]",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="List of annotation set IDs to exclude from the search results.",
+    ),
+    OpenApiParameter(
+        name="exclude_image_set[]",
+        type=OpenApiTypes.FLOAT,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="List of image set IDs to exclude from the search results.",
+    ),
+]
 
 COORD_PARAMS = [
     OpenApiParameter(
@@ -84,6 +110,13 @@ SEARCH_PARAMS = [
         description="If true, include a summary of the search results.",
     ),
     OpenApiParameter(
+        name="return_image_annotation_name_info",
+        type=OpenApiTypes.BOOL,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description="If true, include image and annotation set information in the response.",
+    ),
+    OpenApiParameter(
         name="image_set_name",
         type=OpenApiTypes.STR,
         location=OpenApiParameter.QUERY,
@@ -129,6 +162,7 @@ SEARCH_PARAMS = [
         description="Marine zone filter. Must be one of the allowed values.",
     ),
     *COORD_PARAMS,
+    *EXCLUDE_PARAMS,
 ]
 
 
@@ -174,17 +208,25 @@ class AnnotationSearchViewSet(GenericViewSet):
         validation_error = self._validate_search_params(request)
         if validation_error is not None:
             return validation_error
-        aphia_ids = self._get_all_aphia_ids_from_request(request)
-        if isinstance(aphia_ids, Response):
-            return aphia_ids
-        queryset = self._get_search_queryset(aphia_ids=aphia_ids, request=request)
+        aphia_ids_info = self._get_all_aphia_ids_from_request(request)
+        if isinstance(aphia_ids_info, Response):
+            return aphia_ids_info
+        aphia_ids = list(aphia_ids_info.keys())
+        filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
+        queryset = self._get_search_queryset(filtered_queryset)
 
         calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         summary = self._build_summary(queryset) if calculate_summary else None
+        include_name_info = request.query_params.get("return_image_annotation_name_info", "false").lower() == "true"
+        info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
         paginator = self.paginator
         page = paginator.paginate_queryset(queryset, request, view=self)
-        response_data = {"summary": summary}
+        response_data = {}
+        if summary is not None:
+            response_data["summary"] = summary
+        if info is not None:
+            response_data["info"] = info
 
         if page is not None:
             response_data["annotations"] = page
@@ -209,14 +251,18 @@ class AnnotationSearchViewSet(GenericViewSet):
         validation_error = self._validate_search_params(request)
         if validation_error is not None:
             return validation_error
-        aphia_ids = self._get_all_aphia_ids_from_request(request)
-        if isinstance(aphia_ids, Response):
-            return aphia_ids
+        aphia_ids_info = self._get_all_aphia_ids_from_request(request)
+        if isinstance(aphia_ids_info, Response):
+            return aphia_ids_info
+        aphia_ids = list(aphia_ids_info.keys())
 
-        queryset = self._get_search_queryset(aphia_ids=aphia_ids, request=request)
+        filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
+        queryset = self._get_search_queryset(filtered_queryset)
 
         calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         summary = self._build_summary(queryset) if calculate_summary else None
+        include_name_info = request.query_params.get("return_image_annotation_name_info", "false").lower() == "true"
+        info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
         paginator = self.paginator
         page = paginator.paginate_queryset(queryset, request, view=self)
@@ -228,16 +274,19 @@ class AnnotationSearchViewSet(GenericViewSet):
             grouped.setdefault(annotation_set_uuid, []).append(row)
 
         response_data = {
-            "summary": summary,
             "annotations": grouped,
         }
+        if summary is not None:
+            response_data["summary"] = summary
+        if info is not None:
+            response_data["info"] = info
 
         if page is not None:
             return paginator.get_paginated_response(response_data)
         return Response(response_data)
 
-    def _get_search_queryset(self, aphia_ids: list[int], request: Request) -> QuerySet:
-        """Get a queryset of Annotations matching the given AphiaIDs.
+    def _get_filtered_queryset(self, aphia_ids: list[int], request: Request) -> QuerySet:
+        """Get a filtered queryset of AnnotationLabel rows for the search request.
 
         Args:
             aphia_ids (list[int]): List of AphiaIDs to filter the Annotations by.
@@ -245,30 +294,39 @@ class AnnotationSearchViewSet(GenericViewSet):
 
 
         Returns:
-            QuerySet: A queryset of Annotations matching the given AphiaIDs.
+            QuerySet: A filtered queryset of AnnotationLabel rows.
         """
         filters = self._calculate_filters(aphia_ids, request)
-        return (
-            AnnotationLabel.objects.filter(filters)
-            .values(
-                "creation_datetime",
-                uuid=F("id"),
-                annotation_set_uuid=F("annotation__annotation_set__id"),
-                annotation_set_name=F("annotation__annotation_set__name"),
-                image_set_name=F("annotation__image__image_set__name"),
-                image_set_uuid=F("annotation__image__image_set__id"),
-                image_filename=F("annotation__image__filename"),
-                image_uuid=F("annotation__image__id"),
-                label_name=F("label__name"),
-                label_aphia_id=F("label__lowest_aphia_id"),
-                annotation_platform=F("annotation__annotation_platform"),
-                annotation_shape=F("annotation__shape"),
-                annotation_coordinates=F("annotation__coordinates"),
-                annotation_dimension_pixels=F("annotation__dimension_pixels"),
-                annotator_name=F("annotator__name"),
-            )
-            .order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
-        )
+        return AnnotationLabel.objects.filter(filters)
+
+    def _get_search_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
+        """Build the projected queryset returned by search endpoints.
+
+        Args:
+            filtered_queryset (QuerySet): A filtered queryset of AnnotationLabel rows.
+
+        Returns:
+            QuerySet: A projected queryset with response fields.
+        """
+        return filtered_queryset.values(
+            "creation_datetime",
+            uuid=F("id"),
+            annotation_set_uuid=F("annotation__annotation_set__id"),
+            annotation_set_name=F("annotation__annotation_set__name"),
+            image_set_name=F("annotation__image__image_set__name"),
+            image_set_uuid=F("annotation__image__image_set__id"),
+            image_filename=F("annotation__image__filename"),
+            image_handle=F("annotation__image__handle"),
+            image_uuid=F("annotation__image__id"),
+            label_name=F("label__name"),
+            label_aphia_id=F("label__lowest_aphia_id"),
+            annotation_platform=F("annotation__annotation_platform"),
+            annotation_creation_datetime=F("creation_datetime"),
+            annotation_shape=F("annotation__shape"),
+            annotation_coordinates=F("annotation__coordinates"),
+            annotation_dimension_pixels=F("annotation__dimension_pixels"),
+            annotator_name=F("annotator__name"),
+        ).order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
 
     def _calculate_filters(self, aphia_ids: list[int], request: Request) -> Q:  # noqa: PLR0912
         """Calculate the filters to apply to the Annotation queryset based on the query parameters.
@@ -302,6 +360,18 @@ class AnnotationSearchViewSet(GenericViewSet):
             if value:
                 value = value.strip()
                 filters &= Q(**{f"{db_field}__icontains": value})
+
+        exclude_aphia_ids = self._get_aphia_ids_from_query(request, "exclude_aphia_ids[]")
+        if exclude_aphia_ids:
+            filters &= ~Q(label__lowest_aphia_id__in=exclude_aphia_ids)
+
+        exclude_annotation_sets = self._get_uuid_list_query_param(request, "exclude_annotation_set[]")
+        if exclude_annotation_sets:
+            filters &= ~Q(annotation__annotation_set__id__in=exclude_annotation_sets)
+
+        exclude_image_sets = self._get_uuid_list_query_param(request, "exclude_image_set[]")
+        if exclude_image_sets:
+            filters &= ~Q(annotation__image__image_set__id__in=exclude_image_sets)
 
         filters = self._calculate_fields_filters(filters=filters, request=request)
         return filters
@@ -362,7 +432,7 @@ class AnnotationSearchViewSet(GenericViewSet):
                 errors[param_name] = (
                     f"Invalid value for '{param_name}': '{value}'. " f"Allowed values are: {sorted(allowed_values)}"
                 )
-        aphia_ids = self._get_aphia_ids_from_query(request)
+        aphia_ids = self._get_aphia_ids_from_query(request, "aphia_ids[]")
         name_part = request.query_params.get("name_part")
         if not aphia_ids and not name_part:
             errors["query"] = "At least one of 'aphia_ids[]' or 'name_part' query parameters must be provided."
@@ -420,40 +490,39 @@ class AnnotationSearchViewSet(GenericViewSet):
             errors["longitude_range"] = "'min_lon' must be less than or equal to 'max_lon'."
         return errors
 
-    def _get_all_aphia_ids_from_request(self, request: Request) -> list[int] | Response:
+    def _get_all_aphia_ids_from_request(self, request: Request) -> dict | Response:
         """Extract and validate a list of AphiaIDs from the query parameters, including descendants if requested.
 
         Args:
             request (Request): The incoming HTTP request.
 
         Returns:
-            list[int] | Response: A list of valid AphiaIDs extracted from the query parameters or a Response in case of
+            dict | Response: A dictionary of valid AphiaIDs extracted from the query parameters or a Response in case of
         an error.
         """
-        aphia_ids = self._get_aphia_ids_from_query(request)
+        aphia_ids = self._get_aphia_ids_from_query(request, "aphia_ids[]")
+        aphia_ids_info = _get_aphia_ids_info(aphia_ids)
         name_part = request.query_params.get("name_part")
         include_descendants = request.query_params.get("include_descendants", "false").lower() == "true"
         if name_part:
             name_part = name_part.strip()
-            aphia_ids.extend(_get_aphia_ids_by_name_part(name_part) or [])
+            aphia_ids_info.update(_get_aphia_ids_by_name_part(name_part) or {})
 
-        aphia_ids = list(dict.fromkeys(aphia_ids))
-
-        if not aphia_ids:
+        if not aphia_ids_info:
             return (
                 Response(
                     {"detail": "No valid AphiaIDs found for the provided query parameters."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
                 if not name_part
-                else []
+                else {}
             )
 
         if include_descendants:
-            descendant_ids = _get_descendant_aphia_ids(aphia_ids) or []
-            aphia_ids = list(dict.fromkeys([*aphia_ids, *descendant_ids]))
+            descendant_ids_info = _get_descendant_aphia_ids(aphia_ids) or {}
+            aphia_ids_info.update(descendant_ids_info)
 
-        return aphia_ids
+        return aphia_ids_info
 
     def _get_float_query_param(self, request: Request, name: str) -> float | None:
         """Extract a float query parameter."""
@@ -462,9 +531,9 @@ class AnnotationSearchViewSet(GenericViewSet):
             return None
         return float(value)
 
-    def _get_aphia_ids_from_query(self, request: Request) -> list[int]:
-        """Extract and validate a list of AphiaIDs from the query parameters."""
-        raw_ids = request.query_params.getlist("aphia_ids[]")
+    def _get_aphia_ids_from_query(self, request: Request, name: str) -> list[int]:
+        """Extract and validate a list of integer query parameter values."""
+        raw_ids = request.query_params.getlist(name)
         aphia_ids = []
         for value in raw_ids:
             try:
@@ -472,6 +541,17 @@ class AnnotationSearchViewSet(GenericViewSet):
             except (TypeError, ValueError):
                 continue
         return aphia_ids
+
+    def _get_uuid_list_query_param(self, request: Request, name: str) -> list[uuid.UUID]:
+        """Extract and validate a list of UUID query parameter values."""
+        raw_ids = request.query_params.getlist(name)
+        uuids = []
+        for value in raw_ids:
+            try:
+                uuids.append(uuid.UUID(str(value)))
+            except (TypeError, ValueError, AttributeError):
+                continue
+        return uuids
 
     def _build_summary(self, queryset: QuerySet) -> dict:
         """Build summary statistics for a queryset.
@@ -489,34 +569,106 @@ class AnnotationSearchViewSet(GenericViewSet):
             "n_image_sets": queryset.values("annotation__image__image_set__id").distinct().count(),
         }
 
+    def _build_info(self, queryset: QuerySet, aphia_ids_info: dict) -> dict:
+        """Build unique image set, annotation set and Aphia ID info for search results.
 
-def _get_descendant_aphia_ids(aphia_ids: list[int]) -> list[int]:
+        Args:
+            queryset (QuerySet): The queryset to build the info for.
+            aphia_ids_info (dict): A dictionary mapping AphiaIDs to their details.
+
+        Returns:
+            dict: A dictionary containing unique image set, annotation set and Aphia ID info.
+        """
+        image_sets = list(
+            queryset.values(
+                uuid=F("annotation__image__image_set__id"),
+                name=F("annotation__image__image_set__name"),
+            )
+            .distinct()
+            .order_by("name", "uuid")
+        )
+        annotation_sets = list(
+            queryset.values(
+                uuid=F("annotation__annotation_set__id"),
+                name=F("annotation__annotation_set__name"),
+            )
+            .distinct()
+            .order_by("name", "uuid")
+        )
+        return {
+            "image_sets": image_sets,
+            "annotation_sets": annotation_sets,
+            "aphia_ids": aphia_ids_info.values(),
+        }
+
+
+def _get_descendant_aphia_ids(aphia_ids: list[int]) -> dict[dict]:
     """Get descendant AphiaIDs for a list of AphiaIDs.
 
     Args:
         aphia_ids (list[int]): List of AphiaIDs to get descendants for.
 
     Returns:
-        list[int]: List of descendant AphiaIDs.
+        dict[dict]: A dictionary mapping AphiaIDs to their details.
     """
     client = CachedWoRMSClient()
+    return_dict = {}
     try:
-        return client.descendants_aphia_ids(aphia_ids) or []
+        details_list = client.descendants_aphia_ids(aphia_ids) or []
     except requests.RequestException:
-        return []
+        return {}
+    for detail in details_list:
+        return_dict[detail["AphiaID"]] = {
+            "aphia_id": detail["AphiaID"],
+            "scientific_name": detail["scientificname"],
+            "rank": detail["rank"],
+        }
+    return return_dict
 
 
-def _get_aphia_ids_by_name_part(name_part: str) -> list[int]:
+def _get_aphia_ids_by_name_part(name_part: str) -> dict[dict]:
     """Get AphiaIDs for a given name part.
 
     Args:
         name_part (str): The name part to search for.
 
     Returns:
-        list[str]: List of AphiaIDs matching the name part.
+        dict[dict] | None: A dictionary mapping AphiaIDs to their details.
     """
     client = CachedWoRMSClient()
+    return_dict = {}
     try:
-        return client.aphia_ids_by_name_part(name_part, combine_vernaculars=True) or []
+        details_list = client.aphia_ids_by_name_part(name_part, combine_vernaculars=True, id_only=False) or []
     except requests.RequestException:
-        return []
+        return {}
+    for detail in details_list:
+        return_dict[detail["aphia_id"]] = {
+            "aphia_id": detail["aphia_id"],
+            "scientific_name": detail["scientific_name"],
+            "rank": detail["rank"],
+        }
+    return return_dict
+
+
+def _get_aphia_ids_info(aphia_ids: list[int]) -> dict[dict]:
+    """Get aphia IDs and their details from the WoRMS API.
+
+    Args:
+        aphia_ids (list[int]): List of AphiaIDs to get scientific names for.
+
+    Returns:
+        dict[dict]: A dictionary mapping AphiaIDs to their details, including scientific names.
+    """
+    client = CachedWoRMSClient()
+    return_dict = {}
+    try:
+        details_list = client.get_taxa(aphia_ids) or []
+    except requests.RequestException:
+        details_list = []
+    for detail in details_list:
+        return_dict[detail["AphiaID"]] = {
+            "aphia_id": detail["AphiaID"],
+            "scientific_name": detail["scientificname"],
+            "rank": detail["rank"],
+        }
+    return return_dict

@@ -51,7 +51,7 @@ api:
 ingress:
   enabled: true
   api:
-    path: annotations
+    path: ""
     pathType: Prefix
   ingressClassName: ""
   host: ""

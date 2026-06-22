@@ -10,6 +10,7 @@ from api.views import (
     UploadAnnotationsView,
 )
 from api.views.search import AnnotationSearchViewSet
+from api.views.worms_cache import WormsCacheAjaxViewSet
 
 router_annotation = DefaultRouter()
 
@@ -50,4 +51,9 @@ router_annotation.register(
     r"search",
     AnnotationSearchViewSet,
     basename="search",
+)
+router_annotation.register(
+    r"worms_cache",
+    WormsCacheAjaxViewSet,
+    basename="worms_cache",
 )
