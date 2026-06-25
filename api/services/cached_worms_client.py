@@ -1,5 +1,6 @@
 """WoRMS API client for fetching taxonomic data from the World Register of Marine Species (WoRMS)."""
 
+import logging
 from dataclasses import dataclass
 
 import requests
@@ -9,9 +10,8 @@ from urllib3.util.retry import Retry
 
 from config import settings
 
-import logging
-
 logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class CachedWoRMSClient:
