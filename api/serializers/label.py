@@ -77,6 +77,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             errors["lowest_aphia_id"] = error_message
             return errors
 
+        print(f"Unexpected response from WoRMS API for aphia_id {aphia_id}: {response.status_code} - {response.text}")
         error_message = (
             f"Unable to validate lowest_aphia_id right now " f"(status {response.status_code}). Please try again later."
         )
