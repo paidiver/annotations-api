@@ -9,6 +9,9 @@ from urllib3.util.retry import Retry
 
 from config import settings
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class CachedWoRMSClient:
@@ -62,7 +65,7 @@ class CachedWoRMSClient:
             The response from the API as a requests.Response object.
         """
         url = f"{self.base_url}{path}"
-        print(f"POSTing to {url} with payload: {json}")
+        logger.warning(f"POSTing to {url} with payload: {json}")
         with self._session() as session:
             response = session.post(url, json=json, headers={"Authorization": self.authorization_token}, timeout=20)
             return response
@@ -76,7 +79,7 @@ class CachedWoRMSClient:
         Returns:
             A requests.Response object representing the result of the ingest operation.
         """
-        print(f"Triggering ingest for AphiaID: {aphia_id}")
+        logger.warning(f"Triggering ingest for AphiaID: {aphia_id}")
         return self._post("/taxa/ingest/", json={"aphia_id": aphia_id})
 
     def descendants_aphia_ids(self, aphia_ids: list[int]) -> list[int] | None:

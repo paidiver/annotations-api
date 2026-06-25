@@ -9,6 +9,9 @@ from api.models.annotation_set import AnnotationSet
 from api.serializers.base import ReadOnlyFieldsMixin
 from api.services.cached_worms_client import CachedWoRMSClient
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for Label model."""
@@ -77,7 +80,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             errors["lowest_aphia_id"] = error_message
             return errors
 
-        print(f"Unexpected response from WoRMS API for aphia_id {aphia_id}: {response.status_code} - {response.text}")
+        logger.warning(f"Unexpected response from WoRMS API for aphia_id {aphia_id}: {response.status_code} - {response.text}")
         error_message = (
             f"Unable to validate lowest_aphia_id right now " f"(status {response.status_code}). Please try again later."
         )
