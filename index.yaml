@@ -16,6 +16,20 @@ entries:
     - https://github.com/paidiver/annotations-api/releases/download/api-1.0.19/api-1.0.19.tgz
     version: 1.0.19
   - apiVersion: v2
+    appVersion: 1.0.19-2
+    created: "2026-06-25T13:51:45.297268067Z"
+    description: A database and API for imagery metadata and annotations
+    digest: 124b500ac7302031f9e304d5e4c1f5fb9ea0910dd2752c3021a585890b57f5d3
+    maintainers:
+    - email: elisabeth.wetchy@noc.ac.uk
+      name: eawetchy
+      url: bodc.ac.uk
+    name: api
+    type: application
+    urls:
+    - https://github.com/paidiver/annotations-api/releases/download/docker-v1.0.19-2/api-1.0.19-2.tgz
+    version: 1.0.19-2
+  - apiVersion: v2
     appVersion: 1.0.19-1
     created: "2026-06-25T11:29:06.755748903Z"
     description: A database and API for imagery metadata and annotations
@@ -608,4 +622,4 @@ entries:
     urls:
     - https://github.com/paidiver/annotations-api/releases/download/paidiver-annotations-api-0.1.0/paidiver-annotations-api-0.1.0.tgz
     version: 0.1.0
-generated: "2026-06-25T11:29:06.756007969Z"
+generated: "2026-06-25T13:51:45.297768785Z"
