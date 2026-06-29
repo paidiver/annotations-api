@@ -190,9 +190,7 @@ EXPORT_PARAMS = [
         type=OpenApiTypes.BOOL,
         location=OpenApiParameter.QUERY,
         required=False,
-        description=(
-            "If true, return all matching annotations in a single response. Intended for export workflows."
-        ),
+        description=("If true, return all matching annotations in a single response. Intended for export workflows."),
     ),
 ]
 
