@@ -16,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from api.models.annotation import AnnotationLabel
 from api.models.base import DeploymentEnum, FaunaAttractionEnum, MarineZoneEnum
-from api.serializers.search import GroupedSearchResultRow, SearchResultItem
+from api.serializers.search import GroupedSearchResultRow, PaginatedSearchResult
 from api.services.cached_worms_client import CachedWoRMSClient
 
 MIN_CHARS_FOR_PARTIAL_MATCH = 3
@@ -183,7 +183,19 @@ PAGINATION_PARAMS = [
     ),
 ]
 
+
+EXPORT_PARAMS = [
+    OpenApiParameter(
+        name="disable_pagination",
+        type=OpenApiTypes.BOOL,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        description=("If true, return all matching annotations in a single response. Intended for export workflows."),
+    ),
+]
+
 GROUPED_SEARCH_PARAMS = [*SEARCH_PARAMS, *PAGINATION_PARAMS]
+LIST_SEARCH_PARAMS = [*SEARCH_PARAMS, *PAGINATION_PARAMS, *EXPORT_PARAMS]
 
 
 @extend_schema(tags=["Annotations API"])
@@ -193,8 +205,8 @@ class AnnotationSearchViewSet(GenericViewSet):
     queryset = AnnotationLabel.objects.none()
 
     @extend_schema(
-        parameters=SEARCH_PARAMS,
-        responses={200: SearchResultItem, 204: None},
+        parameters=LIST_SEARCH_PARAMS,
+        responses={200: PaginatedSearchResult, 204: None},
     )
     def list(self, request: Request) -> Response:
         """Search for Annotations based on query parameters.
@@ -220,17 +232,23 @@ class AnnotationSearchViewSet(GenericViewSet):
         include_name_info = request.query_params.get("return_image_annotation_name_info", "false").lower() == "true"
         info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
-        paginator = self.paginator
-        page = paginator.paginate_queryset(queryset, request, view=self)
         response_data = {}
         if summary is not None:
             response_data["summary"] = summary
         if info is not None:
             response_data["info"] = info
 
+        if self._disable_pagination_requested(request):
+            response_data["annotations"] = list(queryset)
+            return Response(response_data)
+
+        paginator = self.paginator
+        page = paginator.paginate_queryset(queryset, request, view=self)
+
         if page is not None:
             response_data["annotations"] = page
             return paginator.get_paginated_response(response_data)
+
         response_data["annotations"] = list(queryset)
         return Response(response_data)
 
@@ -600,6 +618,10 @@ class AnnotationSearchViewSet(GenericViewSet):
             "annotation_sets": annotation_sets,
             "aphia_ids": aphia_ids_info.values(),
         }
+
+    def _disable_pagination_requested(self, request: Request) -> bool:
+        """Return whether pagination should be disabled for this request."""
+        return request.query_params.get("disable_pagination", "false").lower() == "true"
 
 
 def _get_descendant_aphia_ids(aphia_ids: list[int]) -> dict[dict]:

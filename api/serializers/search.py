@@ -44,6 +44,24 @@ SearchResultItem = inline_serializer(
     },
 )
 
+
+PaginatedSearchResult = inline_serializer(
+    name="PaginatedSearchResult",
+    fields={
+        "count": serializers.IntegerField(),
+        "next": serializers.URLField(allow_null=True),
+        "previous": serializers.URLField(allow_null=True),
+        "results": inline_serializer(
+            name="SearchResultPayload",
+            fields={
+                "info": serializers.DictField(required=False),
+                "summary": serializers.DictField(required=False),
+                "annotations": SearchResultItem,
+            },
+        ),
+    },
+)
+
 GroupedSearchResultRow = inline_serializer(
     name="GroupedSearchResultRow",
     fields={
