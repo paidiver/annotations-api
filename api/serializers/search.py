@@ -124,7 +124,6 @@ AnnotationExportImage = inline_serializer(
         "image_uuid": serializers.UUIDField(),
         "image_hash_sha256": serializers.CharField(allow_null=True),
         "image_area_square_meter": serializers.FloatField(allow_null=True),
-        "image_pixel_per_millimeter": serializers.FloatField(allow_null=True),
         "image_meters_above_ground": serializers.FloatField(allow_null=True),
         "image_acquisition_settings": serializers.JSONField(allow_null=True),
         "image_set_name": serializers.CharField(),
