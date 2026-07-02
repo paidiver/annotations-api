@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 
 import requests
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, FloatField, Q, QuerySet, Value
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
@@ -15,8 +15,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from api.models.annotation import AnnotationLabel
+from api.models.annotation_set import AnnotationSet
 from api.models.base import DeploymentEnum, FaunaAttractionEnum, MarineZoneEnum
-from api.serializers.search import GroupedSearchResultRow, PaginatedSearchResult
+from api.models.image_set import ImageSet
+from api.serializers.search import AnnotationExportData, GroupedSearchResultRow, PaginatedSearchResult
 from api.services.cached_worms_client import CachedWoRMSClient
 
 MIN_CHARS_FOR_PARTIAL_MATCH = 3
@@ -303,6 +305,71 @@ class AnnotationSearchViewSet(GenericViewSet):
             return paginator.get_paginated_response(response_data)
         return Response(response_data)
 
+    @extend_schema(
+        parameters=SEARCH_PARAMS,
+        responses={200: AnnotationExportData},
+    )
+    @action(detail=False, methods=["get"], url_path="export-data")
+    def export_data(self, request: Request) -> Response:
+        """Return export-oriented data for matching annotation search results."""
+        validation_error = self._validate_search_params(request)
+        if validation_error is not None:
+            return validation_error
+
+        aphia_ids_info = self._get_all_aphia_ids_from_request(request)
+        if isinstance(aphia_ids_info, Response):
+            return aphia_ids_info
+
+        aphia_ids = list(aphia_ids_info.keys())
+        filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
+
+        annotations = list(self._get_export_annotations_queryset(filtered_queryset))
+        images = list(self._get_export_images_queryset(filtered_queryset))
+        annotation_sets = list(self._get_export_annotation_sets_queryset(filtered_queryset))
+        image_sets = list(self._get_export_image_sets_queryset(filtered_queryset))
+
+        annotation_set_ids = list(
+            {
+                str(annotation_set["annotation_set_uuid"])
+                for annotation_set in annotation_sets
+                if annotation_set["annotation_set_uuid"] is not None
+            }
+        )
+        image_set_ids = list(
+            {
+                str(image_set["image_set_uuid"])
+                for image_set in image_sets
+                if image_set["image_set_uuid"] is not None
+            }
+        )
+
+        annotation_creators_by_set_id = self._get_creators_by_parent_id(
+            model=AnnotationSet,
+            parent_ids=annotation_set_ids,
+        )
+        image_creators_by_set_id = self._get_creators_by_parent_id(
+            model=ImageSet,
+            parent_ids=image_set_ids,
+        )
+
+        for annotation_set in annotation_sets:
+            annotation_set_id = str(annotation_set.get("annotation_set_uuid"))
+            annotation_set["annotation_creators"] = annotation_creators_by_set_id.get(annotation_set_id, [])
+
+        for image_set in image_sets:
+            image_set_id = str(image_set.get("image_set_uuid"))
+            image_set["image_creators"] = image_creators_by_set_id.get(image_set_id, [])
+
+        return Response(
+            {
+                "annotations": annotations,
+                "images": images,
+                "annotation_sets": annotation_sets,
+                "image_sets": image_sets,
+            }
+        )
+
+
     def _get_filtered_queryset(self, aphia_ids: list[int], request: Request) -> QuerySet:
         """Get a filtered queryset of AnnotationLabel rows for the search request.
 
@@ -345,6 +412,202 @@ class AnnotationSearchViewSet(GenericViewSet):
             annotation_dimension_pixels=F("annotation__dimension_pixels"),
             annotator_name=F("annotator__name"),
         ).order_by("annotation__annotation_set__name", "annotation__image__image_set__name", "id")
+
+    def _get_export_annotations_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
+        """Build annotation rows for the export-data endpoint.
+
+        Args:
+            filtered_queryset (QuerySet): A filtered queryset of AnnotationLabel rows.
+
+        Returns:
+            QuerySet: A projected queryset with annotation export fields.
+        """
+        return filtered_queryset.values(
+            image_handle=F("annotation__image__handle"),
+            image_uuid=F("annotation__image__id"),
+            annotation_platform=F("annotation__annotation_platform"),
+            image_filename=F("annotation__image__filename"),
+            annotation_human_creator=F("annotator__name"),
+            annotation_creation_datetime=F("creation_datetime"),
+            annotation_label_name=F("label__name"),
+            annotation_shape_name=F("annotation__shape"),
+            annotation_coordinates=F("annotation__coordinates"),
+            annotation_set_name=F("annotation__annotation_set__name"),
+        ).order_by(
+            "annotation__annotation_set__name",
+            "annotation__image__image_set__name",
+            "annotation__image__filename",
+            "id",
+        )
+
+    def _get_export_images_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
+        """Build image rows for the export-data endpoint.
+
+        Args:
+            filtered_queryset (QuerySet): A filtered queryset of AnnotationLabel rows.
+
+        Returns:
+            QuerySet: A projected queryset with unique image export fields.
+        """
+        return (
+            filtered_queryset.values(
+                image_filename=F("annotation__image__filename"),
+                image_datetime=F("annotation__image__date_time"),
+                image_longitude=F("annotation__image__longitude"),
+                image_latitude=F("annotation__image__latitude"),
+                image_depth=F("annotation__image__altitude_meters"),
+                image_uuid=F("annotation__image__id"),
+                image_hash_sha256=F("annotation__image__sha256_hash"),
+                image_area_square_meter=F("annotation__image__area_square_meters"),
+                image_meters_above_ground=F("annotation__image__meters_above_ground"),
+                image_acquisition_settings=F("annotation__image__acquisition_settings"),
+                image_set_name=F("annotation__image__image_set__name"),
+            )
+            .distinct()
+            .order_by("image_filename", "image_uuid")
+        )
+
+    def _get_export_annotation_sets_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
+        """Build annotation set rows for the export-data endpoint.
+
+        Args:
+            filtered_queryset (QuerySet): A filtered queryset of AnnotationLabel rows.
+
+        Returns:
+            QuerySet: A projected queryset with unique annotation set export fields.
+        """
+        return (
+            filtered_queryset.values(
+                annotation_set_name=F("annotation__annotation_set__name"),
+                annotation_project_name=F("annotation__annotation_set__project__name"),
+                annotation_project_uri=F("annotation__annotation_set__project__uri"),
+                annotation_context_name=F("annotation__annotation_set__context__name"),
+                annotation_context_uri=F("annotation__annotation_set__context__uri"),
+                annotation_abstract=F("annotation__annotation_set__abstract"),
+                annotation_objective=F("annotation__annotation_set__objective"),
+                annotation_target_environment=F("annotation__annotation_set__target_environment"),
+                annotation_target_timescale=F("annotation__annotation_set__target_timescale"),
+                annotation_curation_protocol=F("annotation__annotation_set__curation_protocol"),
+                annotation_pi_name=F("annotation__annotation_set__pi__name"),
+                annotation_pi_uri=F("annotation__annotation_set__pi__uri"),
+                annotation_license_name=F("annotation__annotation_set__license__name"),
+                annotation_license_uri=F("annotation__annotation_set__license__uri"),
+                annotation_copyright=F("annotation__annotation_set__copyright"),
+                annotation_set_uuid=F("annotation__annotation_set__id"),
+                annotation_set_handle=F("annotation__annotation_set__handle"),
+                annotation_set_version=F("annotation__annotation_set__version"),
+                annotation_image_set_name=F("annotation__image__image_set__name"),
+                annotation_image_set_uuid=F("annotation__image__image_set__id"),
+                annotation_image_set_handle=F("annotation__image__image_set__handle"),
+            )
+            .distinct()
+            .order_by("annotation_set_name", "annotation_set_uuid")
+        )
+
+    def _get_export_image_sets_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
+        """Build image set rows for the export-data endpoint.
+
+        Args:
+            filtered_queryset (QuerySet): A filtered queryset of AnnotationLabel rows.
+
+        Returns:
+            QuerySet: A projected queryset with unique image set export fields.
+        """
+        return (
+            filtered_queryset.values(
+                image_set_name=F("annotation__image__image_set__name"),
+                image_project_name=F("annotation__image__image_set__project__name"),
+                image_project_uri=F("annotation__image__image_set__project__uri"),
+                image_context_name=F("annotation__image__image_set__context__name"),
+                image_context_uri=F("annotation__image__image_set__context__uri"),
+                image_abstract=F("annotation__image__image_set__abstract"),
+                image_event_name=F("annotation__image__image_set__event__name"),
+                image_event_uri=F("annotation__image__image_set__event__uri"),
+                image_platform_name=F("annotation__image__image_set__platform__name"),
+                image_platform_uri=F("annotation__image__image_set__platform__uri"),
+                image_sensor_name=F("annotation__image__image_set__sensor__name"),
+                image_sensor_uri=F("annotation__image__image_set__sensor__uri"),
+                image_set_uuid=F("annotation__image__image_set__id"),
+                image_set_handle=F("annotation__image__image_set__handle"),
+                image_pi_name=F("annotation__image__image_set__pi__name"),
+                image_pi_uri=F("annotation__image__image_set__pi__uri"),
+                image_license_name=F("annotation__image__image_set__license__name"),
+                image_license_uri=F("annotation__image__image_set__license__uri"),
+                image_copyright=F("annotation__image__image_set__copyright"),
+                image_acquisition=F("annotation__image__image_set__acquisition"),
+                image_quality=F("annotation__image__image_set__quality"),
+                image_deployment=F("annotation__image__image_set__deployment"),
+                image_navigation=F("annotation__image__image_set__navigation"),
+                image_scale_reference=F("annotation__image__image_set__scale_reference"),
+                image_illumination=F("annotation__image__image_set__illumination"),
+                image_resolution=F("annotation__image__image_set__pixel_magnitude"),
+                image_marine_zone=F("annotation__image__image_set__marine_zone"),
+                image_spectral_resolution=F("annotation__image__image_set__spectral_resolution"),
+                image_capture_mode=F("annotation__image__image_set__capture_mode"),
+                image_spatial_constraints=F("annotation__image__image_set__spatial_constraints"),
+                image_temporal_constraints=F("annotation__image__image_set__temporal_constraints"),
+                image_target_environment=F("annotation__image__image_set__target_environment"),
+                image_objective=F("annotation__image__image_set__objective"),
+                image_time_synchronisation=F("annotation__image__image_set__time_synchronisation"),
+                image_item_identification_scheme=F("annotation__image__image_set__item_identification_scheme"),
+                image_curation_protocol=F("annotation__image__image_set__curation_protocol"),
+                image_acquisition_settings=F("annotation__image__image_set__acquisition_settings"),
+                image_set_start_datetime=F("annotation__image__image_set__date_time"),
+                image_set_lat_min=F("annotation__image__image_set__min_latitude_degrees"),
+                image_set_lat_max=F("annotation__image__image_set__max_latitude_degrees"),
+                image_set_long_min=F("annotation__image__image_set__min_longitude_degrees"),
+                image_set_long_max=F("annotation__image__image_set__max_longitude_degrees"),
+            )
+            .distinct()
+            .order_by("image_set_name", "image_set_uuid")
+        )
+
+
+    def _get_creators_by_parent_id(
+        self,
+        model: type,
+        parent_ids: list[str],
+    ) -> dict[str, list[dict[str, str | None]]]:
+        """Return creators grouped by parent object ID.
+
+        Args:
+            model: The parent model to query, either AnnotationSet or ImageSet.
+            parent_ids: IDs of parent objects to fetch creators for.
+
+        Returns:
+            A dictionary mapping parent IDs to creator name/URI objects.
+        """
+        if not parent_ids:
+            return {}
+
+        rows = (
+            model.objects.filter(id__in=parent_ids)
+            .values(
+                parent_id=F("id"),
+                creator_name=F("creators__name"),
+                creator_uri=F("creators__uri"),
+            )
+            .order_by("id", "creators__name", "creators__uri")
+        )
+
+        creators_by_parent_id: dict[str, list[dict[str, str | None]]] = {}
+
+        for row in rows:
+            parent_id = str(row["parent_id"])
+            creator_name = row["creator_name"]
+            creator_uri = row["creator_uri"]
+
+            if creator_name is None and creator_uri is None:
+                continue
+
+            creators_by_parent_id.setdefault(parent_id, []).append(
+                {
+                    "name": creator_name,
+                    "uri": creator_uri,
+                }
+            )
+
+        return creators_by_parent_id
 
     def _calculate_filters(self, aphia_ids: list[int], request: Request) -> Q:  # noqa: PLR0912
         """Calculate the filters to apply to the Annotation queryset based on the query parameters.
