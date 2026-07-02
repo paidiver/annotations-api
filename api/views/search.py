@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 
 import requests
-from django.db.models import F, FloatField, Q, QuerySet, Value
+from django.db.models import F, Q, QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
