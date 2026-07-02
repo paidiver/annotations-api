@@ -336,11 +336,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             }
         )
         image_set_ids = list(
-            {
-                str(image_set["image_set_uuid"])
-                for image_set in image_sets
-                if image_set["image_set_uuid"] is not None
-            }
+            {str(image_set["image_set_uuid"]) for image_set in image_sets if image_set["image_set_uuid"] is not None}
         )
 
         annotation_creators_by_set_id = self._get_creators_by_parent_id(
@@ -368,7 +364,6 @@ class AnnotationSearchViewSet(GenericViewSet):
                 "image_sets": image_sets,
             }
         )
-
 
     def _get_filtered_queryset(self, aphia_ids: list[int], request: Request) -> QuerySet:
         """Get a filtered queryset of AnnotationLabel rows for the search request.
@@ -562,7 +557,6 @@ class AnnotationSearchViewSet(GenericViewSet):
             .order_by("image_set_name", "image_set_uuid")
         )
 
-
     def _get_creators_by_parent_id(
         self,
         model: type,
@@ -711,7 +705,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             value = request.query_params.get(param_name)
             if value and value not in allowed_values:
                 errors[param_name] = (
-                    f"Invalid value for '{param_name}': '{value}'. " f"Allowed values are: {sorted(allowed_values)}"
+                    f"Invalid value for '{param_name}': '{value}'. Allowed values are: {sorted(allowed_values)}"
                 )
         aphia_ids = self._get_aphia_ids_from_query(request, "aphia_ids[]")
         name_part = request.query_params.get("name_part")
