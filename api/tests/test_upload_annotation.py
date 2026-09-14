@@ -17,7 +17,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
     def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
-        self.upload_url = reverse("upload_annotation-list")
+        self.upload_url = reverse("ingest-annotation-sets")
         self.mock_annotation_set = {"name": "Test Annotation Set"}
         self.mock_label_data = [{"name": "Label1", "parent": "Parent1"}]
         self.mock_annotation_data = [{"annotation": "data"}]

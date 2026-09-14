@@ -200,7 +200,7 @@ GROUPED_SEARCH_PARAMS = [*SEARCH_PARAMS, *PAGINATION_PARAMS]
 LIST_SEARCH_PARAMS = [*SEARCH_PARAMS, *PAGINATION_PARAMS, *EXPORT_PARAMS]
 
 
-@extend_schema(tags=["Annotations API"])
+@extend_schema(tags=["Annotation Search"])
 class AnnotationSearchViewSet(GenericViewSet):
     """ViewSet for searching Annotations."""
 
@@ -309,7 +309,7 @@ class AnnotationSearchViewSet(GenericViewSet):
         parameters=SEARCH_PARAMS,
         responses={200: AnnotationExportData},
     )
-    @action(detail=False, methods=["get"], url_path="export-data")
+    @action(detail=False, methods=["get"], url_path="export")
     def export_data(self, request: Request) -> Response:
         """Return export-oriented data for matching annotation search results."""
         validation_error = self._validate_search_params(request)

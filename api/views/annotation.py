@@ -49,7 +49,8 @@ class UploadAnnotationsView(viewsets.ViewSet):
     serializer_class = FileUploadSerializer
 
     @extend_schema(
-        tags=["Annotations API"],
+        tags=["Ingest"],
+        summary="Import an annotation set from XLSX",
         operation_id="upload_annotations",
         request=FileUploadSerializer,
         responses={201: OpenApiTypes.OBJECT},
