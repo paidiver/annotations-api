@@ -1,4 +1,4 @@
-"""ViewSet for WoRMS cache AJAX endpoints."""
+"""Taxonomy lookups backed by the cached WoRMS client."""
 
 from __future__ import annotations
 
@@ -7,8 +7,7 @@ from typing import Any
 import requests
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework import serializers, status
-from rest_framework.decorators import action
+from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -29,48 +28,6 @@ class TaxonWormsLikeSerializer(serializers.Serializer):
     modified = serializers.DateTimeField(required=False, allow_null=True)
     cached_at = serializers.DateTimeField(required=False, allow_null=True)
     parent_AphiaID = serializers.IntegerField(required=False, allow_null=True)
-
-
-AJAX_BY_NAME_PART_PARAMETERS = [
-    OpenApiParameter(
-        name="name_part",
-        type=OpenApiTypes.STR,
-        location=OpenApiParameter.PATH,
-        required=True,
-    ),
-    OpenApiParameter(
-        name="combine_vernaculars",
-        type=OpenApiTypes.BOOL,
-        required=False,
-        description="Include vernacular matching.",
-    ),
-]
-
-
-@extend_schema(tags=["Annotations API"])
-class WormsCacheAjaxViewSet(GenericViewSet):
-    """ViewSet for WoRMS cache AJAX endpoints."""
-
-    @extend_schema(
-        parameters=AJAX_BY_NAME_PART_PARAMETERS,
-        responses={200: TaxonWormsLikeSerializer(many=True)},
-    )
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path=r"ajax_by_name_part/(?P<name_part>[^/]+)",
-        pagination_class=None,
-        filter_backends=[],
-    )
-    def ajax_by_name_part(self, request: Request, name_part: str) -> Response:
-        """Endpoint for AJAX autocomplete of taxon names."""
-        results = _get_ajax_by_name_part_results(
-            name_part=name_part,
-            combine_vernaculars=_get_bool_query_param(request, "combine_vernaculars", default=True),
-        )
-
-        serializer = TaxonWormsLikeSerializer(results, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 def _get_ajax_by_name_part_results(
@@ -110,3 +67,35 @@ def _get_bool_query_param(
         return default
 
     return value.lower() in {"1", "true", "yes", "y", "on"}
+
+
+@extend_schema(tags=["Taxonomy"])
+class WormsTaxaViewSet(GenericViewSet):
+    """Search WoRMS taxa by a partial name."""
+
+    pagination_class = None
+    filter_backends = []
+
+    @extend_schema(
+        summary="Find WoRMS taxa by partial name",
+        parameters=[
+            OpenApiParameter(name="name_part", type=OpenApiTypes.STR, required=True),
+            OpenApiParameter(
+                name="combine_vernaculars",
+                type=OpenApiTypes.BOOL,
+                required=False,
+                description="Include vernacular matching.",
+            ),
+        ],
+        responses={200: TaxonWormsLikeSerializer(many=True), 400: OpenApiTypes.OBJECT},
+    )
+    def list(self, request: Request) -> Response:
+        """Return taxa matching the required name_part query parameter."""
+        name_part = request.query_params.get("name_part", "").strip()
+        if not name_part:
+            return Response({"name_part": ["This query parameter is required and must not be blank."]}, status=400)
+        results = _get_ajax_by_name_part_results(
+            name_part=name_part,
+            combine_vernaculars=_get_bool_query_param(request, "combine_vernaculars", default=True),
+        )
+        return Response(TaxonWormsLikeSerializer(results, many=True).data)

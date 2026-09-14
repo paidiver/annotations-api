@@ -7,10 +7,8 @@ from api.views import (
     AnnotationSetViewSet,
     AnnotationViewSet,
     AnnotatorViewSet,
-    UploadAnnotationsView,
 )
 from api.views.search import AnnotationSearchViewSet
-from api.views.worms_cache import WormsCacheAjaxViewSet
 
 router_annotation = DefaultRouter()
 
@@ -39,21 +37,9 @@ router_annotation.register(
     basename="annotation_set",
 )
 
-# route for uploading annotation data from XLSX file
-router_annotation.register(
-    "upload_annotation",
-    UploadAnnotationsView,
-    basename="upload_annotation",
-)
-
 # annotatiion_set endpoints are registered here
 router_annotation.register(
     r"search",
     AnnotationSearchViewSet,
     basename="search",
-)
-router_annotation.register(
-    r"worms_cache",
-    WormsCacheAjaxViewSet,
-    basename="worms_cache",
 )

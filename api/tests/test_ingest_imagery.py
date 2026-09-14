@@ -15,7 +15,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
     def ingest_url(self) -> str:
         """Helper to get the ingest URL."""
-        return "/api/ingest/image-set"
+        return "/api/ingest/image-sets/"
 
     @patch("api.views.ingest_imagery.adapt_ifdo_item_to_image_serializer_payload")
     @patch("api.views.ingest_imagery.adapt_ifdo_image_set_to_serializer_payload")

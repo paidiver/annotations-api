@@ -1,4 +1,4 @@
-"""Tests for WormsCacheAjaxViewSet."""
+"""Tests for WormsTaxaViewSet."""
 
 from unittest.mock import Mock, patch
 
@@ -10,12 +10,8 @@ from rest_framework.test import APITestCase
 from api.views.worms_cache import _get_ajax_by_name_part_results
 
 
-class WormsCacheAjaxViewSetTests(APITestCase):
-    """Integration tests for WormsCacheAjaxViewSet endpoint."""
-
-    def ajax_url(self, name_part: str) -> str:
-        """Build URL for the worms_cache ajax_by_name_part action."""
-        return reverse("worms_cache-ajax-by-name-part", kwargs={"name_part": name_part})
+class WormsTaxaViewSetTests(APITestCase):
+    """Integration tests for WormsTaxaViewSet endpoint."""
 
     @patch("api.views.worms_cache.CachedWoRMSClient")
     def test_ajax_by_name_part_returns_results(self, mocked_client_cls: Mock) -> None:
@@ -33,7 +29,7 @@ class WormsCacheAjaxViewSetTests(APITestCase):
             }
         ]
 
-        resp = self.client.get(self.ajax_url("lophi"))
+        resp = self.client.get(reverse("worms-taxa-list"), {"name_part": "lophi"})
         data = list(resp.data)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(data, mocked_client.ajax_by_name_part.return_value)
@@ -45,7 +41,7 @@ class WormsCacheAjaxViewSetTests(APITestCase):
         mocked_client = mocked_client_cls.return_value
         mocked_client.ajax_by_name_part.return_value = []
 
-        resp = self.client.get(self.ajax_url("lophi"), {"combine_vernaculars": "false"})
+        resp = self.client.get(reverse("worms-taxa-list"), {"name_part": "lophi", "combine_vernaculars": "false"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data, [])

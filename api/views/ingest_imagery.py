@@ -40,6 +40,7 @@ IngestIFDOResponseSerializer = inline_serializer(
 
 @extend_schema(
     tags=["Ingest"],
+    summary="Import an image set from iFDO",
     request=IngestIFDOSerializer,
     responses={201: IngestIFDOResponseSerializer, 400: serializers.DictField(), 502: serializers.DictField()},
 )
