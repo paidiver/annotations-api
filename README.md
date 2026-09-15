@@ -27,8 +27,8 @@ Relevant documentation:
 
 ### Local development (without Docker)
 
-* Python ≥ 3.10
-* Poetry
+* Python 3.13
+* uv
 
 ## Project Structure
 
@@ -42,8 +42,8 @@ Relevant documentation:
 │   └── scripts/
 │       └── wait-for-it.sh
 ├── manage.py
-├── pyproject.toml      # Project metadata & dependencies (Poetry)
-├── poetry.lock         # Locked dependency versions
+├── pyproject.toml      # Project metadata & dependencies (uv)
+├── uv.lock         # Locked dependency versions
 ├── tox.ini             # Test, lint, and format automation
 ├── ruff.toml           # Ruff configuration
 ├── README.md
@@ -53,13 +53,13 @@ Relevant documentation:
 
 ## Dependency Management
 
-This project uses **Poetry** for dependency management and packaging.
+This project uses **uv** for dependency management and environments.
 
 Key points:
 
 * Dependencies are defined in `pyproject.toml`
-* Locked versions live in `poetry.lock`
-* Development tools (linting, formatting, testing) are installed via Poetry groups
+* Locked versions live in `uv.lock`
+* Development tools (linting, formatting, testing) are installed via dependency groups
 
 ## Helm Charts
 
@@ -238,7 +238,7 @@ If you set the environment variable `CACHED_WORMS_API_BASE_URL` to point to a lo
 ### 1. Install dependencies
 
 ```bash
-poetry install
+uv sync --locked
 ```
 
 ### 2. Start only the database via Docker
@@ -250,13 +250,13 @@ docker compose -f docker/docker-compose.yml up -d db
 ### 3. Apply migrations
 
 ```bash
-python manage.py migrate
+uv run --locked python manage.py migrate
 ```
 
 ### 4. Run the development server
 
 ```bash
-python manage.py runserver
+uv run --locked python manage.py runserver
 ```
 
 ## Database Migrations
@@ -286,7 +286,7 @@ docker compose -f docker/docker-compose.yml exec api python manage.py migrate
 Format code using Ruff:
 
 ```bash
-tox -e format
+uv run --locked --group test tox -e format
 
 # or using Docker
 docker compose -f docker/docker-compose.yml run --rm api tox -e format
@@ -297,7 +297,7 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e format
 Run lint checks:
 
 ```bash
-tox -e lint
+uv run --locked --group test tox -e lint
 
 # or using Docker
 docker compose -f docker/docker-compose.yml run --rm api tox -e lint
@@ -308,7 +308,7 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e lint
 Run the test suite with coverage:
 
 ```bash
-tox
+uv run --locked --group test tox
 ```
 
 or explicitly:
@@ -326,7 +326,7 @@ for any requests that modify data. Anonymous users may only use "safe" methods (
 The project includes a management command to create a new user with an auth token:
 
 ```bash
-python manage.py create_user_with_token <username> <password>
+uv run --locked python manage.py create_user_with_token <username> <password>
 ```
 
 The created API token is returned in the command output. Please ensure to store this token safely.
@@ -365,7 +365,7 @@ docker compose -f docker/docker-compose.yml run --rm api \
 ### Customising the amount of data
 
 ```bash
-python manage.py seed_demo_data \
+uv run --locked python manage.py seed_demo_data \
   --image-annotation-sets 3 \
   --images-per-image-set 15 \
   --labels-per-annotation-set 25 \
@@ -394,3 +394,57 @@ A collection of example API requests and responses is available in the [API Exam
 ## Acknowledgements
 
 This project was supported by the UK Natural Environment Research Council (NERC) through the *Tools for automating image analysis for biodiversity monitoring (AIAB)* Funding Opportunity, reference code **UKRI052**.
+
+
+## uv development workflow
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (CI and Docker
+use version 0.9.22), then:
+
+```bash
+uv sync --python 3.13 --locked --group test --group lint
+uv run --locked python manage.py migrate
+uv run --locked python manage.py runserver
+uv run --locked --no-default-groups --group test tox -e lint
+uv run --locked --no-default-groups --group test tox -e py313
+```
+
+Tests require PostgreSQL (PostGIS for annotations-api) and the `POSTGRES_*`
+settings used by the application. annotations-api also requires GDAL/GEOS locally.
+If `.python-version` contains a pyenv environment name, run `uv python pin 3.13`.
+The `dev` group is included by default; use `--no-default-groups` to omit it.
+Use `uv add PACKAGE` or `uv add --group test PACKAGE` to add dependencies and
+`uv lock --upgrade` for an intentional upgrade. Commit `pyproject.toml` and
+`uv.lock` together. CI and tox use `--locked` to reject stale lockfiles.
+
+This is a non-package Django application. The old Poetry wheel-build task and
+unused dynamic-versioning configuration have been removed; Docker is the build
+artifact:
+
+```bash
+docker build -f docker/Dockerfile -t api:local .
+```
+
+The default runtime target includes only application dependencies and runs
+Gunicorn after migrations. Compose selects the development target, including
+test/lint tools and the development server. Dependencies are cached separately
+from source, and `/opt/venv` stays available when Compose mounts source at `/app`.
+
+
+### Search ordering
+
+The annotation search, grouped search and export-data endpoints accept the same
+optional `order_by` parameter as the brokerage API:
+
+| Value | Sort field |
+| --- | --- |
+| `label_aphia_id` | Label's lowest AphiaID |
+| `annotation_creation_datetime` | Annotation-label creation time |
+| `label_name` | Label name |
+
+Ordering is ascending, with nulls last and annotation-label UUID as a stable
+tie-breaker. It is applied before pagination (and before grouping in grouped
+search). For export-data, it orders the annotations array. Omitting `order_by`
+preserves the existing default ordering. Unsupported values return HTTP 400.
+
+Example: `/api/annotations/search/?aphia_ids[]=126436&order_by=label_name&page_size=20`.

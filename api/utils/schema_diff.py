@@ -4,8 +4,8 @@ This can be used to compare the Alembic-migrated schema against the
 Django ORM-generated schema to ensure they are in sync.
 
 To run this script, you need to have SQLAlchemy installed in your
-environment. You can install it via poetry dev:
-    poetry install --with dev
+environment. You can install it via the uv dev group:
+    uv sync --locked
 
 To run the script, use the following command:
 

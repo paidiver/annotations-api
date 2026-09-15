@@ -1,63 +1,43 @@
-[build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
-build-backend = "poetry_dynamic_versioning.backend"
-
-[tool.poetry]
+[project]
 name = "annotations-api"
 version = "0.0.0"
 description = "Annotations API - database + REST API for underwater imagery metadata and annotations"
-authors = []
 readme = "README.md"
-package-mode = false
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "Django==4.2.3",
+  "djangorestframework==3.15.2",
+  "psycopg[binary]>=3.1,<4.0.0",
+  "drf-spectacular>=0.27.0,<0.28.0",
+  "drf-spectacular-sidecar>=2024.7.1,<2025.0.0",
+  "drf-yasg>=1.21.10,<2.0.0",
+  "requests>=2.31.0,<3.0.0",
+  "pandas>=3.0.0,<4.0.0",
+  "gunicorn>=25.0.3,<26.0.0",
+  "openpyxl>=3.1.5,<4.0.0",
+  "django-cors-headers>=4.9.0,<5.0.0",
+  "whitenoise>=6.11.0,<7.0.0",
+]
 
-[tool.poetry.dependencies]
-python = "~3.13"
-Django = "4.2.3"
-djangorestframework = "3.15.2"
-psycopg = { extras = ["binary"], version = "^3.1" }
-drf-spectacular = "^0.27.0"
-drf-spectacular-sidecar = "^2024.7.1"
-drf-yasg = "^1.21.10"
-requests = "^2.31.0"
-pandas = "^3.0.0"
-gunicorn = "^25.0.3"
-openpyxl = "^3.1.5"
-django-cors-headers = "^4.9.0"
-whitenoise = "^6.11.0"
+[dependency-groups]
+lint = [
+  "ruff>=0.4.2,<0.5.0",
+]
+dev = [
+  "sqlalchemy>=2.0.46,<3.0.0",
+]
+test = [
+  "pytest>=7.3.0,<8.0.0",
+  "pytest-cov>=4.0.0,<5.0.0",
+  "tox>=4.0.0,<5.0.0",
+  "faker>=40.0.0,<41.0.0",
+  "factory-boy>=3.2.0,<4.0.0",
+]
+types = ["pyright>=1.1,<2"]
 
-[tool.poetry.group.lint]
-optional = true
-
-[tool.poetry.group.lint.dependencies]
-ruff = "^0.4.2"
-
-[tool.poetry.group.dev.dependencies]
-sqlalchemy = "^2.0.46"
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.3.0"
-pytest-cov = "^4.0.0"
-tox = "^4.0.0"
-faker = "^40.0.0"
-factory-boy = "^3.2.0"
-
-[tool.poetry.group.build]
-optional = true
-
-[tool.poetry.group.build.dependencies]
-twine = "^6.1.0"
-importlib-metadata = "7.1.0"
-
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-style = "semver"
-
-[tool.poetry-dynamic-versioning.substitution]
-files = ["config/__init__.py"]
+# Django application deployed as a container, not an installable package.
+[tool.uv]
+package = false
 
 [tool.ruff]
 line-length = 88
