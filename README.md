@@ -132,6 +132,13 @@ helm uninstall my-api
 ### Production release
 A new `latest` Docker image is build and published to https://ghcr.io/paidiver/annotations-api on each push to main.
 
+### Versioned release
+Pushing a Git tag matching `v*` also publishes a Docker image. The full tag is
+preserved: `v1.2.3` publishes `ghcr.io/paidiver/annotations-api:v1.2.3`, and
+`v1.3.0-alpha.1` publishes `ghcr.io/paidiver/annotations-api:v1.3.0-alpha.1`.
+The commit SHA is published as an additional image tag. Versioned pushes do not
+update `latest`, which continues to track pushes to `main`.
+
 ### Development release
 Development versions of Docker images can be released manually, driven by Git tags.
 To release a new Docker image, create a Git tag in the format:
@@ -395,7 +402,6 @@ A collection of example API requests and responses is available in the [API Exam
 
 This project was supported by the UK Natural Environment Research Council (NERC) through the *Tools for automating image analysis for biodiversity monitoring (AIAB)* Funding Opportunity, reference code **UKRI052**.
 
-
 ## uv development workflow
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (CI and Docker
@@ -448,3 +454,18 @@ search). For export-data, it orders the annotations array. Omitting `order_by`
 preserves the existing default ordering. Unsupported values return HTTP 400.
 
 Example: `/api/annotations/search/?aphia_ids[]=126436&order_by=label_name&page_size=20`.
+
+### Ingestion, taxonomy, and annotation search
+
+| Method | URL | Swagger tag | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/ingest/image-sets/` | Ingest | Import an iFDO image set and its images. |
+| POST | `/api/ingest/annotation-sets/` | Ingest | Import annotation-set metadata, labels, and annotations from XLSX. |
+| GET | `/api/taxonomy/worms/taxa/?name_part=lophi` | Taxonomy | Find WoRMS taxa by partial name. |
+| GET | `/api/annotations/search/` | Annotation Search | Search annotations. |
+| GET | `/api/annotations/search/grouped/` | Annotation Search | Group annotation search results. |
+| GET | `/api/annotations/search/export/` | Annotation Search | Export data for matching annotations. |
+
+The taxonomy lookup requires a nonblank `name_part` query parameter and accepts
+`combine_vernaculars` (defaults to `true`). Import payloads and search filters
+are unchanged.

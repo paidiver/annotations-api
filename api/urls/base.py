@@ -11,6 +11,7 @@ from .image import router_image
 from .label import router_label
 
 urlpatterns = [
+    path("taxonomy/", include("api.urls.taxonomy")),
     path("health/", HealthView.as_view(), name="Health"),
     path("images/", include(router_image.urls)),
     path("annotations/", include(router_annotation.urls)),

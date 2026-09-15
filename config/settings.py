@@ -59,6 +59,12 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "TAGS": [
+        {"name": "Ingest", "description": "Import image sets from iFDO and annotation sets from XLSX."},
+        {"name": "Taxonomy", "description": "Find taxa and scientific names through WoRMS."},
+        {
+            "name": "Annotation Search",
+            "description": "Search, group, and export annotations using taxonomic, spatial, and metadata filters.",
+        },
         {"name": "Images API", "description": "Endpoints for managing images and image sets"},
         {"name": "Annotations API", "description": "Endpoints for managing annotations"},
         {"name": "Labels API", "description": "Endpoints for managing labels"},
