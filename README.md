@@ -27,10 +27,12 @@ Relevant documentation:
 
 ### Local development (without Docker)
 
-* Python ≥ 3.10
-* Poetry
+* Python 3.13
+* uv (Python dependency management tool)
 
-## Project Structure
+## Architecture
+
+### Project Structure
 
 ```text
 .
@@ -42,8 +44,8 @@ Relevant documentation:
 │   └── scripts/
 │       └── wait-for-it.sh
 ├── manage.py
-├── pyproject.toml      # Project metadata & dependencies (Poetry)
-├── poetry.lock         # Locked dependency versions
+├── pyproject.toml      # Project metadata & dependencies (uv)
+├── uv.lock         # Locked dependency versions
 ├── tox.ini             # Test, lint, and format automation
 ├── ruff.toml           # Ruff configuration
 ├── README.md
@@ -51,118 +53,19 @@ Relevant documentation:
 └── .env.example
 ```
 
-## Dependency Management
+### Dependency Management
 
-This project uses **Poetry** for dependency management and packaging.
+This project uses **uv** for dependency management and environments.
 
 Key points:
 
 * Dependencies are defined in `pyproject.toml`
-* Locked versions live in `poetry.lock`
-* Development tools (linting, formatting, testing) are installed via Poetry groups
+* Locked versions live in `uv.lock`
+* Development tools (linting, formatting, testing) are installed via dependency groups
 
-## Helm Charts
+### Deployment
 
-The [charts](charts/api) directory contains Helm charts that can be used to deploy this app.
-
-### Helm Chart Versioning & Release Process
-
-Helm chart releases are automated and driven by Git tags.
-
-To release a new Helm Chart version, create a Git tag in the format:
-
-`helm-vMAJOR.MINOR.PATCH[-PRERELEASE]`
-
-Examples:
-- `v1.2.3` → stable release
-- `v1.3.0-alpha.1` → prerelease
-
-The workflow triggers on tag creation.
-The CI workflow:
-
-- Reads the tag version (1.2.3 from helm-v1.2.3)
-- Patches charts/api/Chart.yaml at package time (does not commit to the repo)
-- Packages the Helm chart with the correct version
-- Publishes the chart via [helm/chart-releaser-action](https://github.com/helm/chart-releaser-action)
-
-Whenever you make any change to a Chart, you must update the version in `Chart.yaml`.
-
-* Increment the version to a higher value (e.g. `0.0.0-dev` → `0.0.1-dev`)
-* This is required because the lint process checks that the new version is greater than the previous one
-* If the version is not increased, linting will fail and the release will not run
-
-> Note: The `Chart.yaml` version does not need to match the Git tag, but it must always be higher than the previous version.
-
-To tag a git commit:
-
-```bash
-git tag helm-vX.X.X
-git push origin helm-vX.X.X
-```
-
-### Usage
-
-[Helm](https://helm.sh) must be installed to use the charts.  Please refer to
-Helm's [documentation](https://helm.sh/docs) to get started.
-
-Once Helm has been set up correctly, add the repo as follows:
-
-```bash
-helm repo add paidiver-annotations https://paidiver.github.io/annotations-api
-```
-
-If you had already added this repo earlier, run `helm repo update` to retrieve
-the latest versions of the packages.  You can then run `helm search repo
-paidiver-annotations` to see the charts.
-
-To install the api chart:
-
-```bash
-helm install my-api paidiver-annotations/api
-```
-
-To uninstall the chart:
-
-```bash
-helm uninstall my-api
-```
-
-## Releasing Docker Images
-
-### Production release
-A new `latest` Docker image is build and published to https://ghcr.io/paidiver/annotations-api on each push to main.
-
-### Versioned release
-Pushing a Git tag matching `v*` also publishes a Docker image. The full tag is
-preserved: `v1.2.3` publishes `ghcr.io/paidiver/annotations-api:v1.2.3`, and
-`v1.3.0-alpha.1` publishes `ghcr.io/paidiver/annotations-api:v1.3.0-alpha.1`.
-The commit SHA is published as an additional image tag. Versioned pushes do not
-update `latest`, which continues to track pushes to `main`.
-
-### Development release
-Development versions of Docker images can be released manually, driven by Git tags.
-To release a new Docker image, create a Git tag in the format:
-
-`docker-vMAJOR.MINOR.PATCH[-PRERELEASE]`
-
-Examples:
-- `v1.2.3` → stable release
-- `v1.3.0-alpha.1` → prerelease
-
-The workflow triggers on tag creation.
-The CI workflow:
-
-- Reads the tag version (1.2.3 from docker-v1.2.3)
-- Builds a new Docker image
-- Tags the Docker image with the tag version as well as the tagged commit SHA
-- Pushes the images to the GitHub Container Repository
-
-To tag a git commit:
-
-```bash
-git tag docker-vX.X.X
-git push origin docker-vX.X.X
-```
+The [charts](charts/api) directory contains Helm charts that can be used to deploy this app. For more information, refer to the [charts README](charts/README.md).
 
 ## Quick Start (Docker – Recommended)
 
@@ -245,7 +148,7 @@ If you set the environment variable `CACHED_WORMS_API_BASE_URL` to point to a lo
 ### 1. Install dependencies
 
 ```bash
-poetry install
+uv sync --locked
 ```
 
 ### 2. Start only the database via Docker
@@ -257,13 +160,13 @@ docker compose -f docker/docker-compose.yml up -d db
 ### 3. Apply migrations
 
 ```bash
-python manage.py migrate
+uv run --locked python manage.py migrate
 ```
 
 ### 4. Run the development server
 
 ```bash
-python manage.py runserver
+uv run --locked python manage.py runserver
 ```
 
 ## Database Migrations
@@ -293,7 +196,7 @@ docker compose -f docker/docker-compose.yml exec api python manage.py migrate
 Format code using Ruff:
 
 ```bash
-tox -e format
+uv run --locked --group test tox -e format
 
 # or using Docker
 docker compose -f docker/docker-compose.yml run --rm api tox -e format
@@ -304,7 +207,7 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e format
 Run lint checks:
 
 ```bash
-tox -e lint
+uv run --locked --group test tox -e lint
 
 # or using Docker
 docker compose -f docker/docker-compose.yml run --rm api tox -e lint
@@ -315,7 +218,7 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e lint
 Run the test suite with coverage:
 
 ```bash
-tox
+uv run --locked --group test tox
 ```
 
 or explicitly:
@@ -333,32 +236,17 @@ for any requests that modify data. Anonymous users may only use "safe" methods (
 The project includes a management command to create a new user with an auth token:
 
 ```bash
-python manage.py create_user_with_token <username> <password>
+uv run --locked python manage.py create_user_with_token <username> <password>
 ```
 
 The created API token is returned in the command output. Please ensure to store this token safely.
-Remove shell history to keep sensitive data like passwords safe.
 
 Example output:
 ```
 User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
 ```
 
-Clearing shell history:
-```bash
-paidiver@annotations-api:/app$ python manage.py create_user_with_token <user> <password>
-User created: <user>. API token (please store this securely): <token>
-paidiver@annotations-api:/app$ history
-    1  python manage.py create_user_with_token <user> <password>
-    2  history
-paidiver@annotations-api-f45db94cc-p2fsm:/app$ history -d 1
-paidiver@annotations-api-f45db94cc-p2fsm:/app$ clear
-paidiver@annotations-api-f45db94cc-p2fsm:/app$ history
-    1  history
-    2  history -d 1
-    3  clear
-    4  history
-```
+Remove shell history to keep sensitive data like passwords safe.
 
 ## Fake Data Generation
 
@@ -372,7 +260,7 @@ docker compose -f docker/docker-compose.yml run --rm api \
 ### Customising the amount of data
 
 ```bash
-python manage.py seed_demo_data \
+uv run --locked python manage.py seed_demo_data \
   --image-annotation-sets 3 \
   --images-per-image-set 15 \
   --labels-per-annotation-set 25 \
@@ -383,17 +271,6 @@ python manage.py seed_demo_data \
 
 ⚠️ IMPORTANT: Development use only. Do not run against production databases.
 
-## Dumping All Data (JSON)
-
-To export **all database data as JSON** for inspection or debugging, use the endpoint:
-
-```
-http://localhost:8000/api/debug/db-dump/
-```
-
-This will return a JSON object containing all records from all tables, structured by model name.
-
-
 ## API Examples
 
 A collection of example API requests and responses is available in the [API Examples](docs/API_EXAMPLES.md) document.
@@ -401,18 +278,3 @@ A collection of example API requests and responses is available in the [API Exam
 ## Acknowledgements
 
 This project was supported by the UK Natural Environment Research Council (NERC) through the *Tools for automating image analysis for biodiversity monitoring (AIAB)* Funding Opportunity, reference code **UKRI052**.
-
-### Ingestion, taxonomy, and annotation search
-
-| Method | URL | Swagger tag | Purpose |
-| --- | --- | --- | --- |
-| POST | `/api/ingest/image-sets/` | Ingest | Import an iFDO image set and its images. |
-| POST | `/api/ingest/annotation-sets/` | Ingest | Import annotation-set metadata, labels, and annotations from XLSX. |
-| GET | `/api/taxonomy/worms/taxa/?name_part=lophi` | Taxonomy | Find WoRMS taxa by partial name. |
-| GET | `/api/annotations/search/` | Annotation Search | Search annotations. |
-| GET | `/api/annotations/search/grouped/` | Annotation Search | Group annotation search results. |
-| GET | `/api/annotations/search/export/` | Annotation Search | Export data for matching annotations. |
-
-The taxonomy lookup requires a nonblank `name_part` query parameter and accepts
-`combine_vernaculars` (defaults to `true`). Import payloads and search filters
-are unchanged.

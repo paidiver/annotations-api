@@ -23,6 +23,12 @@ from api.services.cached_worms_client import CachedWoRMSClient
 
 MIN_CHARS_FOR_PARTIAL_MATCH = 3
 
+SEARCH_ORDER_FIELDS = {
+    "label_aphia_id": "label__lowest_aphia_id",
+    "annotation_creation_datetime": "creation_datetime",
+    "label_name": "label__name",
+}
+
 DEPLOYMENT_VALUES = [item.value for item in DeploymentEnum]
 FAUNA_ATTRACTION_VALUES = [item.value for item in FaunaAttractionEnum]
 MARINE_ZONE_VALUES = [item.value for item in MarineZoneEnum]
@@ -82,6 +88,18 @@ COORD_PARAMS = [
     ),
 ]
 SEARCH_PARAMS = [
+    OpenApiParameter(
+        name="order_by",
+        type=OpenApiTypes.STR,
+        location=OpenApiParameter.QUERY,
+        required=False,
+        enum=list(SEARCH_ORDER_FIELDS),
+        description=(
+            "Order annotation rows ascending before pagination. Nulls are last; UUID breaks ties. "
+            "Omitting this parameter preserves the endpoint's default ordering. "
+            "For export-data, applies to the annotations array."
+        ),
+    ),
     OpenApiParameter(
         name="name_part",
         type=OpenApiTypes.STR,
@@ -227,7 +245,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             return aphia_ids_info
         aphia_ids = list(aphia_ids_info.keys())
         filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
-        queryset = self._get_search_queryset(filtered_queryset)
+        queryset = self._apply_search_ordering(self._get_search_queryset(filtered_queryset), request)
 
         calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         summary = self._build_summary(queryset) if calculate_summary else None
@@ -277,7 +295,7 @@ class AnnotationSearchViewSet(GenericViewSet):
         aphia_ids = list(aphia_ids_info.keys())
 
         filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
-        queryset = self._get_search_queryset(filtered_queryset)
+        queryset = self._apply_search_ordering(self._get_search_queryset(filtered_queryset), request)
 
         calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
         summary = self._build_summary(queryset) if calculate_summary else None
@@ -323,7 +341,9 @@ class AnnotationSearchViewSet(GenericViewSet):
         aphia_ids = list(aphia_ids_info.keys())
         filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
 
-        annotations = list(self._get_export_annotations_queryset(filtered_queryset))
+        annotations = list(
+            self._apply_search_ordering(self._get_export_annotations_queryset(filtered_queryset), request)
+        )
         images = list(self._get_export_images_queryset(filtered_queryset))
         annotation_sets = list(self._get_export_annotation_sets_queryset(filtered_queryset))
         image_sets = list(self._get_export_image_sets_queryset(filtered_queryset))
@@ -379,6 +399,13 @@ class AnnotationSearchViewSet(GenericViewSet):
         filters = self._calculate_filters(aphia_ids, request)
         return AnnotationLabel.objects.filter(filters)
 
+    def _apply_search_ordering(self, queryset: QuerySet, request: Request) -> QuerySet:
+        """Order annotation rows by a validated field, with stable ties for pagination."""
+        order_by = request.query_params.get("order_by")
+        if order_by is None:
+            return queryset
+        return queryset.order_by(F(SEARCH_ORDER_FIELDS[order_by]).asc(nulls_last=True), "id")
+
     def _get_search_queryset(self, filtered_queryset: QuerySet) -> QuerySet:
         """Build the projected queryset returned by search endpoints.
 
@@ -397,6 +424,8 @@ class AnnotationSearchViewSet(GenericViewSet):
             image_set_uuid=F("annotation__image__image_set__id"),
             image_filename=F("annotation__image__filename"),
             image_handle=F("annotation__image__handle"),
+            image_latitude=F("annotation__image__latitude"),
+            image_longitude=F("annotation__image__longitude"),
             image_uuid=F("annotation__image__id"),
             label_name=F("label__name"),
             label_aphia_id=F("label__lowest_aphia_id"),
@@ -700,6 +729,11 @@ class AnnotationSearchViewSet(GenericViewSet):
             "marine_zone": set(MARINE_ZONE_VALUES),
         }
         errors = {}
+        order_by = request.query_params.get("order_by")
+        if order_by is not None and order_by not in SEARCH_ORDER_FIELDS:
+            errors["order_by"] = (
+                f"Invalid value for 'order_by': '{order_by}'. Allowed values are: {list(SEARCH_ORDER_FIELDS)}"
+            )
 
         for param_name, allowed_values in choices_map.items():
             value = request.query_params.get(param_name)

@@ -17,6 +17,7 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile
+      target: development
     env_file:
       - ../.env
     restart: always
