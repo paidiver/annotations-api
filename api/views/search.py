@@ -424,6 +424,8 @@ class AnnotationSearchViewSet(GenericViewSet):
             image_set_uuid=F("annotation__image__image_set__id"),
             image_filename=F("annotation__image__filename"),
             image_handle=F("annotation__image__handle"),
+            image_latitude=F("annotation__image__latitude"),
+            image_longitude=F("annotation__image__longitude"),
             image_uuid=F("annotation__image__id"),
             label_name=F("label__name"),
             label_aphia_id=F("label__lowest_aphia_id"),
