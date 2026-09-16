@@ -756,9 +756,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_list_add_info_includes_info_block(
-        self, mocked_get_all_aphia_ids_from_request: Mock
-    ) -> None:
+    def test_list_add_info_includes_info_block(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
         """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs.
 
         Args:
@@ -806,9 +804,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_grouped_add_info_includes_info_block(
-        self, mocked_get_all_aphia_ids_from_request: Mock
-    ) -> None:
+    def test_grouped_add_info_includes_info_block(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
         """Test grouped includes info payload when add_info=true."""
         mocked_get_all_aphia_ids_from_request.return_value = {
             1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
