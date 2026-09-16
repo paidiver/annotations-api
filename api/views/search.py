@@ -123,14 +123,14 @@ SEARCH_PARAMS = [
         description="If true, include descendant taxa in the response.",
     ),
     OpenApiParameter(
-        name="calculate_summary",
+        name="add_summary",
         type=OpenApiTypes.BOOL,
         location=OpenApiParameter.QUERY,
         required=False,
         description="If true, include a summary of the search results.",
     ),
     OpenApiParameter(
-        name="return_image_annotation_name_info",
+        name="add_info",
         type=OpenApiTypes.BOOL,
         location=OpenApiParameter.QUERY,
         required=False,
@@ -247,9 +247,9 @@ class AnnotationSearchViewSet(GenericViewSet):
         filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
         queryset = self._apply_search_ordering(self._get_search_queryset(filtered_queryset), request)
 
-        calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
-        summary = self._build_summary(queryset) if calculate_summary else None
-        include_name_info = request.query_params.get("return_image_annotation_name_info", "false").lower() == "true"
+        add_summary = request.query_params.get("add_summary", "false").lower() == "true"
+        summary = self._build_summary(queryset) if add_summary else None
+        include_name_info = request.query_params.get("add_info", "false").lower() == "true"
         info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
         response_data = {}
@@ -297,9 +297,9 @@ class AnnotationSearchViewSet(GenericViewSet):
         filtered_queryset = self._get_filtered_queryset(aphia_ids=aphia_ids, request=request)
         queryset = self._apply_search_ordering(self._get_search_queryset(filtered_queryset), request)
 
-        calculate_summary = request.query_params.get("calculate_summary", "false").lower() == "true"
-        summary = self._build_summary(queryset) if calculate_summary else None
-        include_name_info = request.query_params.get("return_image_annotation_name_info", "false").lower() == "true"
+        add_summary = request.query_params.get("add_summary", "false").lower() == "true"
+        summary = self._build_summary(queryset) if add_summary else None
+        include_name_info = request.query_params.get("add_info", "false").lower() == "true"
         info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
         paginator = self.paginator

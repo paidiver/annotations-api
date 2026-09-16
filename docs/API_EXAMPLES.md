@@ -34,8 +34,8 @@ rows when it has multiple labels or annotators.
 | `exclude_aphia_ids[]` | Repeat to exclude label AphiaIDs. |
 | `exclude_annotation_set[]`, `exclude_image_set[]` | Repeat to exclude set UUIDs. |
 | `order_by` | `label_aphia_id`, `annotation_creation_datetime`, or `label_name`. |
-| `calculate_summary=true` | Include counts across all matching rows. Default: false. |
-| `return_image_annotation_name_info=true` | Include image-set, annotation-set, and AphiaID information. Default: false. |
+| `add_summary=true` | Include counts across all matching rows. Default: false. |
+| `add_info=true` | Include image-set, annotation-set, and AphiaID information. Default: false. |
 | `page`, `page_size` | Pagination controls; default page size 100, maximum 500. |
 | `disable_pagination=true` | Return all rows for the flat search endpoint only. Default: false. |
 
@@ -57,7 +57,7 @@ curl -sS --get "$API_BASE/api/annotations/search/" \
   --data-urlencode 'aphia_ids[]=126436' \
   --data-urlencode 'aphia_ids[]=126437' \
   --data-urlencode 'include_descendants=true' \
-  --data-urlencode 'calculate_summary=true' \
+  --data-urlencode 'add_summary=true' \
   --data-urlencode 'page_size=25'
 ```
 
@@ -82,7 +82,7 @@ If requested, `results.summary` contains `n_annotations` (assignment count),
 ```bash
 curl -sS --get "$API_BASE/api/annotations/search/grouped/" \
   --data-urlencode 'name_part=coral' \
-  --data-urlencode 'calculate_summary=true' \
+  --data-urlencode 'add_summary=true' \
   --data-urlencode 'page_size=25'
 ```
 

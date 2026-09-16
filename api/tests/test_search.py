@@ -138,7 +138,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         """Equal keys paginate deterministically; omitting ordering keeps the set-based order."""
         mocked_info.return_value = {1001: {}, 2002: {}}
         Label.objects.filter(pk__in=[self.label_1.pk, self.label_2.pk]).update(name="Shared")
-        params = {"aphia_ids[]": [1001, 2002], "disable_pagination": "true", "calculate_summary": "true"}
+        params = {"aphia_ids[]": [1001, 2002], "disable_pagination": "true", "add_summary": "true"}
         ordered = self.client.get(self.list_url, {**params, "order_by": "label_name"})
         default = self.client.get(self.list_url, params)
         ids = [str(self.annotation_label_1.pk), str(self.annotation_label_2.pk)]
@@ -231,7 +231,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
     def test_list_returns_summary_when_requested(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
-        """Test list includes summary when calculate_summary=true.
+        """Test list includes summary when add_summary=true.
 
         Args:
             mocked_get_all_aphia_ids_from_request (Mock): Mock of the _get_all_aphia_ids_from_request method.
@@ -243,7 +243,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(
             self.list_url,
-            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+            {"aphia_ids[]": [1001, 2002], "add_summary": "true"},
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -453,7 +453,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     @patch("api.views.search._get_aphia_ids_info")
     def test_grouped_returns_summary_when_requested(self, mocked_get_aphia_ids_info: Mock) -> None:
-        """Test grouped includes summary when calculate_summary=true.
+        """Test grouped includes summary when add_summary=true.
 
         Args:
             mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
@@ -465,7 +465,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(
             self.grouped_url,
-            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+            {"aphia_ids[]": [1001, 2002], "add_summary": "true"},
         )
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -756,7 +756,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_list_return_image_annotation_name_info_includes_info_block(
+    def test_list_add_info_includes_info_block(
         self, mocked_get_all_aphia_ids_from_request: Mock
     ) -> None:
         """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs.
@@ -773,7 +773,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             self.list_url,
             {
                 "aphia_ids[]": [1001, 2002],
-                "return_image_annotation_name_info": "true",
+                "add_info": "true",
             },
         )
 
@@ -806,10 +806,10 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_grouped_return_image_annotation_name_info_includes_info_block(
+    def test_grouped_add_info_includes_info_block(
         self, mocked_get_all_aphia_ids_from_request: Mock
     ) -> None:
-        """Test grouped includes info payload when return_image_annotation_name_info=true."""
+        """Test grouped includes info payload when add_info=true."""
         mocked_get_all_aphia_ids_from_request.return_value = {
             1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
             2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
@@ -819,7 +819,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             self.grouped_url,
             {
                 "aphia_ids[]": [1001, 2002],
-                "return_image_annotation_name_info": "true",
+                "add_info": "true",
             },
         )
 
