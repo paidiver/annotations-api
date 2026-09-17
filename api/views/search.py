@@ -36,8 +36,9 @@ MARINE_ZONE_VALUES = [item.value for item in MarineZoneEnum]
 EXCLUDE_PARAMS = [
     OpenApiParameter(
         name="exclude_aphia_ids[]",
-        type=OpenApiTypes.FLOAT,
+        type=OpenApiTypes.INT,
         location=OpenApiParameter.QUERY,
+        many=True,
         required=False,
         description="List of AphiaIDs to exclude from the search results.",
     ),
@@ -662,6 +663,7 @@ class AnnotationSearchViewSet(GenericViewSet):
                 filters &= Q(**{f"{db_field}__icontains": value})
 
         exclude_aphia_ids = self._get_aphia_ids_from_query(request, "exclude_aphia_ids[]")
+        exclude_aphia_ids.extend(self._get_aphia_ids_from_query(request, "exclude_aphia_ids"))
         if exclude_aphia_ids:
             filters &= ~Q(label__lowest_aphia_id__in=exclude_aphia_ids)
 
