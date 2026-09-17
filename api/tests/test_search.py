@@ -705,6 +705,42 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.assertEqual(resp.data["results"][0]["label_aphia_id"], 2002)
 
     @patch("api.views.search._get_aphia_ids_info")
+    def test_list_accepts_unbracketed_exclude_aphia_ids(self, mocked_get_aphia_ids_info: Mock) -> None:
+        """The legacy unbracketed exclusion parameter remains supported."""
+        mocked_get_aphia_ids_info.return_value = {
+            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
+            2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
+        }
+
+        resp = self.client.get(
+            self.list_url,
+            {
+                "aphia_ids[]": [1001, 2002],
+                "exclude_aphia_ids": [1001],
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["results"][0]["label_aphia_id"], 2002)
+
+    @patch("api.views.search._get_aphia_ids_by_name_part")
+    def test_list_excludes_aphia_id_also_matching_name_part(self, mocked_lookup: Mock) -> None:
+        """An exclusion wins when the same label also matches name_part."""
+        mocked_lookup.return_value = {1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}}
+
+        resp = self.client.get(
+            self.list_url,
+            {
+                "name_part": "Cod",
+                "exclude_aphia_ids[]": [1001],
+            },
+        )
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data["count"], 0)
+
+    @patch("api.views.search._get_aphia_ids_info")
     def test_list_exclude_annotation_set_filters_results(self, mocked_get_aphia_ids_info: Mock) -> None:
         """Test list excludes annotations matching exclude_annotation_set[].
 
