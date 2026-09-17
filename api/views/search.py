@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import uuid
 
-import requests
 from django.db.models import F, Q, QuerySet
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -18,6 +17,7 @@ from api.models.annotation import AnnotationLabel
 from api.models.annotation_set import AnnotationSet
 from api.models.base import DeploymentEnum, FaunaAttractionEnum, MarineZoneEnum
 from api.models.image_set import ImageSet
+from api.responses import collection_response
 from api.serializers.search import AnnotationExportData, GroupedSearchResultRow, PaginatedSearchResult
 from api.services.cached_worms_client import CachedWoRMSClient
 
@@ -226,7 +226,7 @@ class AnnotationSearchViewSet(GenericViewSet):
 
     @extend_schema(
         parameters=LIST_SEARCH_PARAMS,
-        responses={200: PaginatedSearchResult, 204: None},
+        responses={200: PaginatedSearchResult},
     )
     def list(self, request: Request) -> Response:
         """Search for Annotations based on query parameters.
@@ -252,29 +252,25 @@ class AnnotationSearchViewSet(GenericViewSet):
         include_name_info = request.query_params.get("add_info", "false").lower() == "true"
         info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
-        response_data = {}
+        meta = {}
         if summary is not None:
-            response_data["summary"] = summary
+            meta["summary"] = summary
         if info is not None:
-            response_data["info"] = info
+            meta["info"] = info
 
         if self._disable_pagination_requested(request):
-            response_data["annotations"] = list(queryset)
-            return Response(response_data)
+            return collection_response(list(queryset), meta=meta)
 
-        paginator = self.paginator
-        page = paginator.paginate_queryset(queryset, request, view=self)
-
-        if page is not None:
-            response_data["annotations"] = page
-            return paginator.get_paginated_response(response_data)
-
-        response_data["annotations"] = list(queryset)
-        return Response(response_data)
+        page = self.paginate_queryset(queryset)
+        if page is None:
+            return collection_response(list(queryset), meta=meta)
+        response = self.get_paginated_response(page)
+        response.data["meta"] = meta
+        return response
 
     @extend_schema(
         parameters=GROUPED_SEARCH_PARAMS,
-        responses={200: GroupedSearchResultRow, 204: None},
+        responses={200: GroupedSearchResultRow},
     )
     @action(detail=False, methods=["get"], url_path="grouped")
     def list_grouped(self, request: Request) -> Response:
@@ -302,26 +298,26 @@ class AnnotationSearchViewSet(GenericViewSet):
         include_name_info = request.query_params.get("add_info", "false").lower() == "true"
         info = self._build_info(filtered_queryset, aphia_ids_info) if include_name_info else None
 
-        paginator = self.paginator
-        page = paginator.paginate_queryset(queryset, request, view=self)
-
-        rows = page if page is not None else list(queryset)
-        grouped = {}
-        for row in rows:
-            annotation_set_uuid = str(row.pop("annotation_set_uuid"))
-            grouped.setdefault(annotation_set_uuid, []).append(row)
-
-        response_data = {
-            "annotations": grouped,
-        }
+        group_ids = (
+            filtered_queryset.order_by("annotation__annotation_set_id")
+            .values_list("annotation__annotation_set_id", flat=True)
+            .distinct()
+        )
+        page = self.paginate_queryset(group_ids)
+        paginated = page is not None
+        if page is None:
+            page = list(group_ids)
+        grouped = {str(group_id): [] for group_id in page}
+        for row in queryset.filter(annotation__annotation_set_id__in=page):
+            grouped[str(row["annotation_set_uuid"])].append(row)
+        groups = [{"annotation_set_uuid": group_id, "annotations": rows} for group_id, rows in grouped.items()]
+        response = self.get_paginated_response(groups) if paginated else collection_response(groups)
+        response.data["meta"] = {}
         if summary is not None:
-            response_data["summary"] = summary
+            response.data["meta"]["summary"] = summary
         if info is not None:
-            response_data["info"] = info
-
-        if page is not None:
-            return paginator.get_paginated_response(response_data)
-        return Response(response_data)
+            response.data["meta"]["info"] = info
+        return response
 
     @extend_schema(
         parameters=SEARCH_PARAMS,
@@ -926,10 +922,7 @@ def _get_descendant_aphia_ids(aphia_ids: list[int]) -> dict[dict]:
     """
     client = CachedWoRMSClient()
     return_dict = {}
-    try:
-        details_list = client.descendants_aphia_ids(aphia_ids) or []
-    except requests.RequestException:
-        return {}
+    details_list = client.descendants_aphia_ids(aphia_ids) or []
     for detail in details_list:
         return_dict[detail["AphiaID"]] = {
             "aphia_id": detail["AphiaID"],
@@ -950,10 +943,7 @@ def _get_aphia_ids_by_name_part(name_part: str) -> dict[dict]:
     """
     client = CachedWoRMSClient()
     return_dict = {}
-    try:
-        details_list = client.aphia_ids_by_name_part(name_part, combine_vernaculars=True, id_only=False) or []
-    except requests.RequestException:
-        return {}
+    details_list = client.aphia_ids_by_name_part(name_part, combine_vernaculars=True, id_only=False) or []
     for detail in details_list:
         return_dict[detail["aphia_id"]] = {
             "aphia_id": detail["aphia_id"],
@@ -972,12 +962,11 @@ def _get_aphia_ids_info(aphia_ids: list[int]) -> dict[dict]:
     Returns:
         dict[dict]: A dictionary mapping AphiaIDs to their details, including scientific names.
     """
+    if not aphia_ids:
+        return {}
     client = CachedWoRMSClient()
     return_dict = {}
-    try:
-        details_list = client.get_taxa(aphia_ids) or []
-    except requests.RequestException:
-        details_list = []
+    details_list = client.get_taxa(aphia_ids) or []
     for detail in details_list:
         return_dict[detail["AphiaID"]] = {
             "aphia_id": detail["AphiaID"],

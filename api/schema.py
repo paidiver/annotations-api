@@ -66,3 +66,34 @@ class CreateOnlyRelatedListFieldExtension(OpenApiSerializerFieldExtension):
             items_schema = FALLBACK_OBJECT_SCHEMA
 
         return {"type": "array", "items": items_schema}
+
+
+class ResponseSchema(AutoSchema):
+    """Document the error envelope used by the API middleware."""
+
+    def _get_response_bodies(self, direction: str = "response") -> dict:
+        responses = super()._get_response_bodies(direction)
+        problem = {
+            "type": "object",
+            "required": ["type", "title", "status", "detail", "code"],
+            "properties": {
+                "type": {"type": "string"},
+                "title": {"type": "string"},
+                "status": {"type": "integer"},
+                "detail": {"type": "string"},
+                "code": {"type": "string"},
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {"field": {"type": "string"}, "message": {"type": "string"}},
+                    },
+                },
+            },
+        }
+        for code in (400, 401, 403, 404, 405, 415, 429, 500, 502, 504):
+            responses[str(code)] = {
+                "description": "Request failed. See code and optional field errors.",
+                "content": {"application/problem+json": {"schema": problem}},
+            }
+        return responses

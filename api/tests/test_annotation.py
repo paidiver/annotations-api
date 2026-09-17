@@ -77,7 +77,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("image_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "image_id" for error in resp.data["errors"]))
 
     def test_create_annotation_with_valid_shape(self) -> None:
         """Test that creating an Annotation with a valid shape is accepted."""
@@ -126,8 +126,11 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
 
                 resp = self.client.post(self.list_url(), payload, format="json")
                 self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-                self.assertIn("shape", resp.data)
-                self.assertIn("is not a valid shape", resp.data["shape"][0])
+                self.assertTrue(any(error["field"].split(".")[0] == "shape" for error in resp.data["errors"]))
+                self.assertIn(
+                    "is not a valid shape",
+                    next(error["message"] for error in resp.data["errors"] if error["field"] == "shape"),
+                )
 
     def test_patch_annotation(self) -> None:
         """Test that PATCHing an Annotation."""

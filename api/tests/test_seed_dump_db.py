@@ -88,7 +88,8 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         """Test that the debug database dump endpoint returns 404 when DEBUG is False."""
         resp = self.client.get(self.url())
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(resp.data, {"detail": "Not found."})
+        self.assertEqual(resp.data["detail"], "Not found.")
+        self.assertEqual(resp.data["code"], "not_found")
 
     @override_settings(DEBUG=True)
     @patch("api.views.debug.tables_to_models_and_serializers", new={})

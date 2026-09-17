@@ -1,8 +1,8 @@
 """ViewSet for the Annotation model."""
 
 import pandas as pd
-from drf_spectacular.utils import OpenApiTypes, extend_schema
-from rest_framework import viewsets
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -53,7 +53,17 @@ class UploadAnnotationsView(viewsets.ViewSet):
         summary="Import an annotation set from XLSX",
         operation_id="upload_annotations",
         request=FileUploadSerializer,
-        responses={201: OpenApiTypes.OBJECT},
+        responses={
+            201: inline_serializer(
+                name="AnnotationIngestReport",
+                fields={
+                    "annotation_set_id": serializers.UUIDField(),
+                    "annotation_count": serializers.IntegerField(),
+                    "labels": serializers.ListField(child=serializers.DictField()),
+                    "annotations": serializers.ListField(child=serializers.DictField()),
+                },
+            )
+        },
     )
     def create(self, request: Request) -> Response:
         """Endpoint to receive an XLSX file and import it into the database.
@@ -105,6 +115,11 @@ class UploadAnnotationsView(viewsets.ViewSet):
             )
 
         return Response(
-            {"status": "uploaded", "data": data},
+            {
+                "annotation_set_id": data["annotation_set"]["id"],
+                "annotation_count": data["annotation_data"]["created"],
+                "annotations": data["annotation_data"]["data"],
+                "labels": data["label_set"],
+            },
             status=HTTP_201_CREATED,
         )

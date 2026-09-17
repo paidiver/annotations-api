@@ -49,9 +49,9 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.mocked_worms.return_value = Mock(status_code=400)
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("lowest_aphia_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "lowest_aphia_id" for error in resp.data["errors"]))
         self.assertIn(
-            resp.data["lowest_aphia_id"][0],
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "lowest_aphia_id"),
             [
                 "WoRMS API is currently unavailable. Please try again later.",
                 "Invalid lowest_aphia_id: 999999999 does not exist in WoRMS API.",
@@ -61,9 +61,9 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.mocked_worms.return_value = Mock(status_code=500)
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("lowest_aphia_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "lowest_aphia_id" for error in resp.data["errors"]))
         self.assertIn(
-            resp.data["lowest_aphia_id"][0],
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "lowest_aphia_id"),
             ["Unable to validate lowest_aphia_id right now (status 500). Please try again later."],
         )
 
@@ -78,8 +78,11 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("lowest_aphia_id", resp.data)
-        self.assertIn(resp.data["lowest_aphia_id"][0], ["WoRMS API is currently unavailable. Please try again later."])
+        self.assertTrue(any(error["field"].split(".")[0] == "lowest_aphia_id" for error in resp.data["errors"]))
+        self.assertIn(
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "lowest_aphia_id"),
+            ["WoRMS API is currently unavailable. Please try again later."],
+        )
 
     def test_create_label_rejects_different_error(self) -> None:
         """Test that creating a Label when the WoRMS API returns a different error is rejected."""
@@ -92,13 +95,16 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("lowest_aphia_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "lowest_aphia_id" for error in resp.data["errors"]))
 
         expected_msg = (
             f"Unable to validate lowest_aphia_id right now (status {self.mocked_worms.return_value.status_code}). "
             "Please try again later."
         )
-        self.assertEqual(str(resp.data["lowest_aphia_id"][0]), expected_msg)
+        self.assertEqual(
+            str(next(error["message"] for error in resp.data["errors"] if error["field"] == "lowest_aphia_id")),
+            expected_msg,
+        )
 
     def test_create_label_accepts_valid_lowest_aphia_id(self) -> None:
         """Test that creating a Label with a valid lowest_aphia_id is accepted."""
@@ -170,7 +176,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("annotation_set_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "annotation_set_id" for error in resp.data["errors"]))
 
     def test_patch_label(self) -> None:
         """Test that PATCHing an Label."""

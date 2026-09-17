@@ -55,7 +55,11 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         mock_parse_set.return_value = self.mock_annotation_set
         mock_parse_label.return_value = self.mock_label_data
         mock_parse_annotation.return_value = self.mock_annotation_data
-        mock_ingest.return_value = {"status": "success", "count": 10}
+        mock_ingest.return_value = {
+            "annotation_set": {"id": "00000000-0000-0000-0000-000000000001"},
+            "label_set": [],
+            "annotation_data": {"created": 10, "data": []},
+        }
 
         xlsx_file = self.mock_xlsx_file
         response = self.client.post(
@@ -65,9 +69,8 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["status"], "uploaded")
-        self.assertEqual(response.data["data"]["status"], "success")
-        self.assertEqual(response.data["data"]["count"], 10)
+        self.assertEqual(response.data["annotation_count"], 10)
+        self.assertEqual(response.data["annotation_set_id"], mock_ingest.return_value["annotation_set"]["id"])
 
     def test_upload_annotations_rejects_non_xlsx_file(self) -> None:
         """Test that uploading a non-.xlsx file is rejected."""
@@ -76,7 +79,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         response = self.client.post(self.upload_url, {"file": text_file}, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"], "Provided file is not a .xlsx file.")
+        self.assertEqual(response.data["detail"], "Provided file is not a .xlsx file.")
 
     def test_upload_annotations_rejects_invalid_excel_file(self) -> None:
         """Test that uploading an invalid Excel file is rejected."""
@@ -94,7 +97,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["error"], "Failed to read Excel file.")
+        self.assertEqual(response.data["detail"], "Failed to read Excel file.")
 
     def test_upload_annotations_handles_missing_sheets(self) -> None:
         """Test that uploading a file with missing required sheets is rejected."""
@@ -112,7 +115,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("error", response.data)
+        self.assertIn("detail", response.data)
 
     @patch("api.views.annotation.parse_annotation_set_metadata")
     @patch("api.views.annotation.parse_label_set")
@@ -154,7 +157,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["file"][0], "No file was submitted.")
+        self.assertEqual(response.data["errors"][0]["message"], "No file was submitted.")
 
     @patch("api.views.annotation.parse_annotation_set_metadata")
     @patch("api.views.annotation.parse_label_set")
@@ -175,7 +178,7 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            "Error parsing annotations template: Missing required metadata: Image Set Name", response.data["error"]
+            "Error parsing annotations template: Missing required metadata: Image Set Name", response.data["detail"]
         )
 
     @patch("api.views.annotation.parse_annotation_set_metadata")
@@ -198,4 +201,4 @@ class UploadAnnotationsViewTests(AuthenticatedAPITestCase):
             format="multipart",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Row 0: Image not found (UUID: , Name: fake_filename)", response.data["error"])
+        self.assertIn("Row 0: Image not found (UUID: , Name: fake_filename)", response.data["detail"])

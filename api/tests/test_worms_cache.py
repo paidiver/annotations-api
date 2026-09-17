@@ -30,7 +30,7 @@ class WormsTaxaViewSetTests(APITestCase):
         ]
 
         resp = self.client.get(reverse("worms-taxa-list"), {"name_part": "lophi"})
-        data = list(resp.data)
+        data = resp.data["results"]
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(data, mocked_client.ajax_by_name_part.return_value)
         mocked_client.ajax_by_name_part.assert_called_once_with("lophi", combine_vernaculars=True)
@@ -44,7 +44,7 @@ class WormsTaxaViewSetTests(APITestCase):
         resp = self.client.get(reverse("worms-taxa-list"), {"name_part": "lophi", "combine_vernaculars": "false"})
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(resp.data, [])
+        self.assertEqual(resp.data, {"count": 0, "next": None, "previous": None, "results": []})
         mocked_client.ajax_by_name_part.assert_called_once_with("lophi", combine_vernaculars=False)
 
 
@@ -57,9 +57,8 @@ class GetAjaxByNamePartResultsTests(APITestCase):
         mocked_client = mocked_client_cls.return_value
         mocked_client.ajax_by_name_part.side_effect = requests.RequestException()
 
-        results = _get_ajax_by_name_part_results(name_part="lophi")
-
-        self.assertEqual(results, [])
+        with self.assertRaises(requests.RequestException):
+            _get_ajax_by_name_part_results(name_part="lophi")
 
     @patch("api.views.worms_cache.CachedWoRMSClient")
     def test_get_ajax_by_name_part_results_converts_mapping_to_list(self, mocked_client_cls: Mock) -> None:

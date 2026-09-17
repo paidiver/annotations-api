@@ -95,7 +95,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("annotator_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "annotator_id" for error in resp.data["errors"]))
 
     def test_create_annotation_label_with_same_foreign_key(self) -> None:
         """Test that creating an AnnotationLabel with same foreign key is rejected."""
@@ -114,7 +114,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("non_field_errors", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "non_field_errors" for error in resp.data["errors"]))
 
     def test_create_annotation_label_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
@@ -128,7 +128,7 @@ class AnnotationLabelViewSetTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("annotator", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "annotator" for error in resp.data["errors"]))
 
     def test_create_annotation_label_with_annotator_object(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""

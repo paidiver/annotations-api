@@ -62,7 +62,7 @@ curl -sS --get "$API_BASE/api/annotations/search/" \
 ```
 
 The paginated response has `count`, `next`, `previous`, and `results`.
-`results.annotations` is the list of matching rows. Each row contains:
+`results` is the list of matching rows. Each row contains:
 
 - `uuid` (the annotation-label assignment ID)
 - `creation_datetime`, `annotation_creation_datetime`
@@ -72,10 +72,10 @@ The paginated response has `count`, `next`, `previous`, and `results`.
 - `annotator_name`
 - `annotation_set_uuid`, `annotation_set_name`, `image_set_uuid`, `image_set_name`
 
-If requested, `results.summary` contains `n_annotations` (assignment count),
-`n_images`, `n_annotation_sets`, and `n_image_sets`; `results.info` contains
+If requested, `meta.summary` contains `n_annotations` (assignment count),
+`n_images`, `n_annotation_sets`, and `n_image_sets`; `meta.info` contains
 `image_sets`, `annotation_sets`, and `aphia_ids`. With `disable_pagination=true`,
-`annotations`, `summary`, and `info` are at the top level instead.
+the same envelope is retained, with `next` and `previous` set to null.
 
 ### Search grouped by annotation set
 
@@ -86,12 +86,11 @@ curl -sS --get "$API_BASE/api/annotations/search/grouped/" \
   --data-urlencode 'page_size=25'
 ```
 
-The response is paginated. `results.annotations` is an object keyed by annotation
-set UUID, with a list of matching rows for each key. Rows omit
-`annotation_set_uuid`, since it is the group key. Pagination happens **before**
-grouping, so one annotation set can appear on several pages. Summary and info,
-when requested, cover the full matching results. This endpoint does not honour
-`disable_pagination`.
+The response is paginated by complete annotation-set groups. `results` is an array
+of objects containing `annotation_set_uuid` and an `annotations` array. `count` is
+the total number of groups. Groups are ordered by UUID; `order_by` controls rows
+inside each group. A group is not split between pages. Metadata in `meta` covers
+the full matching rows. This endpoint does not honour `disable_pagination`.
 
 ### Export search results
 
