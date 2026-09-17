@@ -727,9 +727,7 @@ class AnnotationSearchViewSetTests(APITestCase):
     @patch("api.views.search._get_aphia_ids_by_name_part")
     def test_list_excludes_aphia_id_also_matching_name_part(self, mocked_lookup: Mock) -> None:
         """An exclusion wins when the same label also matches name_part."""
-        mocked_lookup.return_value = {
-            1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}
-        }
+        mocked_lookup.return_value = {1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"}}
 
         resp = self.client.get(
             self.list_url,
