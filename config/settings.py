@@ -41,7 +41,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "api.schema.ResponseSchema",
+    "EXCEPTION_HANDLER": "api.responses.exception_handler",
     "DEFAULT_PAGINATION_CLASS": "api.pagination.DefaultPageNumberPagination",
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
@@ -78,6 +79,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 MIDDLEWARE = [
+    "api.responses.ProblemDetailsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",

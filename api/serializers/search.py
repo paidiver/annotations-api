@@ -1,90 +1,64 @@
-"""Serializers for the Annotations API endpoints."""
+"""Response serializers for annotation search and exports."""
 
-from drf_spectacular.utils import inline_serializer
+from drf_spectacular.utils import extend_schema_serializer, inline_serializer
 from rest_framework import serializers
 
-AnnotationSetGroup = inline_serializer(
-    name="AnnotationSetGroup",
-    many=True,
-    fields={
-        "uuid": serializers.UUIDField(),
-        "creation_datetime": serializers.DateTimeField(),
-        "annotation_set_name": serializers.CharField(),
-        "image_set_name": serializers.CharField(allow_null=True),
-        "image_set_uuid": serializers.UUIDField(),
-        "image_filename": serializers.CharField(),
-        "image_uuid": serializers.UUIDField(),
-        "label_name": serializers.CharField(),
-        "label_aphia_id": serializers.IntegerField(allow_null=True),
-        "annotation_platform": serializers.CharField(allow_null=True),
-        "annotation_shape": serializers.CharField(),
-        "annotation_coordinates": serializers.ListField(),
-        "annotation_dimension_pixels": serializers.FloatField(allow_null=True),
-        "annotator_name": serializers.CharField(allow_null=True),
-    },
-)
+
+class SearchResultItem(serializers.Serializer):
+    """A matching annotation-label row."""
+
+    uuid = serializers.UUIDField()
+    creation_datetime = serializers.DateTimeField()
+    annotation_creation_datetime = serializers.DateTimeField()
+    annotation_set_uuid = serializers.UUIDField()
+    annotation_set_name = serializers.CharField()
+    image_set_uuid = serializers.UUIDField()
+    image_set_name = serializers.CharField()
+    image_filename = serializers.CharField()
+    image_handle = serializers.CharField(allow_null=True)
+    image_uuid = serializers.UUIDField()
+    image_latitude = serializers.FloatField(allow_null=True)
+    image_longitude = serializers.FloatField(allow_null=True)
+    label_name = serializers.CharField()
+    label_aphia_id = serializers.IntegerField(allow_null=True)
+    annotation_platform = serializers.CharField(allow_null=True)
+    annotation_shape = serializers.CharField()
+    annotation_coordinates = serializers.ListField()
+    annotation_dimension_pixels = serializers.FloatField(allow_null=True)
+    annotator_name = serializers.CharField(allow_null=True)
 
 
-SearchResultItem = inline_serializer(
-    many=True,
-    name="SearchResultItem",
-    fields={
-        "uuid": serializers.UUIDField(),
-        "image_filename": serializers.CharField(),
-        "image_uuid": serializers.UUIDField(),
-        "image_latitude": serializers.FloatField(allow_null=True),
-        "image_longitude": serializers.FloatField(allow_null=True),
-        "label_name": serializers.CharField(),
-        "label_aphia_id": serializers.IntegerField(),
-        "annotation_platform": serializers.CharField(allow_null=True),
-        "annotation_shape": serializers.CharField(),
-        "annotation_coordinates": serializers.ListField(),
-        "annotation_dimension_pixels": serializers.FloatField(allow_null=True),
-        "annotator_name": serializers.CharField(allow_null=True),
-        "annotation_set_uuid": serializers.UUIDField(),
-        "image_set_uuid": serializers.UUIDField(),
-    },
-)
+class SearchMetadata(serializers.Serializer):
+    """Optional full-search aggregates and filter information."""
+
+    summary = serializers.DictField(required=False)
+    info = serializers.DictField(required=False)
 
 
-PaginatedSearchResult = inline_serializer(
-    name="PaginatedSearchResult",
-    fields={
-        "count": serializers.IntegerField(),
-        "next": serializers.URLField(allow_null=True),
-        "previous": serializers.URLField(allow_null=True),
-        "results": inline_serializer(
-            name="SearchResultPayload",
-            fields={
-                "info": serializers.DictField(required=False),
-                "summary": serializers.DictField(required=False),
-                "annotations": SearchResultItem,
-            },
-        ),
-    },
-)
+@extend_schema_serializer(many=False)
+class PaginatedSearchResult(serializers.Serializer):
+    """Stable collection envelope for paginated and complete searches."""
 
-GroupedSearchResultRow = inline_serializer(
-    name="GroupedSearchResultRow",
-    fields={
-        "summary": inline_serializer(
-            name="GroupedSearchResultSummary",
-            fields={
-                "n_annotations": serializers.IntegerField(),
-                "n_images": serializers.IntegerField(),
-                "n_annotation_sets": serializers.IntegerField(),
-                "n_image_sets": serializers.IntegerField(),
-            },
-        ),
-        "annotations": inline_serializer(
-            name="GroupedSearchResultAnnotations",
-            fields={
-                "<annotation_set_uuid1>": AnnotationSetGroup,
-                "<annotation_set_uuid2>": AnnotationSetGroup,
-            },
-        ),
-    },
-)
+    count = serializers.IntegerField()
+    next = serializers.URLField(allow_null=True)
+    previous = serializers.URLField(allow_null=True)
+    results = SearchResultItem(many=True)
+    meta = SearchMetadata()
+
+
+class AnnotationSetGroup(serializers.Serializer):
+    """All matching rows belonging to an annotation set."""
+
+    annotation_set_uuid = serializers.UUIDField()
+    annotations = SearchResultItem(many=True)
+
+
+@extend_schema_serializer(many=False)
+class GroupedSearchResultRow(PaginatedSearchResult):
+    """Pages of complete groups; count is the number of annotation sets."""
+
+    results = AnnotationSetGroup(many=True)
+
 
 CreatorExportItem = inline_serializer(
     name="CreatorExportItem",

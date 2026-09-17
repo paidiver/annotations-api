@@ -32,7 +32,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     name="IngestIFDOResponse",
     fields={
         "message": serializers.CharField(),
-        "image_set_id": serializers.IntegerField(),
+        "image_set_id": serializers.UUIDField(),
         "image_count": serializers.IntegerField(),
     },
 )
@@ -42,7 +42,7 @@ IngestIFDOResponseSerializer = inline_serializer(
     tags=["Ingest"],
     summary="Import an image set from iFDO",
     request=IngestIFDOSerializer,
-    responses={201: IngestIFDOResponseSerializer, 400: serializers.DictField(), 502: serializers.DictField()},
+    responses={201: IngestIFDOResponseSerializer},
 )
 @api_view(["POST"])
 def ingest_ifdo_image_set(request: Request) -> Response:  # noqa: C901, PLR0911
@@ -70,8 +70,8 @@ def ingest_ifdo_image_set(request: Request) -> Response:  # noqa: C901, PLR0911
 
         try:
             image_set = image_set_ser.save()
-        except IntegrityError as exc:
-            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except IntegrityError:
+            return Response({"detail": "Image set conflicts with existing data."}, status=status.HTTP_400_BAD_REQUEST)
 
         # create Images
         created_image_ids: list[int] = []
@@ -95,8 +95,8 @@ def ingest_ifdo_image_set(request: Request) -> Response:  # noqa: C901, PLR0911
 
             try:
                 img = img_ser.save(image_set=image_set)
-            except IntegrityError as exc:
-                item_errors[str(idx)] = {"detail": str(exc)}
+            except IntegrityError:
+                item_errors[str(idx)] = {"detail": "Image conflicts with existing data."}
                 continue
             created_image_ids.append(img.id)
 

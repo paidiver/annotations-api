@@ -125,7 +125,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("geom", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "geom" for error in resp.data["errors"]))
 
     def test_create_image_set_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
@@ -138,7 +138,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("project", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "project" for error in resp.data["errors"]))
 
     def test_create_image_set_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
@@ -151,7 +151,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("creators", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "creators" for error in resp.data["errors"]))
 
     def test_create_image_set_with_existing_ids(self) -> None:
         """Test creating an ImageSet with existing creator and related material IDs."""
@@ -229,7 +229,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.patch(self.detail_url(image_set.pk), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("min_latitude_degrees", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "min_latitude_degrees" for error in resp.data["errors"]))
 
         payload = {
             "min_longitude_degrees": 10.0,
@@ -237,7 +237,7 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.patch(self.detail_url(image_set.pk), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("min_longitude_degrees", resp.data)
+        self.assertTrue(any(error["field"] == "min_longitude_degrees" for error in resp.data["errors"]))
 
     def test_delete_image_set(self) -> None:
         """Test deleting an ImageSet."""

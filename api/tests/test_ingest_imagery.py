@@ -97,7 +97,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.ingest_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(str(image_set.id), resp.data["detail"])
+        self.assertEqual(resp.data["detail"], "Image set conflicts with existing data.")
 
     def test_ingest_ifdo_with_image_uuid_success_creates_imageset_and_images(self) -> None:
         """POST should create ImageSet and Images and return 201, even if image_set_uuid is provided.
@@ -151,8 +151,11 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.ingest_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("items", resp.data)
-        self.assertIn(str(image.id), resp.data["items"]["1"]["detail"])
+        self.assertTrue(any(error["field"].split(".")[0] == "items" for error in resp.data["errors"]))
+        self.assertEqual(
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "items.1.detail"),
+            "Image conflicts with existing data.",
+        )
 
     def test_ingest_ifdo_missing_ifdo_returns_400(self) -> None:
         """POST without ifdo object should return 400."""
@@ -204,7 +207,7 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
             format="json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("image_set", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "image_set" for error in resp.data["errors"]))
 
         self.assertEqual(ImageSet.objects.count(), 0)
 
@@ -232,9 +235,11 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
         resp = self.client.post(self.ingest_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(resp.data["detail"], "One or more image items failed validation")
-        self.assertIn("items", resp.data)
-        self.assertIn("2", resp.data["items"])
-        self.assertEqual(resp.data["items"]["2"]["detail"], "bad item")
+        self.assertTrue(any(error["field"].split(".")[0] == "items" for error in resp.data["errors"]))
+        self.assertTrue(any(error["field"].startswith("items.2.") for error in resp.data["errors"]))
+        self.assertEqual(
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "items.2.detail"), "bad item"
+        )
 
         self.assertEqual(ImageSet.objects.count(), 0)
         self.assertEqual(Image.objects.count(), 0)
@@ -261,9 +266,12 @@ class IngestIFDOViewTests(AuthenticatedAPITestCase):
 
         resp = self.client.post(self.ingest_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("items", resp.data)
-        self.assertIn("2", resp.data["items"])
-        self.assertEqual(resp.data["items"]["2"]["detail"], "Item must be an object")
+        self.assertTrue(any(error["field"].split(".")[0] == "items" for error in resp.data["errors"]))
+        self.assertTrue(any(error["field"].startswith("items.2.") for error in resp.data["errors"]))
+        self.assertEqual(
+            next(error["message"] for error in resp.data["errors"] if error["field"] == "items.2.detail"),
+            "Item must be an object",
+        )
 
         self.assertEqual(ImageSet.objects.count(), 0)
         self.assertEqual(Image.objects.count(), 0)

@@ -71,7 +71,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             aphia_cache[aphia_id] = None
             return errors
 
-        if response.status_code == status.HTTP_400_BAD_REQUEST:
+        if response.status_code in (status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND):
             error_message = f"Invalid lowest_aphia_id: {aphia_id} does not exist in WoRMS API."
             aphia_cache[aphia_id] = error_message
             errors["lowest_aphia_id"] = error_message

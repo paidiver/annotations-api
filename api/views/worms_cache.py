@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-import requests
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from api.responses import collection_response
 from api.services.cached_worms_client import CachedWoRMSClient
 
 
@@ -30,6 +30,16 @@ class TaxonWormsLikeSerializer(serializers.Serializer):
     parent_AphiaID = serializers.IntegerField(required=False, allow_null=True)
 
 
+@extend_schema_serializer(many=False)
+class TaxaCollectionSerializer(serializers.Serializer):
+    """Complete taxa collection; the outer response is an object."""
+
+    count = serializers.IntegerField()
+    next = serializers.URLField(allow_null=True)
+    previous = serializers.URLField(allow_null=True)
+    results = TaxonWormsLikeSerializer(many=True)
+
+
 def _get_ajax_by_name_part_results(
     *,
     name_part: str,
@@ -38,13 +48,7 @@ def _get_ajax_by_name_part_results(
     """Get WoRMS-like taxon results for a given name part."""
     client = CachedWoRMSClient()
 
-    try:
-        results = client.ajax_by_name_part(
-            name_part,
-            combine_vernaculars=combine_vernaculars,
-        )
-    except requests.RequestException:
-        return []
+    results = client.ajax_by_name_part(name_part, combine_vernaculars=combine_vernaculars)
 
     if not results:
         return []
@@ -87,7 +91,7 @@ class WormsTaxaViewSet(GenericViewSet):
                 description="Include vernacular matching.",
             ),
         ],
-        responses={200: TaxonWormsLikeSerializer(many=True), 400: OpenApiTypes.OBJECT},
+        responses={200: TaxaCollectionSerializer},
     )
     def list(self, request: Request) -> Response:
         """Return taxa matching the required name_part query parameter."""
@@ -98,4 +102,4 @@ class WormsTaxaViewSet(GenericViewSet):
             name_part=name_part,
             combine_vernaculars=_get_bool_query_param(request, "combine_vernaculars", default=True),
         )
-        return Response(TaxonWormsLikeSerializer(results, many=True).data)
+        return collection_response(TaxonWormsLikeSerializer(results, many=True).data)

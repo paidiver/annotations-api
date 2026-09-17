@@ -99,7 +99,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("project", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "project" for error in resp.data["errors"]))
 
     def test_create_annotation_set_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
@@ -113,7 +113,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("creators", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "creators" for error in resp.data["errors"]))
 
     def test_create_annotation_set_with_existing_ids(self) -> None:
         """Test creating an AnnotationSet with existing creator IDs."""

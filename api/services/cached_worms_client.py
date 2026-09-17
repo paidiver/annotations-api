@@ -1,6 +1,7 @@
 """WoRMS API client for fetching taxonomic data from the World Register of Marine Species (WoRMS)."""
 
 from dataclasses import dataclass
+from urllib.parse import quote
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -77,7 +78,7 @@ class CachedWoRMSClient:
         """
         return self._post("/taxa/ingest/", json={"aphia_id": aphia_id})
 
-    def descendants_aphia_ids(self, aphia_ids: list[int]) -> list[int] | None:
+    def descendants_aphia_ids(self, aphia_ids: list[int]) -> list[dict] | None:
         """Fetch the descendant AphiaIDs for a given list of AphiaIDs.
 
         Args:
@@ -86,6 +87,8 @@ class CachedWoRMSClient:
         Returns:
             A list of descendant AphiaIDs for the given list of AphiaIDs, or None if not found.
         """
+        if not aphia_ids:
+            return []
         aphia_ids = [str(aphia_id) for aphia_id in aphia_ids]
         return self._get(f"/taxa/ids_with_descendants/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}&id_only=false")
 
@@ -103,7 +106,8 @@ class CachedWoRMSClient:
             A list of dictionaries or integers representing the AphiaIDs, or None if not found.
         """
         return self._get(
-            f"/taxa/ajax_by_name_part/only_id_info/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}&id_only={str(id_only).lower()}"
+            f"/taxa/ajax_by_name_part/only_id_info/{quote(name_part, safe="")}/"
+            f"?combine_vernaculars={str(combine_vernaculars).lower()}&id_only={str(id_only).lower()}"
         )
 
     def ajax_by_name_part(self, name_part: str, combine_vernaculars: bool = False) -> list[dict | int] | None:
@@ -116,7 +120,10 @@ class CachedWoRMSClient:
         Returns:
             A list of dictionaries or integers representing the AphiaIDs, or None if not found.
         """
-        return self._get(f"/taxa/ajax_by_name_part/{name_part}/?combine_vernaculars={str(combine_vernaculars).lower()}")
+        return self._get(
+            f"/taxa/ajax_by_name_part/{quote(name_part, safe="")}/"
+            f"?combine_vernaculars={str(combine_vernaculars).lower()}"
+        )
 
     def get_taxa(self, aphia_ids: list[int]) -> list[dict] | None:
         """Fetch the taxonomic information for a given list of AphiaIDs.
@@ -127,5 +134,7 @@ class CachedWoRMSClient:
         Returns:
             A list of dictionaries containing taxonomic information for the given AphiaIDs, or None if not found.
         """
+        if not aphia_ids:
+            return []
         aphia_ids = [str(aphia_id) for aphia_id in aphia_ids]
         return self._get(f"/taxa/?aphia_ids[]={"&aphia_ids[]=".join(aphia_ids)}")

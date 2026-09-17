@@ -91,7 +91,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("geom", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "geom" for error in resp.data["errors"]))
 
     def test_create_image_rejects_object_and_id_together(self) -> None:
         """Test that providing both nested object and ID for project is rejected."""
@@ -105,7 +105,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("project", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "project" for error in resp.data["errors"]))
 
     def test_create_image_rejects_object_and_id_together_list(self) -> None:
         """Test that providing both nested object and ID for creators is rejected."""
@@ -119,7 +119,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("creators", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "creators" for error in resp.data["errors"]))
 
     def test_create_image_with_existing_ids(self) -> None:
         """Test creating an Image with existing creator IDs."""
@@ -150,7 +150,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("non_field_errors", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "non_field_errors" for error in resp.data["errors"]))
 
     def test_create_image_with_image_set_that_does_not_exist(self) -> None:
         """Test that creating an Image with an image_set_id that does not exist is rejected."""
@@ -160,7 +160,7 @@ class ImageViewSetTests(AuthenticatedAPITestCase):
         }
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("image_set_id", resp.data)
+        self.assertTrue(any(error["field"].split(".")[0] == "image_set_id" for error in resp.data["errors"]))
 
     def test_patch_image_replaces_one2m_with_nested_objects(self) -> None:
         """Test that PATCHing an Image with nested creators replaces the M2M relationships."""
