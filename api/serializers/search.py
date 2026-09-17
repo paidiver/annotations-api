@@ -32,6 +32,8 @@ SearchResultItem = inline_serializer(
         "uuid": serializers.UUIDField(),
         "image_filename": serializers.CharField(),
         "image_uuid": serializers.UUIDField(),
+        "image_latitude": serializers.FloatField(allow_null=True),
+        "image_longitude": serializers.FloatField(allow_null=True),
         "label_name": serializers.CharField(),
         "label_aphia_id": serializers.IntegerField(),
         "annotation_platform": serializers.CharField(allow_null=True),

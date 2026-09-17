@@ -110,6 +110,82 @@ class AnnotationSearchViewSetTests(APITestCase):
         self.list_url = reverse("search-list")
         self.grouped_url = reverse("search-list-grouped")
 
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_ordering_is_applied_before_pagination(self, mocked_info: Mock) -> None:
+        """Every ordering option chooses the correct first row in both search formats."""
+        mocked_info.return_value = {1001: {}, 2002: {}}
+        Label.objects.filter(pk=self.label_1.pk).update(name="Zebra", lowest_aphia_id=2002)
+        Label.objects.filter(pk=self.label_2.pk).update(name="Alpha", lowest_aphia_id=1001)
+        AnnotationLabel.objects.filter(pk=self.annotation_label_1.pk).update(creation_datetime="2025-01-01T00:00:00Z")
+        for url in (self.list_url, self.grouped_url):
+            for order_by in ("label_name", "label_aphia_id", "annotation_creation_datetime"):
+                with self.subTest(url=url, order_by=order_by):
+                    params = {"aphia_ids[]": [1001, 2002], "order_by": order_by, "page_size": 1}
+                    first = self.client.get(url, params)
+                    second = self.client.get(url, {**params, "page": 2})
+                    self.assertEqual(first.status_code, status.HTTP_200_OK)
+                    self.assertEqual(second.status_code, status.HTTP_200_OK)
+                    self.assertEqual(first.data["count"], 2)
+                    self.assertIn(f"order_by={order_by}", first.data["next"])
+                    for response, expected in ((first, self.annotation_label_2), (second, self.annotation_label_1)):
+                        rows = response.data["results"]["annotations"]
+                        if isinstance(rows, dict):
+                            rows = [row for group in rows.values() for row in group]
+                        self.assertEqual([str(row["uuid"]) for row in rows], [str(expected.pk)])
+
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_ordering_ties_use_uuid_and_default_order_is_preserved(self, mocked_info: Mock) -> None:
+        """Equal keys paginate deterministically; omitting ordering keeps the set-based order."""
+        mocked_info.return_value = {1001: {}, 2002: {}}
+        Label.objects.filter(pk__in=[self.label_1.pk, self.label_2.pk]).update(name="Shared")
+        params = {"aphia_ids[]": [1001, 2002], "disable_pagination": "true", "add_summary": "true"}
+        ordered = self.client.get(self.list_url, {**params, "order_by": "label_name"})
+        default = self.client.get(self.list_url, params)
+        ids = [str(self.annotation_label_1.pk), str(self.annotation_label_2.pk)]
+        self.assertEqual([str(row["uuid"]) for row in ordered.data["annotations"]], sorted(ids))
+        self.assertEqual([str(row["uuid"]) for row in default.data["annotations"]], ids)
+        self.assertEqual(ordered.data["summary"], default.data["summary"])
+        self.assertEqual(ordered.data["summary"]["n_annotations"], 2)
+
+    @patch("api.views.search._get_aphia_ids_by_name_part", return_value={})
+    def test_ordering_places_unknown_aphia_ids_last(self, mocked_lookup: Mock) -> None:
+        """Name searches can include labels without an AphiaID, which sort after known IDs."""
+        Label.objects.filter(pk=self.label_1.pk).update(name="Shared A", lowest_aphia_id=None)
+        Label.objects.filter(pk=self.label_2.pk).update(name="Shared B")
+        response = self.client.get(
+            self.list_url, {"name_part": "shared", "order_by": "label_aphia_id", "disable_pagination": "true"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([row["label_aphia_id"] for row in response.data["annotations"]], [2002, None])
+
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_invalid_ordering_is_rejected_before_upstream_lookup(self, mocked_info: Mock) -> None:
+        """Only the public ascending ordering keys are accepted."""
+        for url in (self.list_url, self.grouped_url, reverse("search-export-data")):
+            for value in ("", "-label_name", "label__name", "uuid"):
+                with self.subTest(url=url, value=value):
+                    response = self.client.get(url, {"aphia_ids[]": [1001], "order_by": value})
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                    self.assertIn("order_by", response.data["detail"])
+        mocked_info.assert_not_called()
+
+    @patch("api.views.search._get_aphia_ids_info")
+    def test_export_annotation_ordering(self, mocked_info: Mock) -> None:
+        """Export annotation rows use the same ordering despite their different field aliases."""
+        mocked_info.return_value = {1001: {}, 2002: {}}
+        Label.objects.filter(pk=self.label_1.pk).update(name="Zebra", lowest_aphia_id=2002)
+        Label.objects.filter(pk=self.label_2.pk).update(name="Alpha", lowest_aphia_id=1001)
+        AnnotationLabel.objects.filter(pk=self.annotation_label_1.pk).update(creation_datetime="2025-01-01T00:00:00Z")
+        for order_by in ("label_name", "label_aphia_id", "annotation_creation_datetime"):
+            with self.subTest(order_by=order_by):
+                response = self.client.get(
+                    reverse("search-export-data"), {"aphia_ids[]": [1001, 2002], "order_by": order_by}
+                )
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+                self.assertEqual(
+                    [row["annotation_label_name"] for row in response.data["annotations"]], ["Alpha", "Zebra"]
+                )
+
     def test_list_requires_aphia_ids_or_name_part(self) -> None:
         """Test that list rejects requests without aphia_ids[] or name_part."""
         resp = self.client.get(self.list_url)
@@ -155,7 +231,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
     def test_list_returns_summary_when_requested(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
-        """Test list includes summary when calculate_summary=true.
+        """Test list includes summary when add_summary=true.
 
         Args:
             mocked_get_all_aphia_ids_from_request (Mock): Mock of the _get_all_aphia_ids_from_request method.
@@ -167,7 +243,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(
             self.list_url,
-            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+            {"aphia_ids[]": [1001, 2002], "add_summary": "true"},
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -377,7 +453,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
     @patch("api.views.search._get_aphia_ids_info")
     def test_grouped_returns_summary_when_requested(self, mocked_get_aphia_ids_info: Mock) -> None:
-        """Test grouped includes summary when calculate_summary=true.
+        """Test grouped includes summary when add_summary=true.
 
         Args:
             mocked_get_aphia_ids_info (Mock): Mock of the _get_aphia_ids_info function.
@@ -389,7 +465,7 @@ class AnnotationSearchViewSetTests(APITestCase):
 
         resp = self.client.get(
             self.grouped_url,
-            {"aphia_ids[]": [1001, 2002], "calculate_summary": "true"},
+            {"aphia_ids[]": [1001, 2002], "add_summary": "true"},
         )
 
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -680,9 +756,7 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_list_return_image_annotation_name_info_includes_info_block(
-        self, mocked_get_all_aphia_ids_from_request: Mock
-    ) -> None:
+    def test_list_add_info_includes_info_block(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
         """Test list includes an info payload with unique image sets, annotation sets and Aphia IDs.
 
         Args:
@@ -697,7 +771,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             self.list_url,
             {
                 "aphia_ids[]": [1001, 2002],
-                "return_image_annotation_name_info": "true",
+                "add_info": "true",
             },
         )
 
@@ -730,10 +804,8 @@ class AnnotationSearchViewSetTests(APITestCase):
         )
 
     @patch("api.views.search.AnnotationSearchViewSet._get_all_aphia_ids_from_request")
-    def test_grouped_return_image_annotation_name_info_includes_info_block(
-        self, mocked_get_all_aphia_ids_from_request: Mock
-    ) -> None:
-        """Test grouped includes info payload when return_image_annotation_name_info=true."""
+    def test_grouped_add_info_includes_info_block(self, mocked_get_all_aphia_ids_from_request: Mock) -> None:
+        """Test grouped includes info payload when add_info=true."""
         mocked_get_all_aphia_ids_from_request.return_value = {
             1001: {"aphia_id": 1001, "scientific_name": "Gadus morhua", "rank": "Species"},
             2002: {"aphia_id": 2002, "scientific_name": "Cancer pagurus", "rank": "Species"},
@@ -743,7 +815,7 @@ class AnnotationSearchViewSetTests(APITestCase):
             self.grouped_url,
             {
                 "aphia_ids[]": [1001, 2002],
-                "return_image_annotation_name_info": "true",
+                "add_info": "true",
             },
         )
 
