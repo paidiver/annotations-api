@@ -75,7 +75,11 @@ def exception_handler(exc: Exception, context: dict) -> Response:
     response = drf_exception_handler(exc, context)
     if response is not None:
         return response
-    if isinstance(exc, requests.Timeout):
+    if isinstance(exc, requests.Timeout) or (
+        isinstance(exc, requests.HTTPError)
+        and exc.response is not None
+        and exc.response.status_code == HTTPStatus.GATEWAY_TIMEOUT
+    ):
         return Response({"detail": "The taxonomy service did not respond in time."}, status=504)
     if isinstance(exc, requests.RequestException):
         return Response({"detail": "The taxonomy service could not complete the request."}, status=502)
