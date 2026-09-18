@@ -10,4 +10,4 @@ jobs:
       contents: read
     uses: paidiver/brokerage-service/.github/workflows/reusable-helm-lint.yml@main
     with:
-      chart_dirs: charts
+      chart_dirs: deployment/charts

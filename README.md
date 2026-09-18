@@ -4,6 +4,16 @@ Annotations API provides a database-backed REST API for working with image metad
 
 The service is implemented using **Django** and **Django REST Framework**, with PostgreSQL/PostGIS as the backing database.
 
+## Overview
+
+The API stores image sets, annotation sets, images, annotations, labels, and their related metadata. It provides public read operations and authenticated write operations, together with search, import, and export workflows.
+
+## Documentation
+
+* [API examples](docs/API_EXAMPLES.md)
+* [Deployment guide](docs/DEPLOYMENT.md)
+* [Database schema](https://paidiver.github.io/annotations-api/database/)
+
 ## Requirements
 
 ### Runtime
@@ -29,6 +39,8 @@ The service is implemented using **Django** and **Django REST Framework**, with 
 │   ├── Dockerfile
 │   └── scripts/
 │       └── wait-for-it.sh
+├── deployment/
+│   └── charts/api/       # Helm chart
 ├── manage.py
 ├── pyproject.toml      # Project metadata & dependencies (uv)
 ├── uv.lock         # Locked dependency versions
@@ -51,15 +63,17 @@ Key points:
 
 ### Database Schema
 
-For a detailed information about the database, take a look at the [database docs](https://paidiver.github.io/annotations-api/database), which is an auto-generated database documentation using SchemaSpy.
+For detailed information about the database, see the [database documentation](https://paidiver.github.io/annotations-api/database/), which is generated automatically using SchemaSpy.
 
 ### Deployment
 
-The [charts](charts/api) directory contains Helm charts that can be used to deploy this app. For more information, refer to the [charts README](charts/README.md).
+The [deployment](deployment) directory contains the Helm chart used to deploy this app. For information about the deployment process, configuration options, usage instructions, and Docker images, see the [deployment guide](docs/DEPLOYMENT.md).
 
-## Quick Start (Docker – Recommended)
+## Quick Start
 
-### 1. Create environment file
+### Docker (Recommended)
+
+1. Create environment file
 
 Configuration is provided via environment variables defined in `.env`.
 
@@ -88,7 +102,7 @@ CACHED_WORMS_API_BASE_URL=https://worms-cache.paidiver.site/api # Base URL for t
 CACHED_WORMS_API_TOKEN=mysecrettoken # Token for authenticating with the cached WoRMS API
 ```
 
-### 2. Build and run the stack
+2. Build and run the stack
 
 First, ensure you have a shared Docker network named `shared_services` (used for inter-container communication with the WoRMS cache API if necessary):
 
@@ -108,7 +122,7 @@ This will:
 * Run Django migrations
 * Start the Django development server
 
-### 3. Test the API
+3. Test the API
 
 Health endpoint:
 
@@ -128,38 +142,38 @@ API schema and documentation:
 http://localhost:8000/api/docs/
 ```
 
-### 4. Worms cache API
+4. Worms cache API
 
 If you set the environment variable `CACHED_WORMS_API_BASE_URL` to point to a local instance of the WoRMS cache API, you may need to start that separately. Please follow the instructions in the [worms-cache repo](https://github.com/paidiver/worms-cache).
 
 
-## Running Locally Without Docker
+### Running Locally Without Docker
 
-### 1. Install dependencies
+1. Install dependencies
 
 ```bash
 uv sync --locked
 ```
 
-### 2. Start only the database via Docker
+2. Start only the database via Docker
 
 ```bash
 docker compose -f docker/docker-compose.yml up -d db
 ```
 
-### 3. Apply migrations
+3. Apply migrations
 
 ```bash
 uv run --locked python manage.py migrate
 ```
 
-### 4. Run the development server
+4. Run the development server
 
 ```bash
 uv run --locked python manage.py runserver
 ```
 
-## Database Migrations
+### Database Migrations
 
 Create new migrations after modifying models:
 
@@ -178,6 +192,49 @@ Apply migrations:
 ```bash
 docker compose -f docker/docker-compose.yml exec api python manage.py migrate
 ```
+
+
+### API Token Generation
+
+This project is configured to use [TokenAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication)
+for any requests that modify data. Anonymous users may only use "safe" methods (`GET`, `HEAD` or `OPTIONS`).
+The project includes a management command to create a new user with an auth token:
+
+```bash
+uv run --locked python manage.py create_user_with_token <username> <password>
+```
+
+The created API token is returned in the command output. Please ensure to store this token safely.
+
+Example output:
+```
+User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
+```
+
+Remove shell history to keep sensitive data like passwords safe.
+
+### Sample Data Generation
+
+For development and testing, the project includes a management command that seeds the database with realistic fake data:
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm api \
+  python manage.py seed_demo_data
+```
+
+To customise the amount of data:
+
+```bash
+uv run --locked python manage.py seed_demo_data \
+  --image-annotation-sets 3 \
+  --images-per-image-set 15 \
+  --labels-per-annotation-set 25 \
+  --annotators 12 \
+  --annotations-per-image 3 \
+  --annotation-labels 150
+```
+
+⚠️ IMPORTANT: Development use only. Do not run against production databases.
 
 ## Development Workflow
 
@@ -218,48 +275,6 @@ docker compose -f docker/docker-compose.yml run --rm api tox -e py313
 ```
 
 Coverage reports are written to `coverage_reports/`.
-
-## API Token Generation
-
-This project is configured to use [TokenAuthentication](https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication)
-for any requests that modify data. Anonymous users may only use "safe" methods (`GET`, `HEAD` or `OPTIONS`).
-The project includes a management command to create a new user with an auth token:
-
-```bash
-uv run --locked python manage.py create_user_with_token <username> <password>
-```
-
-The created API token is returned in the command output. Please ensure to store this token safely.
-
-Example output:
-```
-User created: myUser. API token (please store this securely): 1fa4a1e49e43bad0b96bf26e8bbcde0379892374
-```
-
-Remove shell history to keep sensitive data like passwords safe.
-
-## Fake Data Generation
-
-For development and testing, the project includes a management command that seeds the database with realistic fake data:
-
-```bash
-docker compose -f docker/docker-compose.yml run --rm api \
-  python manage.py seed_demo_data
-```
-
-### Customising the amount of data
-
-```bash
-uv run --locked python manage.py seed_demo_data \
-  --image-annotation-sets 3 \
-  --images-per-image-set 15 \
-  --labels-per-annotation-set 25 \
-  --annotators 12 \
-  --annotations-per-image 3 \
-  --annotation-labels 150
-```
-
-⚠️ IMPORTANT: Development use only. Do not run against production databases.
 
 ## API Examples
 
