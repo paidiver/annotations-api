@@ -4,20 +4,6 @@ Annotations API provides a database-backed REST API for working with image metad
 
 The service is implemented using **Django** and **Django REST Framework**, with PostgreSQL/PostGIS as the backing database.
 
-## Overview
-
-This API follows the database schema defined in the
-[IFDO API repository](https://github.com/paidiver/ifdo-api).
-
-Relevant documentation:
-
-* **DATABASE.md** – core data model for image collections and annotations
-  [https://github.com/paidiver/ifdo-api/blob/main/DATABASE.md](https://github.com/paidiver/ifdo-api/blob/main/DATABASE.md)
-* **SchemaSpy docs** – auto-generated database documentation
-  [https://paidiver.github.io/ifdo-api](https://paidiver.github.io/ifdo-api)
-* **schema.sql** – SQL script to create the database schema
-  [https://github.com/paidiver/ifdo-api/blob/main/docs/schema.sql](https://github.com/paidiver/ifdo-api/blob/main/docs/schema.sql)
-
 ## Requirements
 
 ### Runtime
@@ -62,6 +48,10 @@ Key points:
 * Dependencies are defined in `pyproject.toml`
 * Locked versions live in `uv.lock`
 * Development tools (linting, formatting, testing) are installed via dependency groups
+
+### Database Schema
+
+For a detailed information about the database, take a look at the [database docs](https://paidiver.github.io/annotations-api/database), which is an auto-generated database documentation using SchemaSpy.
 
 ### Deployment
 
