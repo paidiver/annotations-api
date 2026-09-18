@@ -73,7 +73,8 @@ jobs:
             -host db \
             -port 5432 \
             -u "myuser" \
-            -p "mypassword"
+            -p "mypassword" \
+            -I '^(auth_group|auth_group_permissions|auth_permission|auth_user|auth_user_groups|auth_user_user_permissions|authtoken_token|django_admin_log|django_content_type|django_migrations|django_session|spatial_ref_sys|geometry_columns|geography_columns|geography_columns)$'
 
       - name: Export schema SQL
         run: |
