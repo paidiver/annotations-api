@@ -68,6 +68,46 @@ class CaseInsensitiveEnum(str, enum.Enum):
                     return member
         return None
 
+class HumanOrMachineEnum(CaseInsensitiveEnum):
+    """Enumeration for human or machine types in the system."""
+
+    human = "human"
+    algorithm = "algorithm"
+    combination = "combination"
+
+
+class MachineTrainingValidationEnum(CaseInsensitiveEnum):
+    """Enumeration for an annotation's use in machine learning."""
+
+    training = "training"
+    validation = "validation"
+    both = "both"
+
+class QuantificationTypeEnum(CaseInsensitiveEnum):
+    """Enumeration for quantification types in the system."""
+
+    presence_absence = "presence/absence"
+    count = "count"
+    linear_measurement = "linear measurement"
+    area_measurement = "area measurement"
+    volume_measurement = "volume measurement"
+    rate = "rate"
+
+class QualitativeOrQuantitativeEnum(CaseInsensitiveEnum):
+    """Enumeration for qualitative or quantitative types in the system."""
+
+    qualitative = "qualitative"
+    quantitative = "quantitative"
+    semi_quantitative = "semi-quantitative"
+
+class AnnotationModelEnum(CaseInsensitiveEnum):
+    """Enumeration for acquisition types in the system."""
+
+    detection = "detection"
+    classification = "classification"
+    detection_classification = "detection+classification"
+    segmentation = "segmentation"
+
 
 class ShapeEnum(CaseInsensitiveEnum):
     """Enumeration of possible annotation shapes."""
@@ -79,6 +119,8 @@ class ShapeEnum(CaseInsensitiveEnum):
     rectangle = "rectangle"
     ellipse = "ellipse"
     whole_image = "whole-image"
+    centrexy = "centrexy"
+    mask = "mask"
 
 
 class AcquisitionEnum(CaseInsensitiveEnum):

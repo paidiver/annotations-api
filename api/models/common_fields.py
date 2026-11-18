@@ -53,24 +53,6 @@ class CommonFieldsAll(models.Model):
         help_text="A general description of the aims and objectives...",
     )
 
-    target_environment = models.TextField(
-        null=True,
-        blank=True,
-        help_text="A description of the habitat or environment...",
-    )
-
-    target_timescale = models.TextField(
-        null=True,
-        blank=True,
-        help_text="A description of the period or temporal environment...",
-    )
-
-    curation_protocol = models.TextField(
-        null=True,
-        blank=True,
-        help_text="A description of the image/annotation and metadata curation...",
-    )
-
     class Meta:
         """Meta class for CommonFieldsAll."""
 
@@ -79,6 +61,22 @@ class CommonFieldsAll(models.Model):
 
 class CommonFieldsImagesImageSets(models.Model):
     """Common fields for image_sets and images."""
+
+    target_environment = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Description of the habitat or environment represented by the imagery.",
+    )
+    target_timescale = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Description of the period or temporal environment represented by the imagery.",
+    )
+    curation_protocol = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Description of the image and metadata curation or quality-control process.",
+    )
 
     sha256_hash = models.CharField(
         max_length=64,

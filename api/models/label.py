@@ -17,6 +17,8 @@ class Label(DefaultColumns):
 
     parent_label_name = models.CharField(
         max_length=255,
+        null=True,
+        blank=True,
         help_text="Name of parent to label_name",
     )
 
@@ -35,7 +37,8 @@ class Label(DefaultColumns):
     )
 
     name_is_lowest = models.BooleanField(
-        default=False,
+        null=True,
+        blank=True,
         help_text="Indicates whether the name field represents the lowest taxonomic identification",
     )
 
@@ -46,11 +49,11 @@ class Label(DefaultColumns):
         help_text="Open nomenclature signs (see Horton et al 2021); same field name in DarwinCore",
     )
 
-    annotation_set = models.ForeignKey(
-        "AnnotationSet",
+    label_set = models.ForeignKey(
+        "LabelSet",
         on_delete=models.CASCADE,
         related_name="labels",
-        help_text="The annotation_set this label belongs to. An annotation_set can have multiple labels.",
+        help_text="The label set this label belongs to.",
     )
 
     class Meta:
@@ -59,7 +62,7 @@ class Label(DefaultColumns):
         db_table = "labels"
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "parent_label_name", "annotation_set"], name="unique_label_name_per_parent"
+                fields=["name", "label_set"], name="unique_label_name_per_set"
             )
         ]
         indexes = [
