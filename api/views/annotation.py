@@ -8,14 +8,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
-from api.models import Annotation, AnnotationLabel, Annotator
-from api.serializers import AnnotationLabelSerializer, AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
-from api.utils.annotations_ingest import ingest_annotation_data
-from api.utils.annotations_parser import (
-    parse_annotation_data,
-    parse_annotation_set_metadata,
-    parse_label_set,
-)
+from api.models import Annotation, Annotator
+from api.serializers import AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
 
 
 @extend_schema(tags=["Annotations API"])
@@ -35,13 +29,6 @@ class AnnotationViewSet(viewsets.ModelViewSet):
 
 
 @extend_schema(tags=["Annotations API"])
-class AnnotationLabelViewSet(viewsets.ModelViewSet):
-    """ViewSet for the AnnotationLabel model."""
-
-    queryset = AnnotationLabel.objects.all().order_by("id")
-    serializer_class = AnnotationLabelSerializer
-
-
 class UploadAnnotationsView(viewsets.ViewSet):
     """Annotations view to import image annotation data into the database."""
 
@@ -74,6 +61,9 @@ class UploadAnnotationsView(viewsets.ViewSet):
         Returns:
             Response: JSON success/fail response.
         """
+        from api.utils.annotations_ingest import ingest_annotation_data
+        from api.utils.annotations_parser import parse_annotation_data, parse_annotation_set_metadata, parse_label_set
+
         serializer = FileUploadSerializer(data=request.data)
         # file = request.FILES.get("file")
         serializer.is_valid(raise_exception=True)

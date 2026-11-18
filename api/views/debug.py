@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from api.models import (
     PI,
     Annotation,
-    AnnotationLabel,
     AnnotationSet,
+    AnnotationSetModel,
     Annotator,
     Context,
     Creator,
@@ -24,6 +24,7 @@ from api.models import (
     ImagePhotometricCalibration,
     ImageSet,
     Label,
+    LabelSet,
     License,
     Platform,
     Project,
@@ -31,8 +32,8 @@ from api.models import (
     Sensor,
 )
 from api.serializers import (
-    AnnotationLabelSerializer,
     AnnotationSerializer,
+    AnnotationSetModelSerializer,
     AnnotationSetSerializer,
     AnnotatorSerializer,
     ImageCameraCalibrationModelSerializer,
@@ -44,6 +45,7 @@ from api.serializers import (
     ImageSerializer,
     ImageSetSerializer,
     LabelSerializer,
+    LabelSetSerializer,
 )
 from api.serializers.fields import (
     ContextSerializer,
@@ -76,10 +78,11 @@ tables_to_models_and_serializers = {
     "image_flatport_parameter": (ImageFlatportParameter, ImageFlatportParameterSerializer),
     "image_photometric_calibration": (ImagePhotometricCalibration, ImagePhotometricCalibrationSerializer),
     "annotation_sets": (AnnotationSet, AnnotationSetSerializer),
+    "annotation_set_models": (AnnotationSetModel, AnnotationSetModelSerializer),
+    "label_sets": (LabelSet, LabelSetSerializer),
     "labels": (Label, LabelSerializer),
     "annotators": (Annotator, AnnotatorSerializer),
     "annotations": (Annotation, AnnotationSerializer),
-    "annotation_labels": (AnnotationLabel, AnnotationLabelSerializer),
 }
 
 

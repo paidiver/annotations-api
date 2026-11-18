@@ -1,25 +1,24 @@
 """Serializers for the Annotations API endpoints."""
 
-from django.db import transaction
 from rest_framework import serializers
 
 from api.models import Annotation, Annotator
-from api.models.annotation import AnnotationLabel
-from api.models.annotation_set import AnnotationSet
+from api.models.annotation_set import AnnotationSet, AnnotationSetModel
 from api.models.base import AliasedShapesEnumField, ShapeEnum, enum_choices
 from api.models.image import Image
 from api.models.label import Label
-from api.serializers.base import (
-    BaseSerializer,
-    CreateOnlyRelatedField,
-    NestedGetOrCreateMixin,
-    ReadOnlyFieldsMixin,
-    StrictPrimaryKeyRelatedField,
-)
+from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFieldsMixin
 
-FK_PAIRS = [
-    ("annotator", "annotator_id"),
-]
+
+def _model_score_error(model: AnnotationSetModel | None, confidence: float | None, kind: str) -> str | None:
+    """Return a relationship error for a model score, if any."""
+    if confidence is None:
+        return None
+    if model is None:
+        return f"A {kind} model is required when confidence is provided."
+    if not model.score_type:
+        return f"The {kind} model must define its score type."
+    return None
 
 
 class AnnotatorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
@@ -45,7 +44,47 @@ class AnnotationSerializer(serializers.ModelSerializer):
         source="annotation_set",
         queryset=AnnotationSet.objects.all(),
     )
+    label_id = serializers.PrimaryKeyRelatedField(source="label", queryset=Label.objects.all())
+    creator_ids = serializers.PrimaryKeyRelatedField(
+        source="creators", many=True, queryset=Annotator.objects.all(), required=False
+    )
+    human_reviewer_id = serializers.PrimaryKeyRelatedField(
+        source="human_reviewer", queryset=Annotator.objects.all(), required=False, allow_null=True
+    )
+    detection_model_id = serializers.PrimaryKeyRelatedField(
+        source="detection_model", queryset=AnnotationSetModel.objects.all(), required=False, allow_null=True
+    )
+    classification_model_id = serializers.PrimaryKeyRelatedField(
+        source="classification_model", queryset=AnnotationSetModel.objects.all(), required=False, allow_null=True
+    )
     shape = serializers.CharField()  # Accept any string, validate manually below
+
+    class Meta:
+        """Meta class for AnnotationSerializer."""
+
+        model = Annotation
+        fields = [
+            "id",
+            "image_id",
+            "annotation_set_id",
+            "label_id",
+            "creator_ids",
+            "annotation_platform",
+            "human_or_machine",
+            "creation_datetime",
+            "shape",
+            "coordinates",
+            "dimension_pixels",
+            "human_reviewer_id",
+            "machine_training_validation",
+            "additional_info",
+            "detection_model_id",
+            "classification_model_id",
+            "detection_confidence",
+            "classification_confidence",
+            "mask",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_shape(self, value: str) -> str:
         """Manual validation of shape to allow for value mappings."""
@@ -55,128 +94,36 @@ class AnnotationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(f'"{value}" is not a valid shape.')
         return normalised
 
-    class Meta:
-        """Meta class for AnnotationSerializer."""
-
-        model = Annotation
-        fields = [
-            "id",
-            "image_id",
-            "annotation_platform",
-            "shape",
-            "coordinates",
-            "dimension_pixels",
-            "annotation_set_id",
-        ]
-
-        read_only_fields = ["id", "created_at", "updated_at"]
-
-
-class AnnotationLabelSerializer(ReadOnlyFieldsMixin, BaseSerializer):
-    """Serializer for AnnotationLabel model."""
-
-    annotation_id = serializers.PrimaryKeyRelatedField(
-        source="annotation",
-        queryset=Annotation.objects.all(),
-    )
-    label_id = serializers.PrimaryKeyRelatedField(
-        source="label",
-        queryset=Label.objects.all(),
-    )
-
-    annotator_id = StrictPrimaryKeyRelatedField(
-        source="annotator",
-        queryset=AnnotationLabel._meta.get_field("annotator").remote_field.model.objects.all(),
-        required=False,
-        allow_null=True,
-    )
-    annotator = CreateOnlyRelatedField(
-        create_serializer_class=AnnotatorSerializer,
-        write_only=True,
-        required=False,
-    )
-
-    class Meta:
-        """Meta class for AnnotationLabelSerializer."""
-
-        model = AnnotationLabel
-        fields = ["id", "annotation_id", "label_id", "annotator_id", "annotator", "creation_datetime"]
-        validators = []
-
     def validate(self, attrs: dict) -> dict:
-        """Custom validation to ensure no duplicate AnnotationLabel for the same annotation, label, and annotator.
-
-        Args:
-            attrs (dict): The attributes to validate.
-
-        Returns:
-            dict: The validated attributes.
-        """
+        """Validate label, model, and confidence relationships."""
+        attrs = super().validate(attrs)
+        instance = self.instance
+        annotation_set = attrs.get("annotation_set", getattr(instance, "annotation_set", None))
+        label = attrs.get("label", getattr(instance, "label", None))
+        detection_model = attrs.get("detection_model", getattr(instance, "detection_model", None))
+        classification_model = attrs.get("classification_model", getattr(instance, "classification_model", None))
+        detection_confidence = attrs.get("detection_confidence", getattr(instance, "detection_confidence", None))
+        classification_confidence = attrs.get(
+            "classification_confidence", getattr(instance, "classification_confidence", None)
+        )
         errors = {}
-
-        errors = self._validate_pairs(FK_PAIRS, errors)
+        if annotation_set and label and not annotation_set.label_sets.filter(pk=label.label_set_id).exists():
+            errors["label_id"] = "The label must belong to a label set linked to the annotation set."
+        for field_name, model in (
+            ("detection_model_id", detection_model),
+            ("classification_model_id", classification_model),
+        ):
+            if model and annotation_set and model.annotation_set_id != annotation_set.pk:
+                errors[field_name] = "The model must be registered on the same annotation set."
+        detection_error = _model_score_error(detection_model, detection_confidence, "detection")
+        classification_error = _model_score_error(classification_model, classification_confidence, "classification")
+        if detection_error:
+            errors["detection_model_id"] = detection_error
+        if classification_error:
+            errors["classification_model_id"] = classification_error
         if errors:
             raise serializers.ValidationError(errors)
-        self._materialize_deferred_related(attrs, FK_PAIRS)
-
-        errors = self._validate_constraints(attrs, errors)
-
-        if errors:
-            raise serializers.ValidationError(errors)
-
         return attrs
-
-    def _validate_constraints(self, attrs: dict, errors: dict) -> dict:
-        """Validate that there are no duplicate AnnotationLabel for the same annotation, label, and annotator.
-
-        Args:
-            attrs (dict): The attributes to validate.
-            errors (dict): The dictionary to store validation errors.
-
-        Returns:
-            dict: The updated errors dictionary.
-        """
-        annotation = attrs.get("annotation")
-        label = attrs.get("label")
-        annotator = attrs.get("annotator")
-
-        exists = AnnotationLabel.objects.filter(
-            annotation=annotation,
-            label=label,
-            annotator=annotator,
-        ).exists()
-        if exists:
-            errors["non_field_errors"] = ["AnnotationLabel with this annotation, label and annotator already exists."]
-        return errors
-
-    @transaction.atomic
-    def create(self, validated_data: dict) -> AnnotationLabel:
-        """Override create to handle nested creation of related objects and setting M2M relationships.
-
-        Args:
-            validated_data: The validated data from the serializer.
-
-        Returns:
-            The created AnnotationLabel instance.
-        """
-        self._materialize_deferred_related(validated_data, FK_PAIRS)
-
-        return super().create(validated_data)
-
-    @transaction.atomic
-    def update(self, instance: AnnotationLabel, validated_data: dict) -> AnnotationLabel:
-        """Override update to handle nested updates of related objects and setting M2M relationships.
-
-        Args:
-            instance: The existing AnnotationLabel instance.
-            validated_data: The validated data from the serializer.
-
-        Returns:
-            The updated AnnotationLabel instance.
-        """
-        self._materialize_deferred_related(validated_data, FK_PAIRS)
-
-        return super().update(instance, validated_data)
 
 
 class FileUploadSerializer(serializers.Serializer):

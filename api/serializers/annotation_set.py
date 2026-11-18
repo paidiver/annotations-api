@@ -3,7 +3,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from api.models import AnnotationSet, Creator
+from api.models import AnnotationSet, AnnotationSetModel, Creator, LabelSet, RelatedMaterial
 from api.models.image_set import ImageSet
 from api.serializers.fields import (
     ContextSerializer,
@@ -103,6 +103,15 @@ class AnnotationSetSerializer(BaseSerializer):
         queryset=ImageSet.objects.all(),
         required=False,
     )
+    label_set_ids = serializers.PrimaryKeyRelatedField(
+        source="label_sets", many=True, queryset=LabelSet.objects.all(), required=False
+    )
+    connected_set_ids = serializers.PrimaryKeyRelatedField(
+        source="connected_sets", many=True, queryset=AnnotationSet.objects.all(), required=False
+    )
+    related_material_ids = serializers.PrimaryKeyRelatedField(
+        source="related_materials", many=True, queryset=RelatedMaterial.objects.all(), required=False
+    )
 
     class Meta:
         """Serializer for the AnnotationSet model."""
@@ -115,11 +124,7 @@ class AnnotationSetSerializer(BaseSerializer):
             "copyright",
             "abstract",
             "objective",
-            "target_environment",
-            "target_timescale",
-            "curation_protocol",
             "version",
-            "image_set_ids",
             "context_id",
             "context",
             "project_id",
@@ -130,6 +135,17 @@ class AnnotationSetSerializer(BaseSerializer):
             "license",
             "creators_ids",
             "creators",
+            "image_set_ids",
+            "label_set_ids",
+            "connected_set_ids",
+            "machine_scope",
+            "related_material_ids",
+            "quantitative_or_qualitative",
+            "quantification_type",
+            "biological_metrics",
+            "biological_stats",
+            "obis_handles",
+            "funding",
         ]
 
     def validate(self, attrs: dict) -> dict:
@@ -196,3 +212,49 @@ class AnnotationSetSerializer(BaseSerializer):
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
 
         return instance
+
+
+class AnnotationSetModelSerializer(serializers.ModelSerializer):
+    """Serializer for AnnotationSetModel model."""
+
+    annotation_set_id = serializers.PrimaryKeyRelatedField(
+        source="annotation_set", queryset=AnnotationSet.objects.all()
+    )
+    label_set_id = serializers.PrimaryKeyRelatedField(
+        source="label_set", queryset=LabelSet.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        """Meta class for AnnotationSetModelSerializer."""
+
+        model = AnnotationSetModel
+        fields = [
+            "id",
+            "annotation_set_id",
+            "model_id",
+            "name",
+            "version",
+            "task",
+            "handle",
+            "weights_sha256",
+            "description",
+            "score_type",
+            "confidence_threshold",
+            "label_set_id",
+            "training_image_set",
+            "training_annotation_set",
+            "validation_image_set",
+            "validation_annotation_set",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate(self, attrs: dict) -> dict:
+        """Ensure the optional label set is linked to the annotation set."""
+        attrs = super().validate(attrs)
+        annotation_set = attrs.get("annotation_set", getattr(self.instance, "annotation_set", None))
+        label_set = attrs.get("label_set", getattr(self.instance, "label_set", None))
+        if label_set and annotation_set and not annotation_set.label_sets.filter(pk=label_set.pk).exists():
+            raise serializers.ValidationError({"label_set_id": "The label set must be linked to the annotation set."})
+        return attrs
