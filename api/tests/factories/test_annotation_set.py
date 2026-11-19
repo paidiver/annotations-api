@@ -2,9 +2,10 @@
 
 from django.test import TestCase
 
-from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.annotation_set import AnnotationSetFactory, AnnotationSetModelFactory
 from api.factories.fields import CreatorFactory
 from api.factories.image_set import ImageSetFactory
+from api.factories.label_set import LabelSetFactory
 
 
 class AnnotationSetFactoryCoverageTests(TestCase):
@@ -83,3 +84,15 @@ class AnnotationSetFactoryCoverageTests(TestCase):
                 AnnotationSetFactory(image_sets=[ImageSetFactory()])
         finally:
             through_model._meta.fields = original_fields
+
+    def test_label_sets_uses_extracted_list(self) -> None:
+        """AnnotationSet with label sets associates those label sets with the instance."""
+        label_set = LabelSetFactory()
+        annotation_set = AnnotationSetFactory(label_sets=[label_set])
+        self.assertIn(label_set, annotation_set.label_sets.all())
+
+    def test_annotation_set_model_factory(self) -> None:
+        """AnnotationSetModelFactory creates a model linked to an annotation set."""
+        annotation_set = AnnotationSetFactory()
+        annotation_model = AnnotationSetModelFactory(annotation_set=annotation_set)
+        self.assertEqual(annotation_model.annotation_set_id, annotation_set.id)

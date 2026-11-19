@@ -47,9 +47,6 @@ class CommonFieldsAllFactory(DjangoModelFactory):
     copyright = Faker("company")
     abstract = Faker("paragraph", nb_sentences=4)
     objective = Faker("paragraph", nb_sentences=2)
-    target_environment = Faker("sentence")
-    target_timescale = Faker("sentence")
-    curation_protocol = Faker("paragraph", nb_sentences=3)
 
     class Meta:
         """Meta class for CommonFieldsAll."""
@@ -95,6 +92,10 @@ class CommonFieldsAllFactory(DjangoModelFactory):
 
 class CommonFieldsImagesImageSetsFactory(DjangoModelFactory):
     """Common fields for image_sets and images."""
+
+    target_environment = Faker("sentence")
+    target_timescale = Faker("sentence")
+    curation_protocol = Faker("paragraph", nb_sentences=3)
 
     sha256_hash = factory.LazyFunction(lambda: faker.Faker().sha256())
     date_time = factory.LazyFunction(lambda: timezone.now() - timezone.timedelta(days=random.randint(0, 3650)))

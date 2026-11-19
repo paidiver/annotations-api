@@ -4,12 +4,15 @@ import random
 import uuid
 
 import factory
+from factory.django import DjangoModelFactory
 
-from api.models import AnnotationSet
+from api.models import AnnotationSet, AnnotationSetModel, ImageSet, LabelSet
+from api.models.base import AnnotationModelEnum
 
 from .common_fields import CommonFieldsAllFactory
 from .fields import ContextFactory, LicenseFactory, PIFactory, ProjectFactory
 from .image_set import ImageSetFactory
+from .label_set import LabelSetFactory
 
 
 class AnnotationSetFactory(CommonFieldsAllFactory):
@@ -28,10 +31,19 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
     pi = None
     license = None
 
-    class Params:
-        """Factory params for controlling related object creation and M2M linking."""
+    @classmethod
+    def _create(cls, model_class: type[AnnotationSet], *args, **kwargs) -> AnnotationSet:
+        image_set_ids = kwargs.pop("image_set_ids", None)
+        label_set_ids = kwargs.pop("label_set_ids", None)
 
-        image_set_ids: list[int] | None = None
+        instance = super()._create(model_class, *args, **kwargs)
+
+        if image_set_ids is not None:
+            instance.image_sets.set(ImageSet.objects.filter(id__in=image_set_ids))
+        if label_set_ids is not None:
+            instance.label_sets.set(LabelSet.objects.filter(id__in=label_set_ids))
+
+        return instance
 
     @factory.post_generation
     def with_relations(self, create: bool, extracted: bool, **kwargs) -> None:
@@ -92,3 +104,40 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
             image_sets_list = list(extracted)
         rows = [through_model(**{fk_to_self_name: self, "image_set": c}) for c in image_sets_list]
         through_model.objects.bulk_create(rows, ignore_conflicts=True)
+
+    @factory.post_generation
+    def label_sets(self, create: bool, extracted: bool, **kwargs) -> None:
+        """Populate label sets from a count or iterable."""
+        if not create or extracted is None:
+            return
+        if isinstance(extracted, int):
+            label_sets = [LabelSetFactory() for _ in range(max(extracted, 0))]
+        else:
+            label_sets = list(extracted)
+        self.label_sets.set(label_sets)
+
+
+class AnnotationSetModelFactory(DjangoModelFactory):
+    """Factory for AnnotationSetModel."""
+
+    class Meta:
+        """Factory meta class."""
+
+        model = AnnotationSetModel
+
+    annotation_set = factory.SubFactory(AnnotationSetFactory)
+    model_id = factory.LazyFunction(lambda: f"model-{uuid.uuid4().hex[:12]}")
+    name = factory.LazyFunction(lambda: f"Model {uuid.uuid4().hex[:12]}")
+    version = factory.Iterator(["1.0", "1.1", "2.0"], cycle=True)
+    task = factory.Iterator([item.value for item in AnnotationModelEnum], cycle=True)
+    handle = factory.LazyFunction(lambda: f"https://example.org/models/{uuid.uuid4()}")
+    weights_sha256 = factory.LazyFunction(lambda: uuid.uuid4().hex + uuid.uuid4().hex)
+    score_type = "probability"
+    confidence_threshold = factory.LazyFunction(lambda: random.uniform(0.0, 1.0))
+
+    @classmethod
+    def _create(cls, model_class: type[AnnotationSetModel], *args, **kwargs) -> AnnotationSetModel:
+        instance = super()._create(model_class, *args, **kwargs)
+        if instance.label_set_id is not None:
+            instance.annotation_set.label_sets.add(instance.label_set)
+        return instance

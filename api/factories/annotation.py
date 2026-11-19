@@ -5,16 +5,32 @@ import uuid
 from datetime import timedelta
 
 import factory
+from django.db import models
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from api.models import Annotation, AnnotationLabel, Annotator
+from api.models import Annotation, AnnotationSet, Annotator, Image, Label
 from api.models.base import ShapeEnum
 
 from .annotation_set import AnnotationSetFactory
 from .image import ImageFactory
 from .label import LabelFactory
 from .utils import coords_for_shape
+
+
+def _resolve_relation(
+    kwargs: dict, field_name: str, model_class: type[models.Model], factory_class: type
+) -> models.Model:
+    """Resolve a factory relation supplied as an object or primary key."""
+    instance = kwargs.pop(field_name, None)
+    instance_id = kwargs.pop(f"{field_name}_id", None)
+    if instance is not None and instance_id is not None:
+        raise ValueError(f"Pass either {field_name} or {field_name}_id, not both.")
+    if instance is not None:
+        return instance
+    if instance_id is not None:
+        return model_class.objects.get(pk=instance_id)
+    return factory_class()
 
 
 class AnnotatorFactory(DjangoModelFactory):
@@ -36,11 +52,6 @@ class AnnotationFactory(DjangoModelFactory):
 
         model = Annotation
 
-    class Params:
-        """Factory params for controlling related object creation and M2M linking."""
-
-        with_labels: int = 0
-
     annotation_platform = factory.LazyFunction(lambda: random.choice([None, "BIIGLE", "VARS", "SQUIDLE+", "custom"]))
 
     shape = factory.Iterator([e.value for e in ShapeEnum], cycle=True)
@@ -49,101 +60,42 @@ class AnnotationFactory(DjangoModelFactory):
 
     dimension_pixels = factory.LazyFunction(lambda: random.choice([None, random.uniform(1.0, 2000.0)]))
 
-    image = None
-    annotation_set = None
-
-    @classmethod
-    def _create(cls, model_class: type[Annotation], *args, **kwargs) -> Annotation:
-        image = kwargs.pop("image", None)
-        image_id = kwargs.pop("image_id", None)
-        annotation_set = kwargs.pop("annotation_set", None)
-        annotation_set_id = kwargs.pop("annotation_set_id", None)
-
-        if image is not None and image_id is not None:
-            raise ValueError("Pass either image or image_id, not both.")
-        if annotation_set is not None and annotation_set_id is not None:
-            raise ValueError("Pass either annotation_set or annotation_set_id, not both.")
-
-        if image is None and image_id is None:
-            image = ImageFactory()
-        if annotation_set is None and annotation_set_id is None:
-            annotation_set = AnnotationSetFactory()
-
-        if image is not None:
-            kwargs["image"] = image
-        else:
-            kwargs["image_id"] = image_id
-
-        if annotation_set is not None:
-            kwargs["annotation_set"] = annotation_set
-        else:
-            kwargs["annotation_set_id"] = annotation_set_id
-
-        return super()._create(model_class, *args, **kwargs)
-
-
-class AnnotationLabelFactory(DjangoModelFactory):
-    """Factory for AnnotationLabel (through table)."""
-
-    class Meta:
-        """Meta class for AnnotationLabelFactory."""
-
-        model = AnnotationLabel
-
     creation_datetime = factory.LazyFunction(
         lambda: timezone.now() - timedelta(days=random.randint(0, 3650), seconds=random.randint(0, 86400))
     )
+    human_or_machine = "human"
+    mask = factory.LazyAttribute(
+        lambda obj: {"encoding": "coco-rle", "width": 4000, "height": 3000, "counts": []}
+        if obj.shape == "mask"
+        else None
+    )
 
+    image = None
+    annotation_set = None
     label = None
-    annotation = None
-    annotator = None
 
     @classmethod
-    def _create(cls, model_class: type[AnnotationLabel], *args, **kwargs) -> AnnotationLabel:
-        """Override creation to handle label/annotation/annotator logic and uniqueness constraints.
+    def _create(cls, model_class: type[Annotation], *args, **kwargs) -> Annotation:
+        image = _resolve_relation(kwargs, "image", Image, ImageFactory)
+        annotation_set = _resolve_relation(kwargs, "annotation_set", AnnotationSet, AnnotationSetFactory)
+        label = _resolve_relation(kwargs, "label", Label, LabelFactory)
 
-        Args:
-            model_class: The model class being created (AnnotationLabel).
-            *args: Positional arguments (not used here).
-            **kwargs: Keyword arguments for label, annotation, annotator, and their IDs.
-
-        Returns:
-            An instance of AnnotationLabel, with related fields set according to the logic.
-        """
-        label = kwargs.pop("label", None)
-        label_id = kwargs.pop("label_id", None)
-        annotation = kwargs.pop("annotation", None)
-        annotation_id = kwargs.pop("annotation_id", None)
-        annotator = kwargs.pop("annotator", None)
-        annotator_id = kwargs.pop("annotator_id", None)
-
-        if label is not None and label_id is not None:
-            raise ValueError("Pass either label or label_id, not both.")
-        if annotation is not None and annotation_id is not None:
-            raise ValueError("Pass either annotation or annotation_id, not both.")
-        if annotator is not None and annotator_id is not None:
-            raise ValueError("Pass either annotator or annotator_id, not both.")
-
-        if label is None and label_id is None:
-            label = LabelFactory()
-        if annotation is None and annotation_id is None:
-            annotation = AnnotationFactory()
-        if annotator is None and annotator_id is None:
-            annotator = AnnotatorFactory()
-
-        if label is not None:
-            kwargs["label"] = label
-        else:
-            kwargs["label_id"] = label_id
-
-        if annotation is not None:
-            kwargs["annotation"] = annotation
-        else:
-            kwargs["annotation_id"] = annotation_id
-
-        if annotator is not None:
-            kwargs["annotator"] = annotator
-        else:
-            kwargs["annotator_id"] = annotator_id
+        annotation_set.label_sets.add(label.label_set)
+        kwargs["image"] = image
+        kwargs["annotation_set"] = annotation_set
+        kwargs["label"] = label
 
         return super()._create(model_class, *args, **kwargs)
+
+    @factory.post_generation
+    def creators(self, create: bool, extracted: bool, **kwargs) -> None:
+        """Populate annotation creators from a count or iterable."""
+        if not create:
+            return
+        if extracted is None:
+            return
+        if isinstance(extracted, int):
+            creators = [AnnotatorFactory() for _ in range(max(extracted, 0))]
+        else:
+            creators = list(extracted)
+        self.creators.set(creators)
