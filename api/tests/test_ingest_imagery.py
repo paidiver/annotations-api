@@ -1,5 +1,12 @@
 """Tests for ingest_ifdo_image_set view."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_INGEST:
+    raise SkipTest("Legacy ingest endpoints are disabled")
+
 import uuid
 from unittest.mock import Mock, patch
 

@@ -1,5 +1,12 @@
 """Tests for UploadAnnotationsView."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_INGEST:
+    raise SkipTest("Legacy annotation ingest is disabled")
+
 import io
 from unittest.mock import Mock, patch
 

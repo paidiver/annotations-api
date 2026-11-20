@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import requests
+from django.conf import settings
 from django.test import SimpleTestCase
 from django.urls import reverse
 from drf_spectacular.generators import SchemaGenerator
@@ -49,7 +50,10 @@ class ResponseContractTests(SimpleTestCase):
     def test_documented_collections_are_not_double_wrapped(self) -> None:
         """Generated search and taxonomy schemas document arrays under results."""
         schema = SchemaGenerator().get_schema(request=None, public=True)
-        for path in ("/api/annotations/search/", "/api/annotations/search/grouped/", "/api/taxonomy/worms/taxa/"):
+        paths = ["/api/taxonomy/worms/taxa/"]
+        if settings.ENABLE_ANNOTATION_SEARCH:
+            paths.extend(["/api/annotations/search/", "/api/annotations/search/grouped/"])
+        for path in paths:
             responses = schema["paths"][path]["get"]["responses"]
             ref = responses["200"]["content"]["application/json"]["schema"]["$ref"].split("/")[-1]
             self.assertEqual(schema["components"]["schemas"][ref]["properties"]["results"]["type"], "array")

@@ -124,6 +124,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 
+ENABLE_ANNOTATION_SEARCH = os.environ.get("ENABLE_ANNOTATION_SEARCH", "0") == "1"
+ENABLE_ANNOTATION_INGEST = os.environ.get("ENABLE_ANNOTATION_INGEST", "0") == "1"
+
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",

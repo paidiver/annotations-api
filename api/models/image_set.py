@@ -1,4 +1,4 @@
-"""Docstring for api.models.image_set."""
+"""ImageSet model module."""
 
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point, Polygon
@@ -6,8 +6,8 @@ from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import CheckConstraint, F, Q
 
-from .base import DefaultColumns
-from .common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
+from api.models.base import DefaultColumns
+from api.models.common_fields import CommonFieldsAll, CommonFieldsImagesImageSets
 
 
 class ImageSetCreator(models.Model):
