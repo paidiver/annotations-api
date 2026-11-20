@@ -7,11 +7,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.factories.annotation import AnnotatorFactory
 from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image import ImageFactory
 from api.factories.image_set import ImageSetFactory
-from api.models import Annotation, AnnotationSetModel, Label, LabelSet
+from api.models import AnnotationSetModel, Label, LabelSet
 
 
 class SeedAndDatabaseDumpViewTests(APITestCase):
@@ -34,7 +34,7 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         label_set = LabelSet.objects.create(name="Test Label Set")
         annotation_set.label_sets.add(label_set)
         label = Label.objects.create(label_set=label_set, name="Test Label")
-        annotator = AnnotatorFactory(name="Test Annotator")
+        creator = CreatorFactory(name="Test Creator")
 
         annotation_model = AnnotationSetModel.objects.create(
             annotation_set=annotation_set,
@@ -43,15 +43,6 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
             version="1.0",
             task="classification",
         )
-        annotation = Annotation.objects.create(
-            image=image,
-            annotation_set=annotation_set,
-            label=label,
-            human_or_machine="human",
-            shape="whole-image",
-            coordinates=[[]],
-        )
-        annotation.creators.add(annotator)
 
         resp = self.client.get(self.url())
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -66,7 +57,7 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
             "annotation_set_models",
             "label_sets",
             "labels",
-            "annotators",
+            "creators",
             "annotations",
         ]:
             self.assertIn(key, data)
@@ -89,8 +80,8 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         label_names = [row.get("name") for row in data["labels"]]
         self.assertIn(label.name, label_names)
 
-        annotator_names = [row.get("name") for row in data["annotators"]]
-        self.assertIn(annotator.name, annotator_names)
+        creator_names = [row.get("name") for row in data["creators"]]
+        self.assertIn(creator.name, creator_names)
 
         self.assertGreaterEqual(len(data["annotations"]), 1)
 

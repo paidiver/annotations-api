@@ -5,7 +5,7 @@ import uuid
 from django.urls import reverse
 from rest_framework import status
 
-from api.models import Annotation, Label, LabelSet
+from api.models import Annotation, Creator, Label, LabelSet
 from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
 from api.tests.utils.auth_utils import AuthenticatedAPITestCase
@@ -21,6 +21,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         self.label_set = LabelSet.objects.create(name="Test Label Set")
         self.annotation_set.label_sets.add(self.label_set)
         self.label = Label.objects.create(name="Test Label", label_set=self.label_set)
+        self.creator = Creator.objects.create(name="Test Creator")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
         self.image_a = self.image_set.images.create(filename="test_image.jpg", image_set=self.image_set)
@@ -32,6 +33,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
             "coordinates": [[10, 10], [20, 20]],
             "label": self.label,
             "human_or_machine": "human",
+            "creator": self.creator,
         }
         self.annotation_payload = {
             "annotation_platform": "Test Platform",
@@ -39,6 +41,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
             "coordinates": [[10, 10], [20, 20]],
             "label_id": self.label.pk,
             "human_or_machine": "human",
+            "creator_id": self.creator.pk,
         }
 
     def list_url(self) -> str:

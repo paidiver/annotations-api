@@ -1,4 +1,4 @@
-"""Models for annotations, annotators, and annotation labels."""
+"""Models for annotations."""
 
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
@@ -12,25 +12,6 @@ from api.models.base import (
     enum_choices,
 )
 from api.models.validators import validate_coco_rle_mask
-
-
-class Annotator(DefaultColumns):
-    """An annotator is a person or machine that creates annotations."""
-
-    name = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text="A human-readable name for the annotator (identifying the specific human or machine)",
-    )
-
-    class Meta:
-        """Meta class for Annotator."""
-
-        db_table = "annotators"
-
-    def __str__(self):
-        """String representation of the Annotator instance."""
-        return self.name
 
 
 class Annotation(DefaultColumns):
@@ -85,11 +66,13 @@ class Annotation(DefaultColumns):
         help_text="A unique identifier to a semantic label",
     )
 
-    creators = models.ManyToManyField(
-        "Annotator",
+    creator = models.ForeignKey(
+        "Creator",
+        null=True,
         blank=True,
+        on_delete=models.SET_NULL,
         related_name="created_annotations",
-        help_text="The human annotators involved in creating this annotation.",
+        help_text="The person, organisation, or system that created this annotation.",
     )
 
     creation_datetime = models.DateTimeField(
@@ -105,7 +88,7 @@ class Annotation(DefaultColumns):
     )
 
     human_reviewer = models.ForeignKey(
-        "Annotator",
+        "Creator",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

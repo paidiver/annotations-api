@@ -124,13 +124,6 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         blank=True,
     )
 
-    version = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        help_text="The version of the annotation set.",
-    )
-
     label_sets = models.ManyToManyField(
         "LabelSet",
         related_name="annotation_sets",
@@ -202,7 +195,7 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         Returns:
             A string representing the AnnotationSet instance.
         """
-        return f"AnnotationSet(id={self.pk}, version={self.version})"
+        return f"AnnotationSet(id={self.pk})"
 
 
 class AnnotationSetModel(DefaultColumns):

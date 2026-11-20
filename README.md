@@ -229,7 +229,7 @@ uv run --locked python manage.py seed_demo_data \
   --image-annotation-sets 3 \
   --images-per-image-set 15 \
   --labels-per-annotation-set 25 \
-  --annotators 12 \
+  --creators 12 \
   --annotations-per-image 3 \
   --annotation-labels 150
 ```

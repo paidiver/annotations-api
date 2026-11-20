@@ -1,6 +1,6 @@
 """__init__.py for the api.views package."""
 
-from .annotation import AnnotationViewSet, AnnotatorViewSet, UploadAnnotationsView
+from .annotation import AnnotationViewSet, UploadAnnotationsView
 from .annotation_set import AnnotationSetModelViewSet, AnnotationSetViewSet
 from .base import HealthView
 from .fields import (
@@ -30,7 +30,6 @@ __all__ = [
     "ImageSetViewSet",
     "ImageViewSet",
     "AnnotationViewSet",
-    "AnnotatorViewSet",
     "AnnotationSetViewSet",
     "AnnotationSetModelViewSet",
     "LabelViewSet",

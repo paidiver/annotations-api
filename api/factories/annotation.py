@@ -1,7 +1,6 @@
 """Factory for Annotation and related models."""
 
 import random
-import uuid
 from datetime import timedelta
 
 import factory
@@ -9,7 +8,7 @@ from django.db import models
 from django.utils import timezone
 from factory.django import DjangoModelFactory
 
-from api.models import Annotation, AnnotationSet, Annotator, Image, Label
+from api.models import Annotation, AnnotationSet, Image, Label
 from api.models.base import ShapeEnum
 
 from .annotation_set import AnnotationSetFactory
@@ -31,17 +30,6 @@ def _resolve_relation(
     if instance_id is not None:
         return model_class.objects.get(pk=instance_id)
     return factory_class()
-
-
-class AnnotatorFactory(DjangoModelFactory):
-    """Factory for Annotator."""
-
-    class Meta:
-        """Meta class for AnnotatorFactory."""
-
-        model = Annotator
-
-    name = factory.LazyFunction(lambda: f"Annotator {uuid.uuid4().hex[:12]}")
 
 
 class AnnotationFactory(DjangoModelFactory):
@@ -73,6 +61,7 @@ class AnnotationFactory(DjangoModelFactory):
     image = None
     annotation_set = None
     label = None
+    creator = None
 
     @classmethod
     def _create(cls, model_class: type[Annotation], *args, **kwargs) -> Annotation:
@@ -86,16 +75,3 @@ class AnnotationFactory(DjangoModelFactory):
         kwargs["label"] = label
 
         return super()._create(model_class, *args, **kwargs)
-
-    @factory.post_generation
-    def creators(self, create: bool, extracted: bool, **kwargs) -> None:
-        """Populate annotation creators from a count or iterable."""
-        if not create:
-            return
-        if extracted is None:
-            return
-        if isinstance(extracted, int):
-            creators = [AnnotatorFactory() for _ in range(max(extracted, 0))]
-        else:
-            creators = list(extracted)
-        self.creators.set(creators)

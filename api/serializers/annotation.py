@@ -2,12 +2,11 @@
 
 from rest_framework import serializers
 
-from api.models import Annotation, Annotator
+from api.models import Annotation, Creator
 from api.models.annotation_set import AnnotationSet, AnnotationSetModel
 from api.models.base import AliasedShapesEnumField, ShapeEnum, enum_choices
 from api.models.image import Image
 from api.models.label import Label
-from api.serializers.base import NestedGetOrCreateMixin, ReadOnlyFieldsMixin
 
 
 def _model_score_error(model: AnnotationSetModel | None, confidence: float | None, kind: str) -> str | None:
@@ -19,18 +18,6 @@ def _model_score_error(model: AnnotationSetModel | None, confidence: float | Non
     if not model.score_type:
         return f"The {kind} model must define its score type."
     return None
-
-
-class AnnotatorSerializer(NestedGetOrCreateMixin, ReadOnlyFieldsMixin, serializers.ModelSerializer):
-    """Serializer for Annotator model."""
-
-    key_field = "name"
-
-    class Meta:
-        """Meta class for AnnotatorSerializer."""
-
-        model = Annotator
-        fields = ["id", "name"]
 
 
 class AnnotationSerializer(serializers.ModelSerializer):
@@ -45,11 +32,11 @@ class AnnotationSerializer(serializers.ModelSerializer):
         queryset=AnnotationSet.objects.all(),
     )
     label_id = serializers.PrimaryKeyRelatedField(source="label", queryset=Label.objects.all())
-    creator_ids = serializers.PrimaryKeyRelatedField(
-        source="creators", many=True, queryset=Annotator.objects.all(), required=False
+    creator_id = serializers.PrimaryKeyRelatedField(
+        source="creator", queryset=Creator.objects.all(), required=False, allow_null=True
     )
     human_reviewer_id = serializers.PrimaryKeyRelatedField(
-        source="human_reviewer", queryset=Annotator.objects.all(), required=False, allow_null=True
+        source="human_reviewer", queryset=Creator.objects.all(), required=False, allow_null=True
     )
     detection_model_id = serializers.PrimaryKeyRelatedField(
         source="detection_model", queryset=AnnotationSetModel.objects.all(), required=False, allow_null=True
@@ -68,7 +55,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
             "image_id",
             "annotation_set_id",
             "label_id",
-            "creator_ids",
+            "creator_id",
             "annotation_platform",
             "human_or_machine",
             "creation_datetime",

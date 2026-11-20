@@ -24,8 +24,6 @@ class AnnotationSetFactory(CommonFieldsAllFactory):
         model = AnnotationSet
 
     name = factory.LazyFunction(lambda: f"AnnotationSet {uuid.uuid4().hex[:12]}")
-    version = factory.LazyFunction(lambda: random.choice([None, "v1", "v1.0", "v2", "2024-01", "draft"]))
-
     context = None
     project = None
     pi = None

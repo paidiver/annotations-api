@@ -6,11 +6,9 @@ from argparse import ArgumentParser
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from api.factories.annotation import (
-    AnnotationFactory,
-    AnnotatorFactory,
-)
+from api.factories.annotation import AnnotationFactory
 from api.factories.annotation_set import AnnotationSetFactory, AnnotationSetModelFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image import ImageFactory
 from api.factories.image_set import ImageSetFactory
 from api.factories.label import LabelFactory
@@ -30,7 +28,7 @@ class Command(BaseCommand):
         "- 2 label_sets (1 per annotation_set)\n"
         "- 20 images (10 per image_set)\n"
         "- 40 labels (20 per label_set)\n"
-        "- 10 annotators\n"
+        "- 10 creators\n"
         "- 40 annotations (2 per image)\n"
         "- 2 annotation models (1 per annotation_set)\n"
     )
@@ -56,7 +54,7 @@ class Command(BaseCommand):
             default=20,
             help="Number of Labels to create per LabelSet",
         )
-        parser.add_argument("--annotators", type=int, default=10, help="Total number of Annotators to create")
+        parser.add_argument("--creators", type=int, default=10, help="Total number of Creators to create")
         parser.add_argument(
             "--annotations-per-image",
             type=int,
@@ -81,7 +79,7 @@ class Command(BaseCommand):
         n_image_annotation_sets: int = options["image_annotation_sets"]
         images_per_iset: int = options["images_per_image_set"]
         labels_per_lset: int = options["labels_per_label_set"]
-        n_annotators: int = options["annotators"]
+        n_creators: int = options["creators"]
         annotations_per_image: int = options["annotations_per_image"]
         annotation_models_per_set: int = options["annotation_models_per_annotation_set"]
 
@@ -90,7 +88,7 @@ class Command(BaseCommand):
         if (
             images_per_iset < 0
             or labels_per_lset < 0
-            or n_annotators < 0
+            or n_creators < 0
             or annotations_per_image < 0
             or annotation_models_per_set < 0
         ):
@@ -98,7 +96,7 @@ class Command(BaseCommand):
         if images_per_iset > 0 and annotations_per_image > 0 and labels_per_lset == 0:
             raise ValueError("--labels-per-label-set must be > 0 when annotations are created")
 
-        annotators = [AnnotatorFactory() for _ in range(n_annotators)]
+        creators = [CreatorFactory() for _ in range(n_creators)]
 
         image_sets = []
         annotation_sets = []
@@ -136,12 +134,12 @@ class Command(BaseCommand):
             ]
             for img in images:
                 for _ in range(annotations_per_image):
-                    creators = [random.choice(annotators)] if annotators else []
+                    creator = random.choice(creators) if creators else None
                     AnnotationFactory(
                         image=img,
                         annotation_set=annotation_set,
                         label=random.choice(labels),
-                        creators=creators,
+                        creator=creator,
                     )
                     total_annotations += 1
         self.stdout.write(self.style.SUCCESS("Seed complete!"))
@@ -150,6 +148,6 @@ class Command(BaseCommand):
         self.stdout.write(f"Images: {images_per_iset} per ImageSet)")
         self.stdout.write(f"LabelSets: {len(label_sets)} (each linked to one AnnotationSet)")
         self.stdout.write(f"Labels: {labels_per_lset} per LabelSet)")
-        self.stdout.write(f"Annotators: {n_annotators}")
+        self.stdout.write(f"Creators: {n_creators}")
         self.stdout.write(f"Annotations: {total_annotations}")
         self.stdout.write(f"AnnotationSetModels: {total_annotation_models}")

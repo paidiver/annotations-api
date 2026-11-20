@@ -57,9 +57,7 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         annotation_set.image_sets.set([self.image_set])
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
 
-        self.assertEqual(
-            annotation_set.__str__(), f"AnnotationSet(id={annotation_set.pk}, version={annotation_set.version})"
-        )
+        self.assertEqual(annotation_set.__str__(), f"AnnotationSet(id={annotation_set.pk})")
 
         resp = self.client.get(self.detail_url(annotation_set.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

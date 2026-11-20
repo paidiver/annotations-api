@@ -124,7 +124,6 @@ class AnnotationSetSerializer(BaseSerializer):
             "copyright",
             "abstract",
             "objective",
-            "version",
             "context_id",
             "context",
             "project_id",

@@ -7,7 +7,6 @@ from api.views import (
     AnnotationSetModelViewSet,
     AnnotationSetViewSet,
     AnnotationViewSet,
-    AnnotatorViewSet,
 )
 
 router_annotation = DefaultRouter()
@@ -18,12 +17,6 @@ router_annotation.register(
     AnnotationViewSet,
     basename="annotation",
 )
-router_annotation.register(
-    r"annotators",
-    AnnotatorViewSet,
-    basename="annotator",
-)
-
 # annotatiion_set endpoints are registered here
 router_annotation.register(
     r"annotation_sets",

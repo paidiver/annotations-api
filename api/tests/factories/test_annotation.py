@@ -2,11 +2,9 @@
 
 from django.test import TestCase
 
-from api.factories.annotation import (
-    AnnotationFactory,
-    AnnotatorFactory,
-)
+from api.factories.annotation import AnnotationFactory
 from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image import ImageFactory
 from api.factories.label import LabelFactory
 
@@ -71,17 +69,17 @@ class AnnotationFactoriesErrorTests(TestCase):
         with self.assertRaisesMessage(ValueError, "Pass either label or label_id, not both."):
             AnnotationFactory(label=label, label_id=label.id)
 
-    def test_annotation_factory_sets_label_and_creators(self) -> None:
-        """Test that AnnotationFactory sets the direct label and annotation creators."""
+    def test_annotation_factory_sets_label_and_creator(self) -> None:
+        """Test that AnnotationFactory sets the direct label and annotation creator."""
         label = LabelFactory()
-        annotator = AnnotatorFactory()
+        creator = CreatorFactory()
         annotation_set = AnnotationSetFactory()
         annotation = AnnotationFactory(
             annotation_set=annotation_set,
             label=label,
-            creators=[annotator],
+            creator=creator,
         )
 
         self.assertEqual(annotation.label_id, label.id)
         self.assertIn(label.label_set, annotation_set.label_sets.all())
-        self.assertIn(annotator, annotation.creators.all())
+        self.assertEqual(annotation.creator, creator)

@@ -1,6 +1,6 @@
 """__init__.py for the api.models package."""
 
-from .annotation import Annotation, Annotator
+from .annotation import Annotation
 from .annotation_set import AnnotationSet, AnnotationSetCreator, AnnotationSetImageSet, AnnotationSetModel
 from .fields import (
     PI,
@@ -31,7 +31,6 @@ __all__ = [
     "AnnotationSetCreator",
     "AnnotationSetImageSet",
     "AnnotationSetModel",
-    "Annotator",
     "Annotation",
     "Label",
     "LabelSet",

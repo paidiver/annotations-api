@@ -8,16 +8,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
-from api.models import Annotation, Annotator
-from api.serializers import AnnotationSerializer, AnnotatorSerializer, FileUploadSerializer
-
-
-@extend_schema(tags=["Annotations API"])
-class AnnotatorViewSet(viewsets.ModelViewSet):
-    """ViewSet for the Annotator model."""
-
-    queryset = Annotator.objects.all()
-    serializer_class = AnnotatorSerializer
+from api.models import Annotation
+from api.serializers import AnnotationSerializer, FileUploadSerializer
 
 
 @extend_schema(tags=["Annotations API"])

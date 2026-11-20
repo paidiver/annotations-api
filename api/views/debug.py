@@ -11,7 +11,6 @@ from api.models import (
     Annotation,
     AnnotationSet,
     AnnotationSetModel,
-    Annotator,
     Context,
     Creator,
     Event,
@@ -35,7 +34,6 @@ from api.serializers import (
     AnnotationSerializer,
     AnnotationSetModelSerializer,
     AnnotationSetSerializer,
-    AnnotatorSerializer,
     ImageCameraCalibrationModelSerializer,
     ImageCameraHousingViewportSerializer,
     ImageCameraPoseSerializer,
@@ -64,7 +62,7 @@ tables_to_models_and_serializers = {
     "images": (Image, ImageSerializer),
     "pi": (PI, PISerializer),
     "context": (Context, ContextSerializer),
-    "creator": (Creator, CreatorSerializer),
+    "creators": (Creator, CreatorSerializer),
     "event": (Event, EventSerializer),
     "license": (License, LicenseSerializer),
     "platform": (Platform, PlatformSerializer),
@@ -81,7 +79,6 @@ tables_to_models_and_serializers = {
     "annotation_set_models": (AnnotationSetModel, AnnotationSetModelSerializer),
     "label_sets": (LabelSet, LabelSetSerializer),
     "labels": (Label, LabelSerializer),
-    "annotators": (Annotator, AnnotatorSerializer),
     "annotations": (Annotation, AnnotationSerializer),
 }
 
