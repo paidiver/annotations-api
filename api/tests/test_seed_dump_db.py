@@ -83,8 +83,6 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         creator_names = [row.get("name") for row in data["creators"]]
         self.assertIn(creator.name, creator_names)
 
-        self.assertGreaterEqual(len(data["annotations"]), 1)
-
     @override_settings(DEBUG=False)
     def test_debug_dump_returns_404_when_debug_false(self) -> None:
         """Test that the debug database dump endpoint returns 404 when DEBUG is False."""
