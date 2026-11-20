@@ -6,6 +6,7 @@ from rest_framework import viewsets
 from api.models import LabelSet
 from api.serializers import LabelSetSerializer
 
+
 @extend_schema(tags=["Labels API"])
 class LabelSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the LabelSet model."""

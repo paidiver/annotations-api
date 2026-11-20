@@ -7,9 +7,7 @@ from django.urls import reverse
 from requests.exceptions import Timeout
 from rest_framework import status
 
-from api.models import Label
-from api.models.annotation_set import AnnotationSet
-from api.models.image_set import ImageSet
+from api.models import Label, LabelSet
 from api.serializers.label import LabelSerializer
 from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
@@ -20,9 +18,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
     def setUp(self) -> None:
         """Set up test data and common variables."""
         super().setUp()
-        self.annotation_set = AnnotationSet.objects.create(name="Test Set")
-        self.image_set = ImageSet.objects.create(name="Test ImageSet")
-        self.annotation_set.image_sets.set([self.image_set])
+        self.label_set = LabelSet.objects.create(name="Test Label Set")
 
         self._worms_patcher = patch("api.serializers.label._ingest_get_aphia_id_cached_worms")
         self.mocked_worms = self._worms_patcher.start()
@@ -42,7 +38,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         """Test that creating a Label with an invalid lowest_aphia_id is rejected."""
         payload = {
             "name": "Label With Aphia",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "999999999",
             "parent_label_name": "Parent Label",
         }
@@ -72,7 +68,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.mocked_worms.side_effect = Timeout()
         payload = {
             "name": "Label With Aphia",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "12345",
             "parent_label_name": "Parent Label",
         }
@@ -89,7 +85,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         self.mocked_worms.return_value = Mock(status_code=418)
         payload = {
             "name": "Label With Aphia",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "12345",
             "parent_label_name": "Parent Label",
         }
@@ -112,7 +108,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         payload = {
             "name": "Valid Aphia Label",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "12345",
             "parent_label_name": "Parent Label",
         }
@@ -124,7 +120,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         """Test that creating a Label with an empty lowest_aphia_id is accepted."""
         payload = {
             "name": "Valid Aphia Label",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "parent_label_name": "Parent Label",
         }
 
@@ -135,13 +131,13 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
         """Test listing Labels."""
         Label.objects.create(
             name="Test Label",
-            annotation_set=self.annotation_set,
+            label_set=self.label_set,
             parent_label_name="Parent Label",
             lowest_aphia_id="12345",
         )
         Label.objects.create(
             name="Another Label",
-            annotation_set=self.annotation_set,
+            label_set=self.label_set,
             parent_label_name="Parent Label",
             lowest_aphia_id="12345",
         )
@@ -159,30 +155,30 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
     def test_retrieve_label(self) -> None:
         """Test retrieving a specific Label."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
+        label = Label.objects.create(label_set=self.label_set, name="Test Label", lowest_aphia_id="12345")
         self.client.force_authenticate(user=None)  # ensure endpoint works for anonymous users
         resp = self.client.get(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(label.pk))
         self.assertEqual(resp.data["name"], "Test Label")
 
-    def test_create_label_with_annotation_set_that_does_not_exist(self) -> None:
-        """Test that creating an Label with an annotation set that does not exist is rejected."""
+    def test_create_label_with_label_set_that_does_not_exist(self) -> None:
+        """Test that creating a Label with a label set that does not exist is rejected."""
         payload = {
             "name": "Test Label",
             "parent_label_name": "Parent Label",
-            "annotation_set_id": uuid.uuid4(),
+            "label_set_id": uuid.uuid4(),
         }
 
         resp = self.client.post(self.list_url(), payload, format="json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(any(error["field"].split(".")[0] == "annotation_set_id" for error in resp.data["errors"]))
+        self.assertTrue(any(error["field"].split(".")[0] == "label_set_id" for error in resp.data["errors"]))
 
     def test_patch_label(self) -> None:
         """Test that PATCHing an Label."""
         self.mocked_worms.return_value = Mock(status_code=200)
 
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
+        label = Label.objects.create(label_set=self.label_set, name="Test Label", lowest_aphia_id="12345")
         payload = {
             "name": "Updated Label",
             "lowest_aphia_id": "12345",
@@ -196,7 +192,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
     def test_delete_label(self) -> None:
         """Test deleting an Label."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12345")
+        label = Label.objects.create(label_set=self.label_set, name="Test Label", lowest_aphia_id="12345")
 
         resp = self.client.delete(self.detail_url(label.pk))
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
@@ -210,13 +206,13 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         payload_1 = {
             "name": "Label One",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "12345",
             "parent_label_name": "Parent Label",
         }
         payload_2 = {
             "name": "Label Two",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "12345",
             "parent_label_name": "Parent Label",
         }
@@ -239,7 +235,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         payload = {
             "name": "Invalid Aphia Label",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "999999999",
             "parent_label_name": "Parent Label",
         }
@@ -264,7 +260,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
         payload = {
             "name": "Invalid Aphia Label",
-            "annotation_set_id": self.annotation_set.pk,
+            "label_set_id": self.label_set.pk,
             "lowest_aphia_id": "999999999",
             "parent_label_name": "Parent Label",
         }
@@ -283,7 +279,7 @@ class LabelViewSetTests(AuthenticatedAPITestCase):
 
     def test_anonymous_user_cannot_patch_label(self) -> None:
         """Test that a Label can't be PATCHed by an anonymous user.."""
-        label = Label.objects.create(annotation_set=self.annotation_set, name="Test Label", lowest_aphia_id="12346")
+        label = Label.objects.create(label_set=self.label_set, name="Test Label", lowest_aphia_id="12346")
         payload = {
             "name": "Updated Label",
             "lowest_aphia_id": "12345",

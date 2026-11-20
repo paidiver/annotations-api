@@ -67,7 +67,7 @@ class Annotation(DefaultColumns):
             "3 for circle, 8 for ellipse/rectangle, 4 or more for polyline, 8 or more for polygon). The third "
             "coordinate value of a circle defines the radius. The first and last coordinates of a polygon must "
             "be equal. Format: [[p1.x,p1.y,p2x,p2.y,...]..]"
-        )
+        ),
     )
 
     dimension_pixels = models.FloatField(
@@ -121,12 +121,18 @@ class Annotation(DefaultColumns):
     )
     additional_info = models.TextField(null=True, blank=True, help_text="Additional comments or observations.")
     detection_model = models.ForeignKey(
-        "AnnotationSetModel", null=True, blank=True, on_delete=models.PROTECT,
+        "AnnotationSetModel",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
         related_name="detected_annotations",
         help_text="The registered model that produced the annotation shape.",
     )
     classification_model = models.ForeignKey(
-        "AnnotationSetModel", null=True, blank=True, on_delete=models.PROTECT,
+        "AnnotationSetModel",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
         related_name="classified_annotations",
         help_text="The registered model that produced the annotation label.",
     )

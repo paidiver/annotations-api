@@ -1,5 +1,6 @@
 """URL configuration for the Annotations API endpoints."""
 
+from django.conf import settings
 from rest_framework.routers import DefaultRouter
 
 from api.views import (
@@ -8,7 +9,6 @@ from api.views import (
     AnnotationViewSet,
     AnnotatorViewSet,
 )
-from api.views.search import AnnotationSearchViewSet
 
 router_annotation = DefaultRouter()
 
@@ -37,9 +37,11 @@ router_annotation.register(
     basename="annotation_model",
 )
 
-# annotatiion_set endpoints are registered here
-router_annotation.register(
-    r"search",
-    AnnotationSearchViewSet,
-    basename="search",
-)
+if settings.ENABLE_ANNOTATION_SEARCH:
+    from api.views.search import AnnotationSearchViewSet
+
+    router_annotation.register(
+        r"search",
+        AnnotationSearchViewSet,
+        basename="search",
+    )

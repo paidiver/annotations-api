@@ -171,9 +171,7 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         blank=True,
         help_text="The planned type of quantification, such as count, measurement, or rate.",
     )
-    biological_metrics = models.TextField(
-        null=True, blank=True, help_text="Planned derived biological metrics."
-    )
+    biological_metrics = models.TextField(null=True, blank=True, help_text="Planned derived biological metrics.")
     biological_stats = models.TextField(
         null=True, blank=True, help_text="Planned statistical comparisons and sampling design."
     )
@@ -267,19 +265,31 @@ class AnnotationSetModel(DefaultColumns):
         help_text="Label set containing the model output classes, when different from the annotation set default.",
     )
     training_image_set = models.CharField(
-        max_length=2048, null=True, blank=True, validators=[validate_uuid_or_uri],
+        max_length=2048,
+        null=True,
+        blank=True,
+        validators=[validate_uuid_or_uri],
         help_text="UUID or URI of the training image set.",
     )
     training_annotation_set = models.CharField(
-        max_length=2048, null=True, blank=True, validators=[validate_uuid_or_uri],
+        max_length=2048,
+        null=True,
+        blank=True,
+        validators=[validate_uuid_or_uri],
         help_text="UUID or URI of the training annotation set.",
     )
     validation_image_set = models.CharField(
-        max_length=2048, null=True, blank=True, validators=[validate_uuid_or_uri],
+        max_length=2048,
+        null=True,
+        blank=True,
+        validators=[validate_uuid_or_uri],
         help_text="UUID or URI of the validation image set.",
     )
     validation_annotation_set = models.CharField(
-        max_length=2048, null=True, blank=True, validators=[validate_uuid_or_uri],
+        max_length=2048,
+        null=True,
+        blank=True,
+        validators=[validate_uuid_or_uri],
         help_text="UUID or URI of the validation annotation set.",
     )
 
@@ -288,9 +298,7 @@ class AnnotationSetModel(DefaultColumns):
 
         db_table = "annotation_set_models"
         constraints = [
-            models.UniqueConstraint(
-                fields=["annotation_set", "model_id"], name="uq_annotation_set_model_id"
-            ),
+            models.UniqueConstraint(fields=["annotation_set", "model_id"], name="uq_annotation_set_model_id"),
             models.CheckConstraint(
                 check=models.Q(confidence_threshold__isnull=True)
                 | models.Q(confidence_threshold__gte=0, confidence_threshold__lte=1),

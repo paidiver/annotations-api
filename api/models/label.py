@@ -60,11 +60,7 @@ class Label(DefaultColumns):
         """Meta class for Label."""
 
         db_table = "labels"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["name", "label_set"], name="unique_label_name_per_set"
-            )
-        ]
+        constraints = [models.UniqueConstraint(fields=["name", "label_set"], name="unique_label_name_per_set")]
         indexes = [
             GinIndex(
                 name="labels_name_trgm_idx",

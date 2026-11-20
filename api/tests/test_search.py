@@ -1,5 +1,12 @@
 """Tests for AnnotationSearchViewSet."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_SEARCH:
+    raise SkipTest("Legacy annotation search is disabled")
+
 from unittest.mock import Mock, PropertyMock, patch
 
 import requests

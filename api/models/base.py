@@ -68,6 +68,7 @@ class CaseInsensitiveEnum(str, enum.Enum):
                     return member
         return None
 
+
 class HumanOrMachineEnum(CaseInsensitiveEnum):
     """Enumeration for human or machine types in the system."""
 
@@ -83,6 +84,7 @@ class MachineTrainingValidationEnum(CaseInsensitiveEnum):
     validation = "validation"
     both = "both"
 
+
 class QuantificationTypeEnum(CaseInsensitiveEnum):
     """Enumeration for quantification types in the system."""
 
@@ -93,12 +95,14 @@ class QuantificationTypeEnum(CaseInsensitiveEnum):
     volume_measurement = "volume measurement"
     rate = "rate"
 
+
 class QualitativeOrQuantitativeEnum(CaseInsensitiveEnum):
     """Enumeration for qualitative or quantitative types in the system."""
 
     qualitative = "qualitative"
     quantitative = "quantitative"
     semi_quantitative = "semi-quantitative"
+
 
 class AnnotationModelEnum(CaseInsensitiveEnum):
     """Enumeration for acquisition types in the system."""

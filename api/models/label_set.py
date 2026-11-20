@@ -9,20 +9,14 @@ from api.models.common_fields import CommonFieldsAll
 class LabelSetCreator(models.Model):
     """Association table between a label set and its creators."""
 
-    label_set = models.ForeignKey(
-        "LabelSet", on_delete=models.CASCADE, related_name="label_set_creator_links"
-    )
-    creator = models.ForeignKey(
-        "Creator", on_delete=models.CASCADE, related_name="label_set_creator_links"
-    )
+    label_set = models.ForeignKey("LabelSet", on_delete=models.CASCADE, related_name="label_set_creator_links")
+    creator = models.ForeignKey("Creator", on_delete=models.CASCADE, related_name="label_set_creator_links")
 
     class Meta:
         """Database metadata for the label-set creator association."""
 
         db_table = "label_set_creators"
-        constraints = [
-            models.UniqueConstraint(fields=["label_set", "creator"], name="uq_label_set_creator")
-        ]
+        constraints = [models.UniqueConstraint(fields=["label_set", "creator"], name="uq_label_set_creator")]
 
 
 class LabelSet(CommonFieldsAll, DefaultColumns):

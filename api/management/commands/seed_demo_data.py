@@ -20,6 +20,8 @@ from api.factories.label_set import LabelSetFactory
 class Command(BaseCommand):
     """Django management command to seed demo data for testing and development."""
 
+    requires_system_checks = []
+
     help = (
         "Seed demo data with configurable counts.\n\n"
         "Defaults replicate:\n"
@@ -140,7 +142,7 @@ class Command(BaseCommand):
                         annotation_set=annotation_set,
                         label=random.choice(labels),
                         creators=creators,
-                )
+                    )
                     total_annotations += 1
         self.stdout.write(self.style.SUCCESS("Seed complete!"))
         self.stdout.write(f"ImageSets: {n_image_annotation_sets}")
