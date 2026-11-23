@@ -8,7 +8,7 @@ from factory.django import DjangoModelFactory
 
 from api.models import Label
 
-from .annotation_set import AnnotationSetFactory
+from .label_set import LabelSetFactory
 
 
 class LabelFactory(DjangoModelFactory):
@@ -47,11 +47,11 @@ class LabelFactory(DjangoModelFactory):
         lambda: random.choice([None, "cf.", "aff.", "sp.", "gen. sp.", "indet."])
     )
 
-    annotation_set = None
+    label_set = None
 
     @classmethod
     def _create(cls, model_class: type[Label], *args, **kwargs) -> Label:
-        """Override creation to handle annotation_set / annotation_set_id logic.
+        """Override creation to handle label_set / label_set_id logic.
 
         Args:
             model_class: The model class being created (Label).
@@ -59,21 +59,21 @@ class LabelFactory(DjangoModelFactory):
             **kwargs: Keyword arguments
 
         Returns:
-            An instance of Label, with annotation_set set according to the logic.
+            An instance of Label, with label_set set according to the logic.
         """
-        annotation_set = kwargs.pop("annotation_set", None)
-        annotation_set_id = kwargs.pop("annotation_set_id", None)
+        label_set = kwargs.pop("label_set", None)
+        label_set_id = kwargs.pop("label_set_id", None)
 
-        if annotation_set is not None and annotation_set_id is not None:
-            raise ValueError("Pass either annotation_set or annotation_set_id, not both.")
+        if label_set is not None and label_set_id is not None:
+            raise ValueError("Pass either label_set or label_set_id, not both.")
 
-        if annotation_set is None and annotation_set_id is None:
-            annotation_set = AnnotationSetFactory()
+        if label_set is None and label_set_id is None:
+            label_set = LabelSetFactory()
 
-        if annotation_set is not None:
-            kwargs["annotation_set"] = annotation_set
+        if label_set is not None:
+            kwargs["label_set"] = label_set
         else:
-            kwargs["annotation_set_id"] = annotation_set_id
+            kwargs["label_set_id"] = label_set_id
 
         return super()._create(model_class, *args, **kwargs)
 

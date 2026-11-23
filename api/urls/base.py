@@ -1,5 +1,6 @@
 """API URL configuration module."""
 
+from django.conf import settings
 from django.urls import include, path
 
 from api.views.debug import DebugDatabaseDumpView
@@ -17,6 +18,8 @@ urlpatterns = [
     path("annotations/", include(router_annotation.urls)),
     path("labels/", include(router_label.urls)),
     path("fields/", include(router_fields.urls)),
-    path("ingest/", include("api.urls.ingest"), name="ingest-ifdo-image-set"),
     path("debug/db-dump/", DebugDatabaseDumpView.as_view(), name="debug-db-dump"),
 ]
+
+if settings.ENABLE_ANNOTATION_INGEST:
+    urlpatterns.append(path("ingest/", include("api.urls.ingest"), name="ingest-ifdo-image-set"))

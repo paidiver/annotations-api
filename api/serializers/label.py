@@ -5,7 +5,7 @@ from requests import RequestException
 from rest_framework import serializers, status
 
 from api.models import Label
-from api.models.annotation_set import AnnotationSet
+from api.models.label_set import LabelSet
 from api.serializers.base import ReadOnlyFieldsMixin
 from api.services.cached_worms_client import CachedWoRMSClient
 
@@ -13,9 +13,9 @@ from api.services.cached_worms_client import CachedWoRMSClient
 class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
     """Serializer for Label model."""
 
-    annotation_set_id = serializers.PrimaryKeyRelatedField(
-        source="annotation_set",
-        queryset=AnnotationSet.objects.all(),
+    label_set_id = serializers.PrimaryKeyRelatedField(
+        source="label_set",
+        queryset=LabelSet.objects.all(),
     )
 
     class Meta:
@@ -30,7 +30,7 @@ class LabelSerializer(ReadOnlyFieldsMixin, serializers.ModelSerializer):
             "lowest_aphia_id",
             "name_is_lowest",
             "identification_qualifier",
-            "annotation_set_id",
+            "label_set_id",
         ]
 
     def _validate_aphia_id(self, attrs: dict, errors: dict) -> dict:

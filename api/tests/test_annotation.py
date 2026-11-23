@@ -5,7 +5,7 @@ import uuid
 from django.urls import reverse
 from rest_framework import status
 
-from api.models import Annotation
+from api.models import Annotation, Creator, Label, LabelSet
 from api.models.annotation_set import AnnotationSet
 from api.models.image_set import ImageSet
 from api.tests.utils.auth_utils import AuthenticatedAPITestCase
@@ -18,6 +18,10 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         """Set up test data and common variables."""
         super().setUp()
         self.annotation_set = AnnotationSet.objects.create(name="Test Set")
+        self.label_set = LabelSet.objects.create(name="Test Label Set")
+        self.annotation_set.label_sets.add(self.label_set)
+        self.label = Label.objects.create(name="Test Label", label_set=self.label_set)
+        self.creator = Creator.objects.create(name="Test Creator")
         self.image_set = ImageSet.objects.create(name="Test ImageSet")
         self.annotation_set.image_sets.set([self.image_set])
         self.image_a = self.image_set.images.create(filename="test_image.jpg", image_set=self.image_set)
@@ -27,6 +31,17 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
             "annotation_platform": "Test Platform",
             "shape": "rectangle",
             "coordinates": [[10, 10], [20, 20]],
+            "label": self.label,
+            "human_or_machine": "human",
+            "creator": self.creator,
+        }
+        self.annotation_payload = {
+            "annotation_platform": "Test Platform",
+            "shape": "rectangle",
+            "coordinates": [[10, 10], [20, 20]],
+            "label_id": self.label.pk,
+            "human_or_machine": "human",
+            "creator_id": self.creator.pk,
         }
 
     def list_url(self) -> str:
@@ -70,7 +85,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
     def test_create_annotation_with_image_that_does_not_exist(self) -> None:
         """Test that creating an Annotation with an image that does not exist is rejected."""
         payload = {
-            **self.annotation_data,
+            **self.annotation_payload,
             "image_id": uuid.uuid4(),
             "annotation_set_id": str(self.annotation_set.pk),
         }
@@ -101,7 +116,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         for input_value, mapped_value in valid_shapes_mappings:
             with self.subTest(input_value=input_value, mapped_value=mapped_value):
                 payload = {
-                    **self.annotation_data,
+                    **self.annotation_payload,
                     "shape": input_value,
                     "image_id": self.image_a.id,
                     "annotation_set_id": self.annotation_set.id,
@@ -118,7 +133,7 @@ class AnnotationViewSetTests(AuthenticatedAPITestCase):
         for invalid_shape in invalid_shapes:
             with self.subTest(invalid_shape=invalid_shape):
                 payload = {
-                    **self.annotation_data,
+                    **self.annotation_payload,
                     "shape": invalid_shape,
                     "image_id": self.image_a.id,
                     "annotation_set_id": self.annotation_set.id,

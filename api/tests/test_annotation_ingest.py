@@ -1,5 +1,12 @@
 """Tests for annotation data ingestion functions."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_INGEST:
+    raise SkipTest("Legacy annotation ingest is disabled")
+
 import uuid
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch

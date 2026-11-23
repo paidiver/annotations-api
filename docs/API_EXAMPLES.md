@@ -362,28 +362,6 @@ curl -sS -X POST "$API_BASE/api/labels/labels/" \
 
 This will create a `Label` with the specified name and parent label, linked to the specified `AnnotationSet`, with a generated `id` returned in the response. You can then use this `label_id` when creating `AnnotationLabel` objects to link annotations to this label.
 
-### AnnotationLabel
-
-For the `AnnotationLabel` model, the following fields are required: `creation_datetime`, `annotation_id` and `label_id`. You must use existing IDs from your database for these fields to link an existing `Annotation` to an existing `Label`.
-
-For the `annotator` field, it applies the same rules described for `ImageSet`: you can either provide an existing `annotator_id` or a full `annotator` object with the required fields (e.g. `name`). To link an existing annotator, use its `annotator_id`; use a nested object to create a new annotator with a unique name.
-
-```bash
-ANNOTATION_ID="00000000-0000-0000-0000-000000000100"
-LABEL_ID="00000000-0000-0000-0000-000000000002"
-curl -sS -X POST "$API_BASE/api/annotations/annotation_labels/" \
-  -H "Authorization: Bearer $API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "annotation_id": "'$ANNOTATION_ID'",
-    "label_id": "'$LABEL_ID'",
-    "annotator": {
-      "name": "Dr. Jane Doe"
-    },
-    "creation_datetime": "2026-02-15T10:30:00Z"
-  }'
-```
-
 ## Read (GET)
 
 Standard list endpoints return `count`, `next`, `previous`, and a `results` array.

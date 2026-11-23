@@ -7,12 +7,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.factories.annotation import AnnotationFactory, AnnotatorFactory
 from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image import ImageFactory
 from api.factories.image_set import ImageSetFactory
-from api.factories.label import LabelFactory
-from api.models import AnnotationLabel
+from api.models import AnnotationSetModel, Label, LabelSet
 
 
 class SeedAndDatabaseDumpViewTests(APITestCase):
@@ -32,21 +31,17 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
 
         image = ImageFactory(image_set_id=image_set.id, with_relations=False, filename="test_image.jpg")
 
-        label = LabelFactory(annotation_set_id=annotation_set.id, name="Test Label")
-        annotator = AnnotatorFactory(name="Test Annotator")
+        label_set = LabelSet.objects.create(name="Test Label Set")
+        annotation_set.label_sets.add(label_set)
+        label = Label.objects.create(label_set=label_set, name="Test Label")
+        creator = CreatorFactory(name="Test Creator")
 
-        annotation = AnnotationFactory(
-            image=image,
+        annotation_model = AnnotationSetModel.objects.create(
             annotation_set=annotation_set,
-            shape="whole-image",
-            coordinates=[[]],
-        )
-
-        AnnotationLabel.objects.create(
-            annotation=annotation,
-            label=label,
-            annotator=annotator,
-            creation_datetime="2025-01-01T00:00:00Z",
+            model_id="test-model",
+            name="Test Model",
+            version="1.0",
+            task="classification",
         )
 
         resp = self.client.get(self.url())
@@ -59,10 +54,11 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
             "image_sets",
             "images",
             "annotation_sets",
+            "annotation_set_models",
+            "label_sets",
             "labels",
-            "annotators",
+            "creators",
             "annotations",
-            "annotation_labels",
         ]:
             self.assertIn(key, data)
 
@@ -75,13 +71,17 @@ class SeedAndDatabaseDumpViewTests(APITestCase):
         annotation_set_names = [row.get("name") for row in data["annotation_sets"]]
         self.assertIn(annotation_set.name, annotation_set_names)
 
+        label_set_names = [row.get("name") for row in data["label_sets"]]
+        self.assertIn(label_set.name, label_set_names)
+
+        annotation_model_names = [row.get("name") for row in data["annotation_set_models"]]
+        self.assertIn(annotation_model.name, annotation_model_names)
+
         label_names = [row.get("name") for row in data["labels"]]
         self.assertIn(label.name, label_names)
 
-        annotator_names = [row.get("name") for row in data["annotators"]]
-        self.assertIn(annotator.name, annotator_names)
-
-        self.assertGreaterEqual(len(data["annotation_labels"]), 1)
+        creator_names = [row.get("name") for row in data["creators"]]
+        self.assertIn(creator.name, creator_names)
 
     @override_settings(DEBUG=False)
     def test_debug_dump_returns_404_when_debug_false(self) -> None:

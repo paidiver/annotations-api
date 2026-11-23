@@ -1,12 +1,18 @@
 """Unit tests for annotation parsing functions in api/util/annotation.py."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_INGEST:
+    raise SkipTest("Legacy annotation ingest is disabled")
+
 import os
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
-from django.conf import settings
 from django.test import TransactionTestCase
 
 from api.utils.annotations_ingest import ingest_annotation_data

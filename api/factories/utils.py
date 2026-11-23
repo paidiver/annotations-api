@@ -68,9 +68,9 @@ def coords_for_shape(shape: str) -> list[list[float]]:  # noqa: C901
     def xy() -> tuple[float, float]:
         return (random.uniform(0.0, width), random.uniform(0.0, height))
 
-    if shape == "whole-image":
+    if shape in ("whole-image", "mask"):
         output = [[]]
-    elif shape == "single-pixel":
+    elif shape in ("single-pixel", "centrexy"):
         x, y = xy()
         output = [[x, y]]
     elif shape == "circle":

@@ -2,12 +2,9 @@
 
 from django.test import TestCase
 
-from api.factories.annotation import (
-    AnnotationFactory,
-    AnnotationLabelFactory,
-    AnnotatorFactory,
-)
+from api.factories.annotation import AnnotationFactory
 from api.factories.annotation_set import AnnotationSetFactory
+from api.factories.fields import CreatorFactory
 from api.factories.image import ImageFactory
 from api.factories.label import LabelFactory
 
@@ -27,7 +24,17 @@ class AnnotationFactoriesErrorTests(TestCase):
         """Test that AnnotationFactory can create annotations with different shapes."""
         image = ImageFactory()
         annotation_set = AnnotationSetFactory()
-        shapes = ["whole-image", "rectangle", "single-pixel", "ellipse", "polygon", "polyline", "circle"]
+        shapes = [
+            "whole-image",
+            "rectangle",
+            "single-pixel",
+            "ellipse",
+            "polygon",
+            "polyline",
+            "circle",
+            "centrexy",
+            "mask",
+        ]
         for shape in shapes:
             annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id, shape=shape)
             self.assertEqual(annotation.shape, shape)
@@ -55,58 +62,24 @@ class AnnotationFactoriesErrorTests(TestCase):
         with self.assertRaisesMessage(ValueError, "Pass either annotation_set or annotation_set_id, not both."):
             AnnotationFactory(image=image, annotation_set=annotation_set, annotation_set_id=annotation_set.id)
 
-    def test_annotation_label_factory_raises_if_label_and_label_id_both_passed(self) -> None:
-        """Test that AnnotationLabelFactory raises a ValueError when both label and label_id are provided."""
+    def test_annotation_factory_raises_if_label_and_label_id_both_passed(self) -> None:
+        """Test that AnnotationFactory raises a ValueError when both label and label_id are provided."""
         label = LabelFactory()
-        annotation = AnnotationFactory()
 
         with self.assertRaisesMessage(ValueError, "Pass either label or label_id, not both."):
-            AnnotationLabelFactory(label=label, label_id=label.id, annotation=annotation)
+            AnnotationFactory(label=label, label_id=label.id)
 
-    def test_annotation_label_factory_raises_if_annotation_and_annotation_id_both_passed(self) -> None:
-        """Test that AnnotationLabelFactory raises a ValueError when both annotation and annotation_id are provided."""
+    def test_annotation_factory_sets_label_and_creator(self) -> None:
+        """Test that AnnotationFactory sets the direct label and annotation creator."""
         label = LabelFactory()
-        annotation = AnnotationFactory()
-
-        with self.assertRaisesMessage(ValueError, "Pass either annotation or annotation_id, not both."):
-            AnnotationLabelFactory(label=label, annotation=annotation, annotation_id=annotation.id)
-
-    def test_annotation_label_factory_raises_if_annotator_and_annotator_id_both_passed(self) -> None:
-        """Test that AnnotationLabelFactory raises a ValueError when both annotator and annotator_id are provided."""
-        label = LabelFactory()
-        annotation = AnnotationFactory()
-        annotator = AnnotatorFactory()
-
-        with self.assertRaisesMessage(ValueError, "Pass either annotator or annotator_id, not both."):
-            AnnotationLabelFactory(
-                label=label,
-                annotation=annotation,
-                annotator=annotator,
-                annotator_id=annotator.id,
-            )
-
-    def test_annotation_label_factory_creation(self) -> None:
-        """Test that AnnotationLabelFactory can create annotation labels with different combinations of inputs."""
-        image = ImageFactory()
+        creator = CreatorFactory()
         annotation_set = AnnotationSetFactory()
-        annotation = AnnotationFactory(image_id=image.id, annotation_set_id=annotation_set.id)
-        label = LabelFactory(annotation_set_id=annotation_set.id)
-        annotator = AnnotatorFactory()
-        annotation_label = AnnotationLabelFactory(label=label, annotation=annotation, annotator=annotator)
-
-        self.assertEqual(annotation_label.label_id, label.id)
-        self.assertEqual(annotation_label.annotation_id, annotation.id)
-        self.assertEqual(annotation_label.annotator_id, annotator.id)
-
-        label_2 = LabelFactory(annotation_set_id=annotation_set.id)
-        annotation_label_2 = AnnotationLabelFactory(
-            label_id=label_2.id, annotation_id=annotation.id, annotator_id=annotator.id
+        annotation = AnnotationFactory(
+            annotation_set=annotation_set,
+            label=label,
+            creator=creator,
         )
-        self.assertEqual(annotation_label_2.annotation_id, annotation.id)
-        self.assertEqual(annotation_label_2.annotator_id, annotator.id)
-        self.assertEqual(annotation_label_2.label_id, label_2.id)
 
-        annotation_label_3 = AnnotationLabelFactory()
-        self.assertNotEqual(annotation_label_3.label_id, label_2.id)
-        self.assertNotEqual(annotation_label_3.annotation_id, annotation.id)
-        self.assertNotEqual(annotation_label_3.annotator_id, annotator.id)
+        self.assertEqual(annotation.label_id, label.id)
+        self.assertIn(label.label_set, annotation_set.label_sets.all())
+        self.assertEqual(annotation.creator, creator)
