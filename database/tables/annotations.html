@@ -117,11 +117,6 @@
                                     <td>null</td>
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
-                                            <tr>
-                                                <td title="annotation_labels.annotation_id references annotations.id via annotation_labels_annotation_id_fb3c88ae_fk_annotations_id"><a href='annotation_labels.html'>annotation_labels</a><span class='relatedKey'>.annotation_id</span></td>
-                                                <td class="constraint detail">annotation_labels_annotation_id_fb3c88ae_fk_annotations_id</td>
-                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
-                                            </tr>
                                         </table>
                                     </td>
                                     <td>
@@ -202,7 +197,7 @@
                                     <td><span id="coordinates">coordinates</span></td>
                                     <td>jsonb</td>
                                     <td>2147483647</td>
-                                    <td title=''></td>
+                                    <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -276,6 +271,235 @@
                                     </td>
                                     <td></td>
                                 </tr>
+                                <tr>
+                                    <td><span id="additional_info">additional_info</span></td>
+                                    <td>text</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="classification_confidence">classification_confidence</span></td>
+                                    <td>float8</td>
+                                    <td>17,17</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="creation_datetime">creation_datetime</span></td>
+                                    <td>timestamptz</td>
+                                    <td>35,6</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="detection_confidence">detection_confidence</span></td>
+                                    <td>float8</td>
+                                    <td>17,17</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="human_or_machine">human_or_machine</span></td>
+                                    <td>varchar</td>
+                                    <td>32</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="human_reviewer_id">human_reviewer_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="annotations.human_reviewer_id references creators.id via annotations_human_reviewer_id_d4ee1e8b_fk_creators_id"><a href='creators.html'>creators</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">annotations_human_reviewer_id_d4ee1e8b_fk_creators_id</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="label_id">label_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="annotations.label_id references labels.id via annotations_label_id_825001d5_fk_labels_id"><a href='labels.html'>labels</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">annotations_label_id_825001d5_fk_labels_id</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="machine_training_validation">machine_training_validation</span></td>
+                                    <td>varchar</td>
+                                    <td>16</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="mask">mask</span></td>
+                                    <td>jsonb</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="classification_model_id">classification_model_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="annotations.classification_model_id references annotation_set_models.id via annotations_classification_model_21fb6f4e_fk_annotatio"><a href='annotation_set_models.html'>annotation_set_models</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">annotations_classification_model_21fb6f4e_fk_annotatio</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="detection_model_id">detection_model_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="annotations.detection_model_id references annotation_set_models.id via annotations_detection_model_id_77831dda_fk_annotatio"><a href='annotation_set_models.html'>annotation_set_models</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">annotations_detection_model_id_77831dda_fk_annotatio</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="creator_id">creator_id</span></td>
+                                    <td>uuid</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="annotations.creator_id references creators.id via annotations_creator_id_7f9b438a_fk_creators_id"><a href='creators.html'>creators</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">annotations_creator_id_7f9b438a_fk_creators_id</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -319,14 +543,80 @@
                                     <td>annotation_set_id</td>
                                 </tr>
                                 <tr>
+                                    <td title='Indexed'>annotations_classification_model_id_21fb6f4e</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>classification_model_id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>annotations_creator_id_7f9b438a</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>creator_id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>annotations_detection_model_id_77831dda</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>detection_model_id</td>
+                                </tr>
+                                <tr>
+                                    <td title='Indexed'>annotations_human_reviewer_id_d4ee1e8b</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>human_reviewer_id</td>
+                                </tr>
+                                <tr>
                                     <td title='Indexed'>annotations_image_id_dbc46831</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span></td>
                                     <td>image_id</td>
                                 </tr>
+                                <tr>
+                                    <td title='Indexed'>annotations_label_id_825001d5</td>
+                                    <td>Performance</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>label_id</td>
+                                </tr>
                                 </tbody>
                             </table>
                         </div><!-- /.box-body -->
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-sitemap"></i>
+                            <h3 class="box-title">Check Constraints</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="check_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead align='left'>
+                                <tr>
+                                    <th>Constraint Name</th>
+                                    <th>Constraint</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>annotation_detection_confidence_0_1</td>
+                                    <td>(((detection_confidence IS NULL) OR ((detection_confidence &gt;&#61; (0.0)::double precision) AND (detection_confidence &lt;&#61; (1.0)::double precision))))</td>
+                                </tr>
+                                <tr>
+                                    <td>annotation_classification_confidence_0_1</td>
+                                    <td>(((classification_confidence IS NULL) OR ((classification_confidence &gt;&#61; (0.0)::double precision) AND (classification_confidence &lt;&#61; (1.0)::double precision))))</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="box box-primary">
                         <div class="box-header with-border">
@@ -347,38 +637,46 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="annotation_labels.html" target="_top" title="annotation_labels" alt="" coords="849,5,1107,211">
-<area shape="rect" id="node2" href="annotations.html" target="_top" title="annotations" alt="" coords="403,32,805,365">
-<area shape="rect" id="node3" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="61,113,303,377">
-<area shape="rect" id="node4" href="images.html" target="_top" title="images" alt="" coords="5,395,359,1157">
+<area shape="rect" id="node1" href="annotation_set_models.html" target="_top" title="annotation_set_models" alt="" coords="384,1250,692,1456">
+<area shape="rect" id="node2" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="5,644,317,908">
+<area shape="rect" id="node3" href="annotations.html" target="_top" title="annotations" alt="" coords="759,421,1237,1106">
+<area shape="rect" id="node4" href="creators.html" target="_top" title="creators" alt="" coords="455,834,621,1010">
+<area shape="rect" id="node5" href="images.html" target="_top" title="images" alt="" coords="361,54,715,817">
+<area shape="rect" id="node6" href="labels.html" target="_top" title="labels" alt="" coords="395,1028,681,1233">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/annotations.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="annotation_labels.html" target="_top" title="annotation_labels" alt="" coords="1596,863,1853,1068">
-<area shape="rect" id="node2" href="annotations.html" target="_top" title="annotations" alt="" coords="1149,573,1552,907">
-<area shape="rect" id="node3" href="annotators.html" target="_top" title="annotators" alt="" coords="1255,924,1446,1012">
-<area shape="rect" id="node4" href="labels.html" target="_top" title="labels" alt="" coords="1280,1029,1421,1117">
-<area shape="rect" id="node6" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="465,1008,708,1272">
-<area shape="rect" id="node13" href="images.html" target="_top" title="images" alt="" coords="752,145,1105,908">
-<area shape="rect" id="node5" href="annotation_set_creators.html" target="_top" title="annotation_set_creators" alt="" coords="769,1103,1088,1191">
-<area shape="rect" id="node9" href="contexts.html" target="_top" title="contexts" alt="" coords="129,953,297,1041">
-<area shape="rect" id="node10" href="licenses.html" target="_top" title="licenses" alt="" coords="133,1059,294,1147">
-<area shape="rect" id="node11" href="pis.html" target="_top" title="pis" alt="" coords="157,1164,269,1252">
-<area shape="rect" id="node12" href="projects.html" target="_top" title="projects" alt="" coords="132,1269,295,1357">
-<area shape="rect" id="node7" href="annotation_set_image_sets.html" target="_top" title="annotation_set_image_sets" alt="" coords="755,925,1102,1013">
-<area shape="rect" id="node8" href="image_sets.html" target="_top" title="image_sets" alt="" coords="491,588,683,676">
-<area shape="rect" id="node15" href="image_camera_calibration_models.html" target="_top" title="image_camera_calibration_models" alt="" coords="5,5,421,93">
-<area shape="rect" id="node16" href="image_camera_housing_viewports.html" target="_top" title="image_camera_housing_viewports" alt="" coords="6,111,421,199">
-<area shape="rect" id="node17" href="image_camera_poses.html" target="_top" title="image_camera_poses" alt="" coords="69,216,358,304">
-<area shape="rect" id="node18" href="image_domeport_parameters.html" target="_top" title="image_domeport_parameters" alt="" coords="29,321,398,409">
-<area shape="rect" id="node19" href="events.html" target="_top" title="events" alt="" coords="139,427,288,515">
-<area shape="rect" id="node20" href="image_flatport_parameters.html" target="_top" title="image_flatport_parameters" alt="" coords="39,532,387,620">
-<area shape="rect" id="node21" href="image_photometric_calibrations.html" target="_top" title="image_photometric_calibrations" alt="" coords="15,637,411,725">
-<area shape="rect" id="node22" href="platforms.html" target="_top" title="platforms" alt="" coords="124,743,303,831">
-<area shape="rect" id="node23" href="sensors.html" target="_top" title="sensors" alt="" coords="134,848,293,936">
-<area shape="rect" id="node14" href="image_creators.html" target="_top" title="image_creators" alt="" coords="1234,148,1467,236">
+<area shape="rect" id="node1" href="annotation_set_creators.html" target="_top" title="annotation_set_creators" alt="" coords="1293,11,1612,99">
+<area shape="rect" id="node2" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="465,429,705,517">
+<area shape="rect" id="node3" href="creators.html" target="_top" title="creators" alt="" coords="877,761,1042,937">
+<area shape="rect" id="node8" href="contexts.html" target="_top" title="contexts" alt="" coords="129,615,297,703">
+<area shape="rect" id="node9" href="licenses.html" target="_top" title="licenses" alt="" coords="133,721,294,809">
+<area shape="rect" id="node10" href="pis.html" target="_top" title="pis" alt="" coords="157,826,269,914">
+<area shape="rect" id="node11" href="projects.html" target="_top" title="projects" alt="" coords="132,931,295,1019">
+<area shape="rect" id="node4" href="annotation_set_image_sets.html" target="_top" title="annotation_set_image_sets" alt="" coords="786,954,1133,1042">
+<area shape="rect" id="node5" href="image_sets.html" target="_top" title="image_sets" alt="" coords="489,1355,681,1443">
+<area shape="rect" id="node20" href="image_camera_calibration_models.html" target="_top" title="image_camera_calibration_models" alt="" coords="5,1037,421,1125">
+<area shape="rect" id="node21" href="image_camera_housing_viewports.html" target="_top" title="image_camera_housing_viewports" alt="" coords="6,1142,421,1230">
+<area shape="rect" id="node22" href="image_camera_poses.html" target="_top" title="image_camera_poses" alt="" coords="69,1247,358,1335">
+<area shape="rect" id="node23" href="image_domeport_parameters.html" target="_top" title="image_domeport_parameters" alt="" coords="29,1353,398,1441">
+<area shape="rect" id="node24" href="events.html" target="_top" title="events" alt="" coords="139,1458,288,1546">
+<area shape="rect" id="node25" href="image_flatport_parameters.html" target="_top" title="image_flatport_parameters" alt="" coords="39,1563,387,1651">
+<area shape="rect" id="node26" href="image_photometric_calibrations.html" target="_top" title="image_photometric_calibrations" alt="" coords="15,1669,411,1757">
+<area shape="rect" id="node27" href="platforms.html" target="_top" title="platforms" alt="" coords="124,1774,303,1862">
+<area shape="rect" id="node28" href="sensors.html" target="_top" title="sensors" alt="" coords="134,1879,293,1967">
+<area shape="rect" id="node6" href="annotation_set_models.html" target="_top" title="annotation_set_models" alt="" coords="805,655,1113,743">
+<area shape="rect" id="node7" href="label_sets.html" target="_top" title="label_sets" alt="" coords="495,687,675,775">
+<area shape="rect" id="node12" href="annotation_sets_connected_sets.html" target="_top" title="annotation_sets_connected_sets" alt="" coords="760,81,1159,169">
+<area shape="rect" id="node13" href="annotation_sets_label_sets.html" target="_top" title="annotation_sets_label_sets" alt="" coords="787,327,1132,415">
+<area shape="rect" id="node14" href="annotation_sets_related_materials.html" target="_top" title="annotation_sets_related_materials" alt="" coords="749,186,1169,274">
+<area shape="rect" id="node15" href="annotations.html" target="_top" title="annotations" alt="" coords="1213,119,1692,805">
+<area shape="rect" id="node16" href="images.html" target="_top" title="images" alt="" coords="783,1095,1136,1858">
+<area shape="rect" id="node17" href="labels.html" target="_top" title="labels" alt="" coords="817,433,1102,638">
+<area shape="rect" id="node18" href="image_creators.html" target="_top" title="image_creators" alt="" coords="1336,1013,1569,1101">
+<area shape="rect" id="node19" href="image_set_creators.html" target="_top" title="image_set_creators" alt="" coords="1317,1521,1589,1609">
+<area shape="rect" id="node29" href="label_set_creators.html" target="_top" title="label_set_creators" alt="" coords="1323,865,1583,953">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/annotations.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>

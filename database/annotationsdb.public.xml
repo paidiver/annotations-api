@@ -1,39 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <database name="annotationsdb" schema="public" type="PostgreSQL - 16.9 (Debian 16.9-1.pgdg110+1)">
    <tables>
-      <table name="annotation_labels" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="creation_datetime" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="annotation_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="id" foreignKey="annotation_labels_annotation_id_fb3c88ae_fk_annotations_id" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
-         </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="annotator_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="id" foreignKey="annotation_labels_annotator_id_8b67ad6f_fk_annotators_id" implied="false" onDeleteCascade="false" schema="public" table="annotators"/>
-         </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="label_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="id" foreignKey="annotation_labels_label_id_74b937ae_fk_labels_id" implied="false" onDeleteCascade="false" schema="public" table="labels"/>
-         </column>
-         <primaryKey column="id" sequenceNumberInPK="1"/>
-         <index name="annotation_labels_pkey" unique="true">
-            <column ascending="true" name="id"/>
-         </index>
-         <index name="annotation_labels_annotation_id_fb3c88ae" unique="false">
-            <column ascending="true" name="annotation_id"/>
-         </index>
-         <index name="annotation_labels_annotator_id_8b67ad6f" unique="false">
-            <column ascending="true" name="annotator_id"/>
-         </index>
-         <index name="annotation_labels_label_id_74b937ae" unique="false">
-            <column ascending="true" name="label_id"/>
-         </index>
-         <index name="uq_annotation_label_annotation_annotator" unique="true">
-            <column ascending="true" name="label_id"/>
-            <column ascending="true" name="annotation_id"/>
-            <column ascending="true" name="annotator_id"/>
-         </index>
-      </table>
       <table name="annotation_set_creators" remarks="" schema="public" type="TABLE">
          <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="annotation_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
@@ -80,12 +47,58 @@
             <column ascending="true" name="image_set_id"/>
          </index>
       </table>
+      <table name="annotation_set_models" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="classification_model_id" foreignKey="annotations_classification_model_21fb6f4e_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
+            <child column="detection_model_id" foreignKey="annotations_detection_model_id_77831dda_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="model_id" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="version" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="task" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="handle" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="weights_sha256" nullable="true" remarks="" size="64" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="score_type" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="11" name="confidence_threshold" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="training_image_set" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="training_annotation_set" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="validation_image_set" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="validation_annotation_set" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="annotation_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_set_model_annotation_set_id_5474967e_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="label_set_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_set_models_label_set_id_73f2c647_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="annotation_set_models_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="annotation_set_models_annotation_set_id_5474967e" unique="false">
+            <column ascending="true" name="annotation_set_id"/>
+         </index>
+         <index name="annotation_set_models_label_set_id_73f2c647" unique="false">
+            <column ascending="true" name="label_set_id"/>
+         </index>
+         <index name="uq_annotation_set_model_id" unique="true">
+            <column ascending="true" name="annotation_set_id"/>
+            <column ascending="true" name="model_id"/>
+         </index>
+         <checkConstraint constraint="(((confidence_threshold IS NULL) OR ((confidence_threshold &gt;= (0.0)::double precision) AND (confidence_threshold &lt;= (1.0)::double precision))))" name="annotation_model_confidence_threshold_0_1"/>
+      </table>
       <table name="annotation_sets" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <child column="annotation_set_id" foreignKey="annotation_set_creat_annotation_set_id_fa9d5b3c_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_creators"/>
             <child column="annotation_set_id" foreignKey="annotation_set_image_annotation_set_id_7f390f0a_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_image_sets"/>
+            <child column="annotation_set_id" foreignKey="annotation_set_model_annotation_set_id_5474967e_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_models"/>
+            <child column="from_annotationset_id" foreignKey="annotation_sets_conn_from_annotationset_i_3bf577e5_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_connected_sets"/>
+            <child column="to_annotationset_id" foreignKey="annotation_sets_conn_to_annotationset_id_0b51c43f_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_connected_sets"/>
+            <child column="annotationset_id" foreignKey="annotation_sets_labe_annotationset_id_9d793f69_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_label_sets"/>
+            <child column="annotationset_id" foreignKey="annotation_sets_rela_annotationset_id_3256c31c_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_related_materials"/>
             <child column="annotation_set_id" foreignKey="annotations_annotation_set_id_0c704769_fk_annotation_sets_id" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
-            <child column="annotation_set_id" foreignKey="labels_annotation_set_id_c5463aac_fk_annotation_sets_id" implied="false" onDeleteCascade="false" schema="public" table="labels"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -94,22 +107,25 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="copyright" nullable="true" remarks="" size="500" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="abstract" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="objective" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="target_environment" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="target_timescale" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="curation_protocol" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="version" nullable="true" remarks="" size="50" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="context_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="context_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotation_sets_context_id_2977e3b6_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="contexts"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="license_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="license_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotation_sets_license_id_009cd245_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="licenses"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="pi_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="pi_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotation_sets_pi_id_6bbaab5d_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="pis"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="project_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="project_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotation_sets_project_id_e84bb40d_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="projects"/>
          </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="biological_metrics" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="biological_stats" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="funding" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="machine_scope" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="obis_handles" nullable="true" remarks="" size="2048" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="quantification_type" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="quantitative_or_qualitative" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="annotation_sets_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -133,21 +149,110 @@
             <column ascending="true" name="project_id"/>
          </index>
       </table>
-      <table name="annotations" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <child column="annotation_id" foreignKey="annotation_labels_annotation_id_fb3c88ae_fk_annotations_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_labels"/>
+      <table name="annotation_sets_connected_sets" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="from_annotationset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_conn_from_annotationset_i_3bf577e5_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
          </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="to_annotationset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_conn_to_annotationset_id_0b51c43f_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="annotation_sets_connected_sets_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="annotation_sets_connecte_from_annotationset_id_to_3dcf9da3_uniq" unique="true">
+            <column ascending="true" name="from_annotationset_id"/>
+            <column ascending="true" name="to_annotationset_id"/>
+         </index>
+         <index name="annotation_sets_connected_sets_from_annotationset_id_3bf577e5" unique="false">
+            <column ascending="true" name="from_annotationset_id"/>
+         </index>
+         <index name="annotation_sets_connected_sets_to_annotationset_id_0b51c43f" unique="false">
+            <column ascending="true" name="to_annotationset_id"/>
+         </index>
+      </table>
+      <table name="annotation_sets_label_sets" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="annotationset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_labe_annotationset_id_9d793f69_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="labelset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_labe_labelset_id_851733f0_fk_label_set" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="annotation_sets_label_sets_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="annotation_sets_label_se_annotationset_id_labelse_be335b65_uniq" unique="true">
+            <column ascending="true" name="annotationset_id"/>
+            <column ascending="true" name="labelset_id"/>
+         </index>
+         <index name="annotation_sets_label_sets_annotationset_id_9d793f69" unique="false">
+            <column ascending="true" name="annotationset_id"/>
+         </index>
+         <index name="annotation_sets_label_sets_labelset_id_851733f0" unique="false">
+            <column ascending="true" name="labelset_id"/>
+         </index>
+      </table>
+      <table name="annotation_sets_related_materials" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="annotationset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_rela_annotationset_id_3256c31c_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="relatedmaterial_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotation_sets_rela_relatedmaterial_id_ff08506d_fk_related_m" implied="false" onDeleteCascade="false" schema="public" table="related_materials"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="annotation_sets_related_materials_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="annotation_sets_related__annotationset_id_related_576978fd_uniq" unique="true">
+            <column ascending="true" name="annotationset_id"/>
+            <column ascending="true" name="relatedmaterial_id"/>
+         </index>
+         <index name="annotation_sets_related_materials_annotationset_id_3256c31c" unique="false">
+            <column ascending="true" name="annotationset_id"/>
+         </index>
+         <index name="annotation_sets_related_materials_relatedmaterial_id_ff08506d" unique="false">
+            <column ascending="true" name="relatedmaterial_id"/>
+         </index>
+      </table>
+      <table name="annotations" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="annotation_platform" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="shape" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="coordinates" nullable="false" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="coordinates" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
          <column autoUpdated="false" defaultValue="null" digits="17" id="6" name="dimension_pixels" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="annotation_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotations_annotation_set_id_0c704769_fk_annotation_sets_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="image_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotations_image_id_dbc46831_fk_images_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="additional_info" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="10" name="classification_confidence" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="11" name="creation_datetime" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="17" id="12" name="detection_confidence" nullable="true" remarks="" size="17" type="float8" typeCode="8"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="human_or_machine" nullable="false" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="human_reviewer_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotations_human_reviewer_id_d4ee1e8b_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="creators"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="label_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotations_label_id_825001d5_fk_labels_id" implied="false" onDeleteCascade="false" schema="public" table="labels"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="machine_training_validation" nullable="true" remarks="" size="16" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="mask" nullable="true" remarks="" size="2147483647" type="jsonb" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="classification_model_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotations_classification_model_21fb6f4e_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_models"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="detection_model_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotations_detection_model_id_77831dda_fk_annotatio" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_models"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="creator_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="annotations_creator_id_7f9b438a_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="creators"/>
          </column>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="annotations_pkey" unique="true">
@@ -156,33 +261,33 @@
          <index name="annotations_annotation_set_id_0c704769" unique="false">
             <column ascending="true" name="annotation_set_id"/>
          </index>
+         <index name="annotations_classification_model_id_21fb6f4e" unique="false">
+            <column ascending="true" name="classification_model_id"/>
+         </index>
+         <index name="annotations_creator_id_7f9b438a" unique="false">
+            <column ascending="true" name="creator_id"/>
+         </index>
+         <index name="annotations_detection_model_id_77831dda" unique="false">
+            <column ascending="true" name="detection_model_id"/>
+         </index>
+         <index name="annotations_human_reviewer_id_d4ee1e8b" unique="false">
+            <column ascending="true" name="human_reviewer_id"/>
+         </index>
          <index name="annotations_image_id_dbc46831" unique="false">
             <column ascending="true" name="image_id"/>
          </index>
-      </table>
-      <table name="annotators" remarks="" schema="public" type="TABLE">
-         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <child column="annotator_id" foreignKey="annotation_labels_annotator_id_8b67ad6f_fk_annotators_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_labels"/>
-         </column>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
-         <primaryKey column="id" sequenceNumberInPK="1"/>
-         <index name="annotators_pkey" unique="true">
-            <column ascending="true" name="id"/>
+         <index name="annotations_label_id_825001d5" unique="false">
+            <column ascending="true" name="label_id"/>
          </index>
-         <index name="annotators_name_4cb94721_like" unique="false">
-            <column ascending="true" name="name"/>
-         </index>
-         <index name="annotators_name_key" unique="true">
-            <column ascending="true" name="name"/>
-         </index>
+         <checkConstraint constraint="(((classification_confidence IS NULL) OR ((classification_confidence &gt;= (0.0)::double precision) AND (classification_confidence &lt;= (1.0)::double precision))))" name="annotation_classification_confidence_0_1"/>
+         <checkConstraint constraint="(((detection_confidence IS NULL) OR ((detection_confidence &gt;= (0.0)::double precision) AND (detection_confidence &lt;= (1.0)::double precision))))" name="annotation_detection_confidence_0_1"/>
       </table>
       <table name="contexts" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <child column="context_id" foreignKey="annotation_sets_context_id_2977e3b6_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
             <child column="context_id" foreignKey="image_sets_context_id_09e2d2fb_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="image_sets"/>
             <child column="context_id" foreignKey="images_context_id_e3d92780_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
+            <child column="context_id" foreignKey="label_sets_context_id_8fd0352c_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -200,8 +305,11 @@
       <table name="creators" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <child column="creator_id" foreignKey="annotation_set_creators_creator_id_eaef68cb_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_creators"/>
+            <child column="creator_id" foreignKey="annotations_creator_id_7f9b438a_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
+            <child column="human_reviewer_id" foreignKey="annotations_human_reviewer_id_d4ee1e8b_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
             <child column="creator_id" foreignKey="image_creators_creator_id_a3ec7299_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="image_creators"/>
             <child column="creator_id" foreignKey="image_set_creators_creator_id_f70e74a5_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="image_set_creators"/>
+            <child column="creator_id" foreignKey="label_set_creators_creator_id_811003c8_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="label_set_creators"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -757,27 +865,125 @@
             <column ascending="true" name="image_set_id"/>
          </index>
       </table>
+      <table name="label_set_creators" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="creator_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_set_creators_creator_id_811003c8_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="creators"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="label_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_set_creators_label_set_id_8739c7af_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="label_set_creators_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="label_set_creators_creator_id_811003c8" unique="false">
+            <column ascending="true" name="creator_id"/>
+         </index>
+         <index name="label_set_creators_label_set_id_8739c7af" unique="false">
+            <column ascending="true" name="label_set_id"/>
+         </index>
+         <index name="uq_label_set_creator" unique="true">
+            <column ascending="true" name="label_set_id"/>
+            <column ascending="true" name="creator_id"/>
+         </index>
+      </table>
+      <table name="label_sets" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="label_set_id" foreignKey="annotation_set_models_label_set_id_73f2c647_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_set_models"/>
+            <child column="labelset_id" foreignKey="annotation_sets_labe_labelset_id_851733f0_fk_label_set" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_label_sets"/>
+            <child column="label_set_id" foreignKey="label_set_creators_label_set_id_8739c7af_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="label_set_creators"/>
+            <child column="labelset_id" foreignKey="label_sets_related_m_labelset_id_c30613d6_fk_label_set" implied="false" onDeleteCascade="false" schema="public" table="label_sets_related_materials"/>
+            <child column="label_set_id" foreignKey="labels_label_set_id_2dedb6b8_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="labels"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="handle" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="copyright" nullable="true" remarks="" size="500" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="abstract" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="objective" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="catalogue" nullable="true" remarks="" size="2048" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="funding" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="10" name="context_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_context_id_8fd0352c_fk_contexts_id" implied="false" onDeleteCascade="false" schema="public" table="contexts"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="11" name="license_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_license_id_53cc8c44_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="licenses"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="12" name="pi_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_pi_id_2c45885f_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="pis"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="13" name="project_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_project_id_52298e44_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="projects"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="label_sets_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="label_sets_context_id_8fd0352c" unique="false">
+            <column ascending="true" name="context_id"/>
+         </index>
+         <index name="label_sets_license_id_53cc8c44" unique="false">
+            <column ascending="true" name="license_id"/>
+         </index>
+         <index name="label_sets_name_4af1d4cc_like" unique="false">
+            <column ascending="true" name="name"/>
+         </index>
+         <index name="label_sets_name_key" unique="true">
+            <column ascending="true" name="name"/>
+         </index>
+         <index name="label_sets_pi_id_2c45885f" unique="false">
+            <column ascending="true" name="pi_id"/>
+         </index>
+         <index name="label_sets_project_id_52298e44" unique="false">
+            <column ascending="true" name="project_id"/>
+         </index>
+      </table>
+      <table name="label_sets_related_materials" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="true" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="19" type="int8" typeCode="-5"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="labelset_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_related_m_labelset_id_c30613d6_fk_label_set" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="relatedmaterial_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="label_sets_related_m_relatedmaterial_id_5deb480d_fk_related_m" implied="false" onDeleteCascade="false" schema="public" table="related_materials"/>
+         </column>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="label_sets_related_materials_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="label_sets_related_mater_labelset_id_relatedmater_de030f14_uniq" unique="true">
+            <column ascending="true" name="labelset_id"/>
+            <column ascending="true" name="relatedmaterial_id"/>
+         </index>
+         <index name="label_sets_related_materials_labelset_id_c30613d6" unique="false">
+            <column ascending="true" name="labelset_id"/>
+         </index>
+         <index name="label_sets_related_materials_relatedmaterial_id_5deb480d" unique="false">
+            <column ascending="true" name="relatedmaterial_id"/>
+         </index>
+      </table>
       <table name="labels" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <child column="label_id" foreignKey="annotation_labels_label_id_74b937ae_fk_labels_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_labels"/>
+            <child column="label_id" foreignKey="annotations_label_id_825001d5_fk_labels_id" implied="false" onDeleteCascade="false" schema="public" table="annotations"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="parent_label_name" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="parent_label_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="5" name="lowest_taxonomic_name" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="6" name="lowest_aphia_id" nullable="true" remarks="" size="10" type="int4" typeCode="4"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="name_is_lowest" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="name_is_lowest" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="identification_qualifier" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="annotation_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
-            <parent column="id" foreignKey="labels_annotation_set_id_c5463aac_fk_annotation_sets_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="label_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="labels_label_set_id_2dedb6b8_fk_label_sets_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
          </column>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="labels_pkey" unique="true">
             <column ascending="true" name="id"/>
          </index>
-         <index name="labels_annotation_set_id_c5463aac" unique="false">
-            <column ascending="true" name="annotation_set_id"/>
+         <index name="labels_label_set_id_2dedb6b8" unique="false">
+            <column ascending="true" name="label_set_id"/>
          </index>
          <index name="labels_lowest_aphia_id_adf5a274" unique="false">
             <column ascending="true" name="lowest_aphia_id"/>
@@ -791,10 +997,9 @@
          <index name="labels_name_trgm_idx" unique="false">
             <column ascending="true" name="name"/>
          </index>
-         <index name="unique_label_name_per_parent" unique="true">
+         <index name="unique_label_name_per_set" unique="true">
             <column ascending="true" name="name"/>
-            <column ascending="true" name="parent_label_name"/>
-            <column ascending="true" name="annotation_set_id"/>
+            <column ascending="true" name="label_set_id"/>
          </index>
          <checkConstraint constraint="((lowest_aphia_id &gt;= 0))" name="labels_lowest_aphia_id_adf5a274_check"/>
       </table>
@@ -803,6 +1008,7 @@
             <child column="license_id" foreignKey="annotation_sets_license_id_009cd245_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
             <child column="license_id" foreignKey="image_sets_license_id_d6d40d8d_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="image_sets"/>
             <child column="license_id" foreignKey="images_license_id_682d4e9b_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
+            <child column="license_id" foreignKey="label_sets_license_id_53cc8c44_fk_licenses_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -822,6 +1028,7 @@
             <child column="pi_id" foreignKey="annotation_sets_pi_id_6bbaab5d_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
             <child column="pi_id" foreignKey="image_sets_pi_id_d8be8830_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="image_sets"/>
             <child column="pi_id" foreignKey="images_pi_id_17154e55_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
+            <child column="pi_id" foreignKey="label_sets_pi_id_2c45885f_fk_pis_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -862,6 +1069,7 @@
             <child column="project_id" foreignKey="annotation_sets_project_id_e84bb40d_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
             <child column="project_id" foreignKey="image_sets_project_id_cb8b25fd_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="image_sets"/>
             <child column="project_id" foreignKey="images_project_id_add1891c_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
+            <child column="project_id" foreignKey="label_sets_project_id_52298e44_fk_projects_id" implied="false" onDeleteCascade="false" schema="public" table="label_sets"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
@@ -881,7 +1089,9 @@
       </table>
       <table name="related_materials" remarks="" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="relatedmaterial_id" foreignKey="annotation_sets_rela_relatedmaterial_id_ff08506d_fk_related_m" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets_related_materials"/>
             <child column="related_material_id" foreignKey="image_set_related_ma_related_material_id_b77b8a43_fk_related_m" implied="false" onDeleteCascade="false" schema="public" table="image_set_related_materials"/>
+            <child column="relatedmaterial_id" foreignKey="label_sets_related_m_relatedmaterial_id_5deb480d_fk_related_m" implied="false" onDeleteCascade="false" schema="public" table="label_sets_related_materials"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="6" id="1" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
          <column autoUpdated="false" defaultValue="null" digits="6" id="2" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>

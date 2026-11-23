@@ -118,8 +118,18 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
+                                                <td title="annotation_sets_related_materials.relatedmaterial_id references related_materials.id via annotation_sets_rela_relatedmaterial_id_ff08506d_fk_related_m"><a href='annotation_sets_related_materials.html'>annotation_sets_related_materials</a><span class='relatedKey'>.relatedmaterial_id</span></td>
+                                                <td class="constraint detail">annotation_sets_rela_relatedmaterial_id_ff08506d_fk_related_m</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
                                                 <td title="image_set_related_materials.related_material_id references related_materials.id via image_set_related_ma_related_material_id_b77b8a43_fk_related_m"><a href='image_set_related_materials.html'>image_set_related_materials</a><span class='relatedKey'>.related_material_id</span></td>
                                                 <td class="constraint detail">image_set_related_ma_related_material_id_b77b8a43_fk_related_m</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="label_sets_related_materials.relatedmaterial_id references related_materials.id via label_sets_related_m_relatedmaterial_id_5deb480d_fk_related_m"><a href='label_sets_related_materials.html'>label_sets_related_materials</a><span class='relatedKey'>.relatedmaterial_id</span></td>
+                                                <td class="constraint detail">label_sets_related_m_relatedmaterial_id_5deb480d_fk_related_m</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
@@ -280,16 +290,22 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="image_set_related_materials.html" target="_top" title="image_set_related_materials" alt="" coords="420,5,783,157">
-<area shape="rect" id="node2" href="related_materials.html" target="_top" title="related_materials" alt="" coords="5,61,376,307">
+<area shape="rect" id="node1" href="annotation_sets_related_materials.html" target="_top" title="annotation_sets_related_materials" alt="" coords="420,5,840,157">
+<area shape="rect" id="node2" href="related_materials.html" target="_top" title="related_materials" alt="" coords="5,231,376,476">
+<area shape="rect" id="node3" href="image_set_related_materials.html" target="_top" title="image_set_related_materials" alt="" coords="449,175,811,327">
+<area shape="rect" id="node4" href="label_sets_related_materials.html" target="_top" title="label_sets_related_materials" alt="" coords="450,344,810,496">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/related_materials.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="image_set_related_materials.html" target="_top" title="image_set_related_materials" alt="" coords="420,15,783,167">
-<area shape="rect" id="node2" href="image_sets.html" target="_top" title="image_sets" alt="" coords="95,5,287,93">
-<area shape="rect" id="node3" href="related_materials.html" target="_top" title="related_materials" alt="" coords="5,111,376,356">
+<area shape="rect" id="node1" href="annotation_sets_related_materials.html" target="_top" title="annotation_sets_related_materials" alt="" coords="420,5,840,157">
+<area shape="rect" id="node2" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="71,32,311,120">
+<area shape="rect" id="node3" href="related_materials.html" target="_top" title="related_materials" alt="" coords="5,243,376,488">
+<area shape="rect" id="node4" href="image_set_related_materials.html" target="_top" title="image_set_related_materials" alt="" coords="449,179,811,331">
+<area shape="rect" id="node5" href="image_sets.html" target="_top" title="image_sets" alt="" coords="95,137,287,225">
+<area shape="rect" id="node6" href="label_sets_related_materials.html" target="_top" title="label_sets_related_materials" alt="" coords="450,407,810,559">
+<area shape="rect" id="node7" href="label_sets.html" target="_top" title="label_sets" alt="" coords="101,505,281,593">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/related_materials.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>

@@ -118,8 +118,8 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="annotation_labels.label_id references labels.id via annotation_labels_label_id_74b937ae_fk_labels_id"><a href='annotation_labels.html'>annotation_labels</a><span class='relatedKey'>.label_id</span></td>
-                                                <td class="constraint detail">annotation_labels_label_id_74b937ae_fk_labels_id</td>
+                                                <td title="annotations.label_id references labels.id via annotations_label_id_825001d5_fk_labels_id"><a href='annotations.html'>annotations</a><span class='relatedKey'>.label_id</span></td>
+                                                <td class="constraint detail">annotations_label_id_825001d5_fk_labels_id</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
@@ -182,10 +182,10 @@
                                     <td></td>
                                 </tr>
                                 <tr>
-                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="parent_label_name">parent_label_name</span></td>
+                                    <td><span id="parent_label_name">parent_label_name</span></td>
                                     <td>varchar</td>
                                     <td>255</td>
-                                    <td title=''></td>
+                                    <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -236,7 +236,7 @@
                                     <td><span id="name_is_lowest">name_is_lowest</span></td>
                                     <td>bool</td>
                                     <td>1</td>
-                                    <td title=''></td>
+                                    <td title='nullable'>√</td>
                                     <td title=''></td>
                                     <td>null</td>
                                     <td>
@@ -267,7 +267,7 @@
                                     <td></td>
                                 </tr>
                                 <tr>
-                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="annotation_set_id">annotation_set_id</span></td>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="label_set_id">label_set_id</span></td>
                                     <td>uuid</td>
                                     <td>2147483647</td>
                                     <td title=''></td>
@@ -280,8 +280,8 @@
                                     <td>
                                         <table border='0' cellspacing='0' cellpadding='0'>
                                             <tr>
-                                                <td title="labels.annotation_set_id references annotation_sets.id via labels_annotation_set_id_c5463aac_fk_annotation_sets_id"><a href='annotation_sets.html'>annotation_sets</a><span class='relatedKey'>.id</span></td>
-                                                <td class="constraint detail">labels_annotation_set_id_c5463aac_fk_annotation_sets_id</td>
+                                                <td title="labels.label_set_id references label_sets.id via labels_label_set_id_2dedb6b8_fk_label_sets_id"><a href='label_sets.html'>label_sets</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">labels_label_set_id_2dedb6b8_fk_label_sets_id</td>
                                                 <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
                                             </tr>
                                         </table>
@@ -325,10 +325,10 @@
                                     <td>id</td>
                                 </tr>
                                 <tr>
-                                    <td title='Indexed'>labels_annotation_set_id_c5463aac</td>
+                                    <td title='Indexed'>labels_label_set_id_2dedb6b8</td>
                                     <td>Performance</td>
                                     <td><span title='Ascending'>Asc</span></td>
-                                    <td>annotation_set_id</td>
+                                    <td>label_set_id</td>
                                 </tr>
                                 <tr>
                                     <td title='Indexed'>labels_lowest_aphia_id_adf5a274</td>
@@ -355,10 +355,10 @@
                                     <td>name</td>
                                 </tr>
                                 <tr>
-                                    <td class='uniqueKey' title='Unique Key'><i class='icon ion-key iconkey'></i> unique_label_name_per_parent</td>
+                                    <td class='uniqueKey' title='Unique Key'><i class='icon ion-key iconkey'></i> unique_label_name_per_set</td>
                                     <td>Must be unique</td>
-                                    <td><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
-                                    <td>name + parent_label_name + annotation_set_id</td>
+                                    <td><span title='Ascending'>Asc</span>/<span title='Ascending'>Asc</span></td>
+                                    <td>name + label_set_id</td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -415,25 +415,28 @@
                                 <div class="tab-content no-padding">
                                     <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
-<area shape="rect" id="node1" href="annotation_labels.html" target="_top" title="annotation_labels" alt="" coords="772,5,1029,211">
-<area shape="rect" id="node2" href="labels.html" target="_top" title="labels" alt="" coords="292,91,728,453">
-<area shape="rect" id="node3" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="5,357,248,621">
+<area shape="rect" id="node1" href="annotations.html" target="_top" title="annotations" alt="" coords="709,5,1033,328">
+<area shape="rect" id="node2" href="labels.html" target="_top" title="labels" alt="" coords="229,120,665,483">
+<area shape="rect" id="node3" href="label_sets.html" target="_top" title="label_sets" alt="" coords="5,387,185,651">
 </map>
                                         <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/labels.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
                                     <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
                                         <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
-<area shape="rect" id="node1" href="annotation_labels.html" target="_top" title="annotation_labels" alt="" coords="984,49,1241,255">
-<area shape="rect" id="node2" href="annotations.html" target="_top" title="annotations" alt="" coords="622,5,822,93">
-<area shape="rect" id="node3" href="annotators.html" target="_top" title="annotators" alt="" coords="627,111,817,199">
-<area shape="rect" id="node4" href="labels.html" target="_top" title="labels" alt="" coords="504,216,940,579">
-<area shape="rect" id="node6" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="217,539,460,803">
-<area shape="rect" id="node5" href="annotation_set_creators.html" target="_top" title="annotation_set_creators" alt="" coords="563,596,881,684">
-<area shape="rect" id="node8" href="contexts.html" target="_top" title="contexts" alt="" coords="5,485,173,573">
-<area shape="rect" id="node9" href="licenses.html" target="_top" title="licenses" alt="" coords="9,591,170,679">
-<area shape="rect" id="node10" href="pis.html" target="_top" title="pis" alt="" coords="33,696,145,784">
-<area shape="rect" id="node11" href="projects.html" target="_top" title="projects" alt="" coords="8,801,171,889">
-<area shape="rect" id="node7" href="annotation_set_image_sets.html" target="_top" title="annotation_set_image_sets" alt="" coords="549,701,895,789">
+<area shape="rect" id="node1" href="annotation_set_models.html" target="_top" title="annotation_set_models" alt="" coords="565,614,873,702">
+<area shape="rect" id="node2" href="annotation_sets.html" target="_top" title="annotation_sets" alt="" coords="217,395,457,483">
+<area shape="rect" id="node3" href="label_sets.html" target="_top" title="label_sets" alt="" coords="247,500,427,764">
+<area shape="rect" id="node4" href="contexts.html" target="_top" title="contexts" alt="" coords="5,290,173,378">
+<area shape="rect" id="node5" href="licenses.html" target="_top" title="licenses" alt="" coords="9,395,170,483">
+<area shape="rect" id="node6" href="pis.html" target="_top" title="pis" alt="" coords="33,500,145,588">
+<area shape="rect" id="node7" href="projects.html" target="_top" title="projects" alt="" coords="8,606,171,694">
+<area shape="rect" id="node8" href="annotation_sets_label_sets.html" target="_top" title="annotation_sets_label_sets" alt="" coords="547,128,892,216">
+<area shape="rect" id="node9" href="annotations.html" target="_top" title="annotations" alt="" coords="981,435,1305,758">
+<area shape="rect" id="node10" href="creators.html" target="_top" title="creators" alt="" coords="637,824,802,912">
+<area shape="rect" id="node11" href="images.html" target="_top" title="images" alt="" coords="261,290,414,378">
+<area shape="rect" id="node12" href="labels.html" target="_top" title="labels" alt="" coords="501,234,937,596">
+<area shape="rect" id="node13" href="label_set_creators.html" target="_top" title="label_set_creators" alt="" coords="1013,858,1273,946">
+<area shape="rect" id="node14" href="label_sets_related_materials.html" target="_top" title="label_sets_related_materials" alt="" coords="539,719,899,807">
 </map>
                                         <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/labels.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
                                     </div>
