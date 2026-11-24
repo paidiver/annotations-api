@@ -8,6 +8,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 M = TypeVar("M")  # model type variable
+RELATED_OBJECT_RESPONSE_EXCLUDED_FIELDS = frozenset({"id", "created_at", "updated_at"})
 
 
 class BaseSerializer(serializers.ModelSerializer):
@@ -193,6 +194,17 @@ class CreateOnlyRelatedField(serializers.Field):
         return None
 
 
+class CreateAndReadRelatedField(CreateOnlyRelatedField):
+    """Accept nested related-object input and return its fields without the internal ID."""
+
+    def to_representation(self, value) -> dict | None:  # noqa: ANN001
+        """Serialize related fields without exposing the related object's UUID."""
+        if value is None:
+            return None
+        representation = self.create_serializer_class(value, context=self.context).data
+        return {key: item for key, item in representation.items() if key not in RELATED_OBJECT_RESPONSE_EXCLUDED_FIELDS}
+
+
 class CreateOnlyRelatedListField(serializers.Field):
     """Accepts a list of objects (dicts). Rejects any item containing 'id'.
 
@@ -247,6 +259,21 @@ class CreateOnlyRelatedListField(serializers.Field):
     def to_representation(self, value) -> None:  # noqa: ANN001
         """This field is meant for write-only use (creating related objects), so we won't serialize it back."""
         return None
+
+
+class CreateAndReadRelatedListField(CreateOnlyRelatedListField):
+    """Accept nested related-object input and return its fields without internal IDs."""
+
+    def to_representation(self, value) -> list[dict]:  # noqa: ANN001
+        """Serialize related fields without exposing the related objects' UUIDs."""
+        if value is None:
+            return []
+        instances = value.all() if hasattr(value, "all") else value
+        representation = self.create_serializer_class(instances, many=True, context=self.context).data
+        return [
+            {key: item for key, item in related.items() if key not in RELATED_OBJECT_RESPONSE_EXCLUDED_FIELDS}
+            for related in representation
+        ]
 
 
 class ReadOnlyFieldsMixin:

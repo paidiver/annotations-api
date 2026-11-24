@@ -86,6 +86,10 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
 
         self.assertTrue(Creator.objects.filter(name="Ada Lovelace").exists())
         self.assertTrue(RelatedMaterial.objects.filter(uri="https://example.com/paper.pdf").exists())
+        for related_object in resp.data["creators"] + resp.data["related_materials"]:
+            self.assertNotIn("id", related_object)
+            self.assertNotIn("created_at", related_object)
+            self.assertNotIn("updated_at", related_object)
 
         # limits is computed in ImageSet.save() when bbox is present
         self.assertIsNotNone(image_set.limits)
@@ -116,6 +120,9 @@ class ImageSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(image_set.creators.count(), 1)
         self.assertEqual(image_set.project.pk, existing_project.pk)
         self.assertEqual(image_set.creators.first().pk, existing_creator.pk)
+        self.assertNotIn("id", resp.data["project"])
+        self.assertNotIn("created_at", resp.data["project"])
+        self.assertNotIn("updated_at", resp.data["project"])
 
     def test_create_image_set_rejects_geom(self) -> None:
         """Test that creating an ImageSet with a geom field is rejected, since geom is computed server-side."""

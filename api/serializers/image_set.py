@@ -24,8 +24,8 @@ from api.serializers.fields import (
 
 from .base import (
     BaseSerializer,
-    CreateOnlyRelatedField,
-    CreateOnlyRelatedListField,
+    CreateAndReadRelatedField,
+    CreateAndReadRelatedListField,
     StrictPrimaryKeyRelatedField,
 )
 
@@ -61,11 +61,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("context").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    context = CreateOnlyRelatedField(
+    context = CreateAndReadRelatedField(
         create_serializer_class=ContextSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -74,10 +74,10 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("project").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
-    )
-    project = CreateOnlyRelatedField(
-        create_serializer_class=ProjectSerializer,
         write_only=True,
+    )
+    project = CreateAndReadRelatedField(
+        create_serializer_class=ProjectSerializer,
         required=False,
     )
 
@@ -86,11 +86,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("event").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    event = CreateOnlyRelatedField(
+    event = CreateAndReadRelatedField(
         create_serializer_class=EventSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -99,11 +99,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("platform").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    platform = CreateOnlyRelatedField(
+    platform = CreateAndReadRelatedField(
         create_serializer_class=PlatformSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -112,11 +112,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("sensor").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    sensor = CreateOnlyRelatedField(
+    sensor = CreateAndReadRelatedField(
         create_serializer_class=SensorSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -125,11 +125,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("pi").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    pi = CreateOnlyRelatedField(
+    pi = CreateAndReadRelatedField(
         create_serializer_class=PISerializer,
-        write_only=True,
         required=False,
     )
 
@@ -138,11 +138,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("license").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    license = CreateOnlyRelatedField(
+    license = CreateAndReadRelatedField(
         create_serializer_class=LicenseSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -151,11 +151,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("camera_pose").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    camera_pose = CreateOnlyRelatedField(
+    camera_pose = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraPoseSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -164,11 +164,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("camera_housing_viewport").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    camera_housing_viewport = CreateOnlyRelatedField(
+    camera_housing_viewport = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraHousingViewportSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -177,11 +177,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("flatport_parameter").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    flatport_parameter = CreateOnlyRelatedField(
+    flatport_parameter = CreateAndReadRelatedField(
         create_serializer_class=ImageFlatportParameterSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -190,11 +190,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("domeport_parameter").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    domeport_parameter = CreateOnlyRelatedField(
+    domeport_parameter = CreateAndReadRelatedField(
         create_serializer_class=ImageDomeportParameterSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -203,11 +203,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("photometric_calibration").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    photometric_calibration = CreateOnlyRelatedField(
+    photometric_calibration = CreateAndReadRelatedField(
         create_serializer_class=ImagePhotometricCalibrationSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -216,11 +216,11 @@ class ImageSetSerializer(BaseSerializer):
         queryset=ImageSet._meta.get_field("camera_calibration_model").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    camera_calibration_model = CreateOnlyRelatedField(
+    camera_calibration_model = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraCalibrationModelSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -229,13 +229,12 @@ class ImageSetSerializer(BaseSerializer):
         many=True,
         queryset=Creator.objects.all(),
         required=False,
+        write_only=True,
     )
 
-    creators = CreateOnlyRelatedListField(
+    creators = CreateAndReadRelatedListField(
         create_serializer_class=CreatorSerializer,
-        write_only=True,
         required=False,
-        source="_creators_deferred",
     )
 
     related_materials_ids = StrictPrimaryKeyRelatedField(
@@ -243,13 +242,12 @@ class ImageSetSerializer(BaseSerializer):
         many=True,
         queryset=RelatedMaterial.objects.all(),
         required=False,
+        write_only=True,
     )
 
-    related_materials = CreateOnlyRelatedListField(
+    related_materials = CreateAndReadRelatedListField(
         create_serializer_class=RelatedMaterialSerializer,
-        write_only=True,
         required=False,
-        source="_related_materials_deferred",
     )
 
     class Meta:
@@ -412,8 +410,8 @@ class ImageSetSerializer(BaseSerializer):
         Returns:
             The created ImageSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
-        related_deferred = validated_data.pop("_related_materials_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -438,8 +436,8 @@ class ImageSetSerializer(BaseSerializer):
         Returns:
             The updated ImageSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
-        related_deferred = validated_data.pop("_related_materials_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 

@@ -1,19 +1,103 @@
 """ViewSet for the ImageSet model."""
 
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
+from django.db.models import CharField, QuerySet
+from django.db.models.functions import Cast
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
+from rest_framework.request import Request
+from rest_framework.response import Response
 
 from api.models import ImageSet
 from api.serializers import ImageSetSerializer
+from api.views.set_filters import filter_set_queryset
+
+IMAGE_SET_FILTERS = {
+    "name": "name",
+    "project": "project__name",
+    "context": "context__name",
+    "abstract": "abstract",
+    "objective": "objective",
+    "target_timescale": "target_timescale",
+    "handle": "handle",
+    "platform": "platform__name",
+    "sensor": "sensor__name",
+}
+
+IMAGE_SET_METADATA_SEARCH_FIELDS = [
+    "name",
+    "project__name",
+    "context__name",
+    "abstract",
+    "objective",
+    "target_timescale",
+]
+
+IMAGE_SET_FILTER_PARAMETERS = [
+    OpenApiParameter(
+        name=name,
+        type=str,
+        description=f"Filter image sets by {name} (case-insensitive partial match).",
+    )
+    for name in IMAGE_SET_FILTERS
+] + [
+    OpenApiParameter(name="uuid", type=str, description="Filter by part of the image-set UUID."),
+    OpenApiParameter(
+        name="metadata_search",
+        type=str,
+        description="Search name, project, context, abstract, objective, or target timescale (partial match).",
+    ),
+    OpenApiParameter(name="longitude", type=str, description="Filter by part of the longitude."),
+    OpenApiParameter(name="latitude", type=str, description="Filter by part of the latitude."),
+]
 
 
 @extend_schema(tags=["Images API"])
 class ImageSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageSet model."""
 
-    queryset = ImageSet.objects.all().order_by("id")
+    queryset = (
+        ImageSet.objects.select_related(
+            "context",
+            "project",
+            "event",
+            "platform",
+            "sensor",
+            "pi",
+            "license",
+            "camera_pose",
+            "camera_housing_viewport",
+            "flatport_parameter",
+            "domeport_parameter",
+            "photometric_calibration",
+            "camera_calibration_model",
+        )
+        .prefetch_related("creators", "related_materials")
+        .order_by("id")
+    )
     serializer_class = ImageSetSerializer
+
+    @extend_schema(parameters=IMAGE_SET_FILTER_PARAMETERS)
+    def list(self, request: Request, *args, **kwargs) -> Response:
+        """List image sets, optionally filtered by their searchable metadata."""
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self) -> QuerySet[ImageSet]:
+        """Return image sets matching all supplied query parameters."""
+        queryset = super().get_queryset()
+        if self.action != "list":
+            return queryset
+
+        queryset = filter_set_queryset(queryset, self.request, IMAGE_SET_FILTERS, IMAGE_SET_METADATA_SEARCH_FIELDS)
+        for parameter in ("longitude", "latitude"):
+            value = self.request.query_params.get(parameter, "").strip()
+            if not value:
+                continue
+            text_alias = f"{parameter}_as_text"
+            queryset = queryset.alias(**{text_alias: Cast(parameter, output_field=CharField())})
+            queryset = queryset.filter(**{f"{text_alias}__icontains": value})
+
+        return queryset
 
     @transaction.atomic
     def perform_create(self, serializer: ImageSetSerializer) -> None:

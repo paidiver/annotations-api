@@ -11,12 +11,13 @@ from api.serializers.fields import (
     LicenseSerializer,
     PISerializer,
     ProjectSerializer,
+    RelatedMaterialSerializer,
 )
 
 from .base import (
     BaseSerializer,
-    CreateOnlyRelatedField,
-    CreateOnlyRelatedListField,
+    CreateAndReadRelatedField,
+    CreateAndReadRelatedListField,
     StrictPrimaryKeyRelatedField,
 )
 
@@ -26,6 +27,7 @@ FK_PAIRS = [
     ("pi", "pi_id"),
     ("license", "license_id"),
     ("creators", "creators_ids"),
+    ("related_materials", "related_material_ids"),
 ]
 
 
@@ -37,11 +39,11 @@ class AnnotationSetSerializer(BaseSerializer):
         queryset=AnnotationSet._meta.get_field("context").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    context = CreateOnlyRelatedField(
+    context = CreateAndReadRelatedField(
         create_serializer_class=ContextSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -50,10 +52,10 @@ class AnnotationSetSerializer(BaseSerializer):
         queryset=AnnotationSet._meta.get_field("project").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
-    )
-    project = CreateOnlyRelatedField(
-        create_serializer_class=ProjectSerializer,
         write_only=True,
+    )
+    project = CreateAndReadRelatedField(
+        create_serializer_class=ProjectSerializer,
         required=False,
     )
 
@@ -62,11 +64,11 @@ class AnnotationSetSerializer(BaseSerializer):
         queryset=AnnotationSet._meta.get_field("pi").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    pi = CreateOnlyRelatedField(
+    pi = CreateAndReadRelatedField(
         create_serializer_class=PISerializer,
-        write_only=True,
         required=False,
     )
 
@@ -75,11 +77,11 @@ class AnnotationSetSerializer(BaseSerializer):
         queryset=AnnotationSet._meta.get_field("license").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    license = CreateOnlyRelatedField(
+    license = CreateAndReadRelatedField(
         create_serializer_class=LicenseSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -88,13 +90,12 @@ class AnnotationSetSerializer(BaseSerializer):
         many=True,
         queryset=Creator.objects.all(),
         required=False,
+        write_only=True,
     )
 
-    creators = CreateOnlyRelatedListField(
+    creators = CreateAndReadRelatedListField(
         create_serializer_class=CreatorSerializer,
-        write_only=True,
         required=False,
-        source="_creators_deferred",
     )
 
     image_set_ids = StrictPrimaryKeyRelatedField(
@@ -110,7 +111,15 @@ class AnnotationSetSerializer(BaseSerializer):
         source="connected_sets", many=True, queryset=AnnotationSet.objects.all(), required=False
     )
     related_material_ids = serializers.PrimaryKeyRelatedField(
-        source="related_materials", many=True, queryset=RelatedMaterial.objects.all(), required=False
+        source="related_materials",
+        many=True,
+        queryset=RelatedMaterial.objects.all(),
+        required=False,
+        write_only=True,
+    )
+    related_materials = CreateAndReadRelatedListField(
+        create_serializer_class=RelatedMaterialSerializer,
+        required=False,
     )
 
     class Meta:
@@ -145,6 +154,9 @@ class AnnotationSetSerializer(BaseSerializer):
             "biological_stats",
             "obis_handles",
             "funding",
+            "target_environment",
+            "target_timescale",
+            "related_materials",
         ]
 
     def validate(self, attrs: dict) -> dict:
@@ -179,7 +191,8 @@ class AnnotationSetSerializer(BaseSerializer):
         Returns:
             The created AnnotationSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_materials_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -187,6 +200,8 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 
@@ -201,7 +216,8 @@ class AnnotationSetSerializer(BaseSerializer):
         Returns:
             The updated AnnotationSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_materials_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -209,6 +225,8 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 
