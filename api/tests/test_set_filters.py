@@ -3,7 +3,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from api.models import AnnotationSet, Context, ImageSet, LabelSet, Platform, Project, Sensor
+from api.models import AnnotationSet, Context, ImageSet, Label, LabelSet, Platform, Project, Sensor
 from api.tests.utils.auth_utils import AuthenticatedAPITestCase
 
 
@@ -33,12 +33,67 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
-    def test_label_set_filters_by_exact_uuid(self) -> None:
-        """The uuid parameter selects exactly one label set."""
+    def test_label_set_filters_by_part_of_uuid(self) -> None:
+        """A partial UUID selects matching label sets without UUID parsing."""
         expected = LabelSet.objects.create(name="Wanted")
         LabelSet.objects.create(name="Other")
 
-        response = self.client.get(reverse("label_set-list"), {"uuid": str(expected.id)})
+        response = self.client.get(reverse("label_set-list"), {"uuid": str(expected.id)[8:20]})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(expected.id))
+
+    def test_label_set_filters_by_label_metadata(self) -> None:
+        """Label metadata filters find associated label sets and combine on one matching label."""
+        expected = LabelSet.objects.create(name="Benthic label set")
+        Label.objects.create(
+            label_set=expected,
+            name="Gadus",
+            parent_label_name="Fish",
+            lowest_taxonomic_name="Gadus morhua",
+            lowest_aphia_id=126436,
+        )
+        Label.objects.create(
+            label_set=expected,
+            name="Cod",
+            parent_label_name="Fish",
+            lowest_taxonomic_name="Gadus morhua",
+            lowest_aphia_id=126436,
+        )
+        other = LabelSet.objects.create(name="Other label set")
+        Label.objects.create(label_set=other, name="Gadus", lowest_aphia_id=126436)
+        split_match = LabelSet.objects.create(name="Split match")
+        Label.objects.create(label_set=split_match, name="Gadus")
+        Label.objects.create(
+            label_set=split_match,
+            name="Other species",
+            parent_label_name="Fish",
+            lowest_taxonomic_name="Gadus morhua",
+            lowest_aphia_id=126436,
+        )
+
+        response = self.client.get(
+            reverse("label_set-list"),
+            {
+                "label-name": "gad",
+                "label-parent-name": "fish",
+                "label-lowest-taxonomic-name": "morhua",
+                "label-lowest-AphiaID": "264",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(expected.id))
+
+    def test_label_set_filters_by_part_of_aphia_id(self) -> None:
+        """AphiaID filtering matches a substring of the stored integer."""
+        expected = LabelSet.objects.create(name="Wanted label set")
+        Label.objects.create(label_set=expected, name="Cod", lowest_aphia_id=126436)
+        LabelSet.objects.create(name="Other label set")
+
+        response = self.client.get(reverse("label_set-list"), {"label-lowest-AphiaID": "264"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
@@ -70,19 +125,36 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
-    def test_annotation_set_filters_by_exact_uuid(self) -> None:
-        """The uuid parameter selects exactly one annotation set."""
-        expected = AnnotationSet.objects.create(name="Wanted annotations")
-        AnnotationSet.objects.create(name="Other annotations")
+    def test_annotation_set_filters_by_label_name(self) -> None:
+        """Annotation sets match names of labels in their linked label sets."""
+        label_set = LabelSet.objects.create(name="Fish taxonomy")
+        Label.objects.create(label_set=label_set, name="Atlantic cod")
+        Label.objects.create(label_set=label_set, name="Atlantic pollock")
+        expected = AnnotationSet.objects.create(name="Fish annotations")
+        expected.label_sets.add(label_set)
+        other_label_set = LabelSet.objects.create(name="Coral taxonomy")
+        Label.objects.create(label_set=other_label_set, name="Acropora")
+        AnnotationSet.objects.create(name="Coral annotations").label_sets.add(other_label_set)
 
-        response = self.client.get(reverse("annotation_set-list"), {"uuid": str(expected.id)})
+        response = self.client.get(reverse("annotation_set-list"), {"label-name": "atlantic"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
-    def test_image_set_filters_text_fields_and_coordinates(self) -> None:
-        """Text fields use partial matching while coordinates use numeric equality."""
+    def test_annotation_set_filters_by_part_of_uuid(self) -> None:
+        """A partial UUID selects matching annotation sets without UUID parsing."""
+        expected = AnnotationSet.objects.create(name="Wanted annotations")
+        AnnotationSet.objects.create(name="Other annotations")
+
+        response = self.client.get(reverse("annotation_set-list"), {"uuid": str(expected.id)[8:20]})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["id"], str(expected.id))
+
+    def test_image_set_filters_text_fields_and_partial_coordinates(self) -> None:
+        """Text fields and coordinates use case-insensitive partial matching."""
         project = Project.objects.create(name="Atlantic Survey")
         context = Context.objects.create(name="Deep Ocean")
         platform = Platform.objects.create(name="Autonomous Vehicle")
@@ -114,8 +186,8 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
                 "handle": "images/one",
                 "platform": "vehicle",
                 "sensor": "camera",
-                "longitude": "-4.25",
-                "latitude": "50.75",
+                "longitude": "-4.2",
+                "latitude": "50",
             },
         )
 
@@ -123,19 +195,20 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
-    def test_image_set_filters_by_exact_uuid(self) -> None:
-        """The uuid parameter selects exactly one image set."""
+    def test_image_set_filters_by_part_of_uuid(self) -> None:
+        """A partial UUID selects matching image sets without UUID parsing."""
         expected = ImageSet.objects.create(name="Wanted imagery")
         ImageSet.objects.create(name="Other imagery")
 
-        response = self.client.get(reverse("image_set-list"), {"uuid": str(expected.id)})
+        response = self.client.get(reverse("image_set-list"), {"uuid": str(expected.id)[8:20]})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
-    def test_image_set_filters_rejects_invalid_coordinate(self) -> None:
-        """Invalid numeric parameters produce a client error instead of a server error."""
+    def test_image_set_coordinate_filters_accept_partial_content(self) -> None:
+        """Coordinate filters treat their inputs as text rather than numeric values."""
         response = self.client.get(reverse("image_set-list"), {"latitude": "north"})
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)

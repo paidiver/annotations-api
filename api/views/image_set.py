@@ -1,11 +1,10 @@
 """ViewSet for the ImageSet model."""
 
 from django.db import transaction
-from django.db.models import QuerySet
-from drf_spectacular.types import OpenApiTypes
+from django.db.models import CharField, QuerySet
+from django.db.models.functions import Cast
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -33,9 +32,9 @@ IMAGE_SET_FILTER_PARAMETERS = [
     )
     for name in IMAGE_SET_FILTERS
 ] + [
-    OpenApiParameter(name="uuid", type=OpenApiTypes.UUID, description="Filter by an exact image-set UUID."),
-    OpenApiParameter(name="longitude", type=float, description="Filter by exact longitude."),
-    OpenApiParameter(name="latitude", type=float, description="Filter by exact latitude."),
+    OpenApiParameter(name="uuid", type=str, description="Filter by part of the image-set UUID."),
+    OpenApiParameter(name="longitude", type=str, description="Filter by part of the longitude."),
+    OpenApiParameter(name="latitude", type=str, description="Filter by part of the latitude."),
 ]
 
 
@@ -62,11 +61,9 @@ class ImageSetViewSet(viewsets.ModelViewSet):
             value = self.request.query_params.get(parameter, "").strip()
             if not value:
                 continue
-            try:
-                numeric_value = float(value)
-            except ValueError as error:
-                raise ValidationError({parameter: "Must be a valid number."}) from error
-            queryset = queryset.filter(**{parameter: numeric_value})
+            text_alias = f"{parameter}_as_text"
+            queryset = queryset.alias(**{text_alias: Cast(parameter, output_field=CharField())})
+            queryset = queryset.filter(**{f"{text_alias}__icontains": value})
 
         return queryset
 
