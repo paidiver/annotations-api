@@ -5,7 +5,20 @@ from typing import Any
 from drf_spectacular.extensions import OpenApiSerializerFieldExtension
 from drf_spectacular.openapi import AutoSchema
 
+from api.serializers.base import RELATED_OBJECT_RESPONSE_EXCLUDED_FIELDS
+
 FALLBACK_OBJECT_SCHEMA = {"type": "object", "additionalProperties": True}
+
+
+def _map_related_serializer(field: Any, auto_schema: AutoSchema, direction: str) -> dict[str, Any]:
+    serializer_class = getattr(field, "create_serializer_class", None)
+    if serializer_class is None:
+        return FALLBACK_OBJECT_SCHEMA
+
+    serializer = serializer_class(context=getattr(field, "context", {}))
+    for field_name in RELATED_OBJECT_RESPONSE_EXCLUDED_FIELDS:
+        serializer.fields.pop(field_name, None)
+    return auto_schema._map_serializer(serializer, direction, bypass_extensions=True)
 
 
 class CreateOnlyRelatedFieldExtension(OpenApiSerializerFieldExtension):
@@ -37,6 +50,17 @@ class CreateOnlyRelatedFieldExtension(OpenApiSerializerFieldExtension):
         return FALLBACK_OBJECT_SCHEMA
 
 
+class CreateAndReadRelatedFieldExtension(OpenApiSerializerFieldExtension):
+    """Map CreateAndReadRelatedField to its nested fields without an id."""
+
+    target_class = "api.serializers.base.CreateAndReadRelatedField"
+    priority = 1
+
+    def map_serializer_field(self, auto_schema: AutoSchema, direction: str) -> dict[str, Any]:
+        """Return related model fields without IDs or timestamps."""
+        return _map_related_serializer(self.target, auto_schema, direction)
+
+
 class CreateOnlyRelatedListFieldExtension(OpenApiSerializerFieldExtension):
     """Map CreateOnlyRelatedListField -> array of the create serializer schema."""
 
@@ -65,6 +89,18 @@ class CreateOnlyRelatedListFieldExtension(OpenApiSerializerFieldExtension):
         else:
             items_schema = FALLBACK_OBJECT_SCHEMA
 
+        return {"type": "array", "items": items_schema}
+
+
+class CreateAndReadRelatedListFieldExtension(OpenApiSerializerFieldExtension):
+    """Map CreateAndReadRelatedListField to an array of nested fields without IDs."""
+
+    target_class = "api.serializers.base.CreateAndReadRelatedListField"
+    priority = 1
+
+    def map_serializer_field(self, auto_schema: AutoSchema, direction: str) -> dict[str, Any]:
+        """Return related model fields without IDs or timestamps."""
+        items_schema = _map_related_serializer(self.target, auto_schema, direction)
         return {"type": "array", "items": items_schema}
 
 

@@ -24,6 +24,15 @@ IMAGE_SET_FILTERS = {
     "sensor": "sensor__name",
 }
 
+IMAGE_SET_METADATA_SEARCH_FIELDS = [
+    "name",
+    "project__name",
+    "context__name",
+    "abstract",
+    "objective",
+    "target_timescale",
+]
+
 IMAGE_SET_FILTER_PARAMETERS = [
     OpenApiParameter(
         name=name,
@@ -33,6 +42,11 @@ IMAGE_SET_FILTER_PARAMETERS = [
     for name in IMAGE_SET_FILTERS
 ] + [
     OpenApiParameter(name="uuid", type=str, description="Filter by part of the image-set UUID."),
+    OpenApiParameter(
+        name="metadata_search",
+        type=str,
+        description="Search name, project, context, abstract, objective, or target timescale (partial match).",
+    ),
     OpenApiParameter(name="longitude", type=str, description="Filter by part of the longitude."),
     OpenApiParameter(name="latitude", type=str, description="Filter by part of the latitude."),
 ]
@@ -42,7 +56,25 @@ IMAGE_SET_FILTER_PARAMETERS = [
 class ImageSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the ImageSet model."""
 
-    queryset = ImageSet.objects.all().order_by("id")
+    queryset = (
+        ImageSet.objects.select_related(
+            "context",
+            "project",
+            "event",
+            "platform",
+            "sensor",
+            "pi",
+            "license",
+            "camera_pose",
+            "camera_housing_viewport",
+            "flatport_parameter",
+            "domeport_parameter",
+            "photometric_calibration",
+            "camera_calibration_model",
+        )
+        .prefetch_related("creators", "related_materials")
+        .order_by("id")
+    )
     serializer_class = ImageSetSerializer
 
     @extend_schema(parameters=IMAGE_SET_FILTER_PARAMETERS)
@@ -56,7 +88,7 @@ class ImageSetViewSet(viewsets.ModelViewSet):
         if self.action != "list":
             return queryset
 
-        queryset = filter_set_queryset(queryset, self.request, IMAGE_SET_FILTERS)
+        queryset = filter_set_queryset(queryset, self.request, IMAGE_SET_FILTERS, IMAGE_SET_METADATA_SEARCH_FIELDS)
         for parameter in ("longitude", "latitude"):
             value = self.request.query_params.get(parameter, "").strip()
             if not value:

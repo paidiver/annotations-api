@@ -23,8 +23,8 @@ from api.serializers.fields import (
 
 from .base import (
     BaseSerializer,
-    CreateOnlyRelatedField,
-    CreateOnlyRelatedListField,
+    CreateAndReadRelatedField,
+    CreateAndReadRelatedListField,
     StrictPrimaryKeyRelatedField,
 )
 
@@ -60,7 +60,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    context = CreateOnlyRelatedField(
+    context = CreateAndReadRelatedField(
         create_serializer_class=ContextSerializer,
         write_only=True,
         required=False,
@@ -72,7 +72,7 @@ class ImageSerializer(BaseSerializer):
         required=False,
         allow_null=True,
     )
-    project = CreateOnlyRelatedField(
+    project = CreateAndReadRelatedField(
         create_serializer_class=ProjectSerializer,
         write_only=True,
         required=False,
@@ -85,7 +85,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    event = CreateOnlyRelatedField(
+    event = CreateAndReadRelatedField(
         create_serializer_class=EventSerializer,
         write_only=True,
         required=False,
@@ -98,7 +98,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    platform = CreateOnlyRelatedField(
+    platform = CreateAndReadRelatedField(
         create_serializer_class=PlatformSerializer,
         write_only=True,
         required=False,
@@ -111,7 +111,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    sensor = CreateOnlyRelatedField(
+    sensor = CreateAndReadRelatedField(
         create_serializer_class=SensorSerializer,
         write_only=True,
         required=False,
@@ -124,7 +124,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    pi = CreateOnlyRelatedField(
+    pi = CreateAndReadRelatedField(
         create_serializer_class=PISerializer,
         write_only=True,
         required=False,
@@ -137,7 +137,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    license = CreateOnlyRelatedField(
+    license = CreateAndReadRelatedField(
         create_serializer_class=LicenseSerializer,
         write_only=True,
         required=False,
@@ -150,7 +150,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    camera_pose = CreateOnlyRelatedField(
+    camera_pose = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraPoseSerializer,
         write_only=True,
         required=False,
@@ -163,7 +163,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    camera_housing_viewport = CreateOnlyRelatedField(
+    camera_housing_viewport = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraHousingViewportSerializer,
         write_only=True,
         required=False,
@@ -176,7 +176,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    flatport_parameter = CreateOnlyRelatedField(
+    flatport_parameter = CreateAndReadRelatedField(
         create_serializer_class=ImageFlatportParameterSerializer,
         write_only=True,
         required=False,
@@ -189,7 +189,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    domeport_parameter = CreateOnlyRelatedField(
+    domeport_parameter = CreateAndReadRelatedField(
         create_serializer_class=ImageDomeportParameterSerializer,
         write_only=True,
         required=False,
@@ -202,7 +202,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    photometric_calibration = CreateOnlyRelatedField(
+    photometric_calibration = CreateAndReadRelatedField(
         create_serializer_class=ImagePhotometricCalibrationSerializer,
         write_only=True,
         required=False,
@@ -215,7 +215,7 @@ class ImageSerializer(BaseSerializer):
         allow_null=True,
     )
 
-    camera_calibration_model = CreateOnlyRelatedField(
+    camera_calibration_model = CreateAndReadRelatedField(
         create_serializer_class=ImageCameraCalibrationModelSerializer,
         write_only=True,
         required=False,
@@ -228,7 +228,7 @@ class ImageSerializer(BaseSerializer):
         required=False,
     )
 
-    creators = CreateOnlyRelatedListField(
+    creators = CreateAndReadRelatedListField(
         create_serializer_class=CreatorSerializer,
         write_only=True,
         required=False,

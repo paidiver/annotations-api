@@ -15,8 +15,8 @@ from api.serializers.fields import (
 
 from .base import (
     BaseSerializer,
-    CreateOnlyRelatedField,
-    CreateOnlyRelatedListField,
+    CreateAndReadRelatedField,
+    CreateAndReadRelatedListField,
     StrictPrimaryKeyRelatedField,
 )
 
@@ -38,11 +38,11 @@ class LabelSetSerializer(BaseSerializer):
         queryset=LabelSet._meta.get_field("context").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    context = CreateOnlyRelatedField(
+    context = CreateAndReadRelatedField(
         create_serializer_class=ContextSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -51,11 +51,11 @@ class LabelSetSerializer(BaseSerializer):
         queryset=LabelSet._meta.get_field("project").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    project = CreateOnlyRelatedField(
+    project = CreateAndReadRelatedField(
         create_serializer_class=ProjectSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -64,11 +64,11 @@ class LabelSetSerializer(BaseSerializer):
         queryset=LabelSet._meta.get_field("pi").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    pi = CreateOnlyRelatedField(
+    pi = CreateAndReadRelatedField(
         create_serializer_class=PISerializer,
-        write_only=True,
         required=False,
     )
 
@@ -77,11 +77,11 @@ class LabelSetSerializer(BaseSerializer):
         queryset=LabelSet._meta.get_field("license").remote_field.model.objects.all(),
         required=False,
         allow_null=True,
+        write_only=True,
     )
 
-    license = CreateOnlyRelatedField(
+    license = CreateAndReadRelatedField(
         create_serializer_class=LicenseSerializer,
-        write_only=True,
         required=False,
     )
 
@@ -90,13 +90,12 @@ class LabelSetSerializer(BaseSerializer):
         many=True,
         queryset=Creator.objects.all(),
         required=False,
+        write_only=True,
     )
 
-    creators = CreateOnlyRelatedListField(
+    creators = CreateAndReadRelatedListField(
         create_serializer_class=CreatorSerializer,
-        write_only=True,
         required=False,
-        source="_creators_deferred",
     )
 
     related_materials_ids = StrictPrimaryKeyRelatedField(
@@ -104,13 +103,12 @@ class LabelSetSerializer(BaseSerializer):
         many=True,
         queryset=RelatedMaterial.objects.all(),
         required=False,
+        write_only=True,
     )
 
-    related_materials = CreateOnlyRelatedListField(
+    related_materials = CreateAndReadRelatedListField(
         create_serializer_class=RelatedMaterialSerializer,
-        write_only=True,
         required=False,
-        source="_related_materials_deferred",
     )
 
     class Meta:
@@ -171,8 +169,8 @@ class LabelSetSerializer(BaseSerializer):
         Returns:
             The created LabelSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
-        related_materials_deferred = validated_data.pop("_related_materials_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_materials_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -196,8 +194,8 @@ class LabelSetSerializer(BaseSerializer):
         Returns:
             The updated LabelSet instance.
         """
-        creators_deferred = validated_data.pop("_creators_deferred", None)
-        related_materials_deferred = validated_data.pop("_related_materials_deferred", None)
+        creators_deferred = validated_data.pop("creators", None)
+        related_materials_deferred = validated_data.pop("related_materials", None)
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 

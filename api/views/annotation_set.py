@@ -23,6 +23,15 @@ ANNOTATION_SET_FILTERS = {
     "label-name": "label_sets__labels__name",
 }
 
+ANNOTATION_SET_METADATA_SEARCH_FIELDS = [
+    "name",
+    "project__name",
+    "context__name",
+    "abstract",
+    "objective",
+    "target_environment",
+]
+
 ANNOTATION_SET_FILTER_PARAMETERS = [
     OpenApiParameter(
         name=name,
@@ -30,14 +39,25 @@ ANNOTATION_SET_FILTER_PARAMETERS = [
         description=f"Filter annotation sets by {name} (case-insensitive partial match).",
     )
     for name in ANNOTATION_SET_FILTERS
-] + [OpenApiParameter(name="uuid", type=str, description="Filter by part of the annotation-set UUID.")]
+] + [
+    OpenApiParameter(name="uuid", type=str, description="Filter by part of the annotation-set UUID."),
+    OpenApiParameter(
+        name="metadata_search",
+        type=str,
+        description="Search name, project, context, abstract, objective, or target environment (partial match).",
+    ),
+]
 
 
 @extend_schema(tags=["Annotations API"])
 class AnnotationSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the AnnotationSet model."""
 
-    queryset = AnnotationSet.objects.all().order_by("id")
+    queryset = (
+        AnnotationSet.objects.select_related("context", "project", "pi", "license")
+        .prefetch_related("creators", "related_materials")
+        .order_by("id")
+    )
     serializer_class = AnnotationSetSerializer
 
     @extend_schema(parameters=ANNOTATION_SET_FILTER_PARAMETERS)
@@ -50,7 +70,12 @@ class AnnotationSetViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         if self.action != "list":
             return queryset
-        queryset = filter_set_queryset(queryset, self.request, ANNOTATION_SET_FILTERS)
+        queryset = filter_set_queryset(
+            queryset,
+            self.request,
+            ANNOTATION_SET_FILTERS,
+            ANNOTATION_SET_METADATA_SEARCH_FIELDS,
+        )
         if self.request.query_params.get("label-name", "").strip():
             queryset = queryset.distinct()
         return queryset

@@ -153,6 +153,23 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
+    def test_annotation_set_metadata_search_matches_any_field(self) -> None:
+        """The grouped metadata search matches annotation sets by any configured field."""
+        expected_by_project = AnnotationSet.objects.create(
+            name="Project match",
+            project=Project.objects.create(name="Reef project"),
+        )
+        expected_by_target = AnnotationSet.objects.create(name="Target match", target_environment="Coral reef")
+        AnnotationSet.objects.create(name="Unrelated annotations")
+
+        response = self.client.get(reverse("annotation_set-list"), {"metadata_search": "reef"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {item["id"] for item in response.data["results"]},
+            {str(expected_by_project.id), str(expected_by_target.id)},
+        )
+
     def test_image_set_filters_text_fields_and_partial_coordinates(self) -> None:
         """Text fields and coordinates use case-insensitive partial matching."""
         project = Project.objects.create(name="Atlantic Survey")
@@ -195,6 +212,22 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
         self.assertEqual(response.data["count"], 1)
         self.assertEqual(response.data["results"][0]["id"], str(expected.id))
 
+    def test_image_set_metadata_search_matches_any_field(self) -> None:
+        """The grouped metadata search matches image sets by any configured field."""
+        expected_by_context = ImageSet.objects.create(
+            name="Context match", context=Context.objects.create(name="Reef survey")
+        )
+        expected_by_objective = ImageSet.objects.create(name="Objective match", objective="Protect coral reefs")
+        ImageSet.objects.create(name="Unrelated imagery")
+
+        response = self.client.get(reverse("image_set-list"), {"metadata_search": "reef"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {item["id"] for item in response.data["results"]},
+            {str(expected_by_context.id), str(expected_by_objective.id)},
+        )
+
     def test_image_set_filters_by_part_of_uuid(self) -> None:
         """A partial UUID selects matching image sets without UUID parsing."""
         expected = ImageSet.objects.create(name="Wanted imagery")
@@ -212,3 +245,43 @@ class ImageAnnotationLabelSetFilterTests(AuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 0)
+
+    def test_label_set_metadata_search_matches_any_field(self) -> None:
+        """The grouped metadata search matches label sets by any configured field."""
+        expected_by_abstract = LabelSet.objects.create(name="Abstract match", abstract="Reef catalogue")
+        expected_by_objective = LabelSet.objects.create(name="Objective match", objective="Protect coral reefs")
+        LabelSet.objects.create(name="Unrelated labels")
+
+        response = self.client.get(reverse("label_set-list"), {"metadata_search": "reef"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {item["id"] for item in response.data["results"]},
+            {str(expected_by_abstract.id), str(expected_by_objective.id)},
+        )
+
+    def test_label_set_label_search_matches_any_label_field_including_aphia_id(self) -> None:
+        """The grouped label search matches label properties and partial AphiaIDs."""
+        expected_by_name = LabelSet.objects.create(name="Name match")
+        Label.objects.create(label_set=expected_by_name, name="Needlefish")
+        expected_by_parent = LabelSet.objects.create(name="Parent match")
+        Label.objects.create(label_set=expected_by_parent, parent_label_name="Needlefish")
+        expected_by_taxon = LabelSet.objects.create(name="Taxonomy match")
+        Label.objects.create(label_set=expected_by_taxon, lowest_taxonomic_name="Needlefish")
+        expected_by_aphia_id = LabelSet.objects.create(name="Aphia match")
+        Label.objects.create(label_set=expected_by_aphia_id, lowest_aphia_id=123456)
+        LabelSet.objects.create(name="Unrelated labels")
+
+        response = self.client.get(reverse("label_set-list"), {"label_search": "needle"})
+        aphia_response = self.client.get(reverse("label_set-list"), {"label_search": "345"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            {item["id"] for item in response.data["results"]},
+            {str(expected_by_name.id), str(expected_by_parent.id), str(expected_by_taxon.id)},
+        )
+        self.assertEqual(aphia_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [item["id"] for item in aphia_response.data["results"]],
+            [str(expected_by_aphia_id.id)],
+        )
