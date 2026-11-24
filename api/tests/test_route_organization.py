@@ -21,6 +21,7 @@ class RouteOrganizationTests(SimpleTestCase):
                 [
                     ("/api/ingest/image-sets/", "post", "Ingest", False),
                     ("/api/ingest/annotation-sets/", "post", "Ingest", False),
+                    ("/api/ingest/label-sets/", "post", "Ingest", False),
                 ]
             )
         if settings.ENABLE_ANNOTATION_SEARCH:
@@ -39,6 +40,7 @@ class RouteOrganizationTests(SimpleTestCase):
         if not settings.ENABLE_ANNOTATION_INGEST:
             self.assertNotIn("/api/ingest/image-sets/", paths)
             self.assertNotIn("/api/ingest/annotation-sets/", paths)
+            self.assertNotIn("/api/ingest/label-sets/", paths)
         if not settings.ENABLE_ANNOTATION_SEARCH:
             self.assertNotIn("/api/annotations/search/", paths)
             self.assertNotIn("/api/annotations/search/grouped/", paths)
