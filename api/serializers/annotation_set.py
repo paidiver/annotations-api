@@ -145,6 +145,8 @@ class AnnotationSetSerializer(BaseSerializer):
             "biological_stats",
             "obis_handles",
             "funding",
+            "target_environment",
+            "target_timescale",
         ]
 
     def validate(self, attrs: dict) -> dict:

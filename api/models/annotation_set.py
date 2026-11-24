@@ -183,6 +183,16 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         help_text="Relationship to image_sets included in this annotation set.",
         blank=True,
     )
+    target_environment = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Description of the habitat or environment represented by the imagery.",
+    )
+    target_timescale = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Description of the period or temporal environment represented by the imagery.",
+    )
 
     class Meta:
         """Meta class for AnnotationSet."""
