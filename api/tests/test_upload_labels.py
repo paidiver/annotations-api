@@ -1,5 +1,12 @@
 """Tests for the label-set XLSX ingestion endpoint."""
 
+from unittest import SkipTest
+
+from django.conf import settings
+
+if not settings.ENABLE_ANNOTATION_INGEST:
+    raise SkipTest("Label-set ingest is disabled")
+
 import io
 from unittest.mock import Mock, patch
 from uuid import UUID

@@ -1,5 +1,6 @@
 """Ingestion functions for label-set submission workbooks."""
 
+from collections import Counter
 from uuid import UUID
 
 from django.db import transaction
@@ -19,6 +20,17 @@ def _validate_uuid_collisions(
         raise serializers.ValidationError({"label-set-uuid": (f"A label set with UUID {label_set_id} already exists.")})
 
     supplied_label_ids = [label["id"] for label in labels_data if label.get("id") is not None]
+
+    duplicate_label_ids = sorted(str(label_id) for label_id, count in Counter(supplied_label_ids).items() if count > 1)
+
+    if duplicate_label_ids:
+        raise serializers.ValidationError(
+            {
+                "label-name-uuid": [
+                    f"Label UUID {label_id} is used more than once in the workbook." for label_id in duplicate_label_ids
+                ]
+            }
+        )
 
     existing_label_ids = Label.objects.filter(pk__in=supplied_label_ids).values_list("pk", flat=True)
 
