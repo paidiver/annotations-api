@@ -12,11 +12,11 @@ from api.serializers.label_set import LabelSetSerializer
 
 
 def _validate_uuid_collisions(
-    label_set_id: UUID,
+    label_set_id: UUID | None,
     labels_data: list[dict],
 ) -> None:
     """Reject supplied UUIDs that already belong to existing records."""
-    if LabelSet.objects.filter(pk=label_set_id).exists():
+    if label_set_id is not None and LabelSet.objects.filter(pk=label_set_id).exists():
         raise serializers.ValidationError({"label-set-uuid": (f"A label set with UUID {label_set_id} already exists.")})
 
     supplied_label_ids = [label["id"] for label in labels_data if label.get("id") is not None]
@@ -44,7 +44,7 @@ def _validate_uuid_collisions(
 
 @transaction.atomic
 def ingest_label_data(
-    label_set_id: UUID,
+    label_set_id: UUID | None,
     label_set_data: dict,
     labels_data: list[dict],
 ) -> dict:
@@ -53,7 +53,11 @@ def ingest_label_data(
 
     label_set_serializer = LabelSetSerializer(data=label_set_data)
     label_set_serializer.is_valid(raise_exception=True)
-    label_set = label_set_serializer.save(id=label_set_id)
+    label_set = (
+        label_set_serializer.save(id=label_set_id)
+        if label_set_id is not None
+        else label_set_serializer.save()
+    )
 
     created_labels = []
 

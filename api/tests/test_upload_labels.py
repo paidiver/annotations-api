@@ -158,6 +158,56 @@ class UploadLabelsViewTests(AuthenticatedAPITestCase):
             self.labels_data,
         )
 
+        @patch("api.views.ingest_labels.ingest_label_data")
+    @patch("api.views.ingest_labels.parse_labels")
+    @patch("api.views.ingest_labels.parse_label_set_metadata")
+    def test_upload_labels_allows_missing_label_set_uuid(
+        self,
+        mock_parse_label_set: Mock,
+        mock_parse_labels: Mock,
+        mock_ingest: Mock,
+    ) -> None:
+        """Allow ingestion to generate an omitted label-set UUID."""
+        mock_parse_label_set.return_value = (
+            None,
+            self.label_set_data,
+        )
+        mock_parse_labels.return_value = self.labels_data
+        mock_ingest.return_value = {
+            "label_set": {
+                "id": str(LABEL_SET_ID),
+                "name": "Test label set",
+            },
+            "labels": [
+                {
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "name": "Test label",
+                }
+            ],
+        }
+
+        response = self.client.post(
+            self.upload_url,
+            {"file": self.mock_file},
+            format="multipart",
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+        self.assertEqual(
+            response.data["label_set_id"],
+            str(LABEL_SET_ID),
+        )
+        self.assertEqual(response.data["label_count"], 1)
+
+        mock_ingest.assert_called_once_with(
+            None,
+            self.label_set_data,
+            self.labels_data,
+        )
+
     def test_upload_labels_rejects_non_xlsx_file(self) -> None:
         """Reject files that do not have an XLSX extension."""
         upload = SimpleUploadedFile(

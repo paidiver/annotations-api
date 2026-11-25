@@ -24,7 +24,6 @@ REQUIRED_LABEL_SET_FIELDS = {
     "label-set-creators",
     "label-set-pi",
     "label-set-license",
-    "label-set-uuid",
     "label-set-funding",
 }
 
@@ -144,7 +143,7 @@ def _named_uri(
 
 def parse_label_set_metadata(
     label_set_df: pd.DataFrame,
-) -> tuple[UUID, dict]:
+) -> tuple[UUID | None, dict]:
     """Parse label-set metadata into a LabelSetSerializer payload."""
     values, paired_values, row_numbers = _extract_label_set_values(label_set_df)
 
@@ -157,9 +156,6 @@ def parse_label_set_metadata(
         row_numbers["label-set-uuid"],
         "label-set-uuid",
     )
-    if label_set_id is None:
-        # Defensive check: the required-field validation above should catch this.
-        raise ValueError("label-set-uuid is required.")
 
     creator_names = _split_comma_separated(values["label-set-creators"])
     creator_uris = _split_comma_separated(paired_values.get("label-set-creators"))

@@ -141,3 +141,19 @@ class IngestLabelDataTests(TestCase):
             str(exc_info.exception.detail["label-name-uuid"]),
         )
         self.assertFalse(LabelSet.objects.filter(pk=label_set_id).exists())
+
+    def test_generates_label_set_uuid_when_omitted(self) -> None:
+        """Generate a label-set UUID when the workbook does not supply one."""
+        result = ingest_label_data(
+            None,
+            {"name": "Generated UUID label set"},
+            [make_label("Fish")],
+        )
+
+        label_set = LabelSet.objects.get(name="Generated UUID label set")
+
+        self.assertIsNotNone(label_set.pk)
+        self.assertEqual(
+            str(result["label_set"]["id"]),
+            str(label_set.pk),
+        )

@@ -367,16 +367,13 @@ class LabelSetMetadataParserTests(TestCase):
         ):
             parse_label_set_metadata(dataframe)
 
-    @patch("api.utils.labels_parser._parse_optional_uuid", return_value=None)
-    def test_parse_label_set_metadata_defensively_rejects_missing_uuid(
-        self,
-        mock_parse_optional_uuid: Mock,
-    ) -> None:
-        """Retain the defensive check if UUID parsing returns None."""
-        dataframe = build_label_set_dataframe(*self.build_required_rows())
 
-        with self.assertRaisesRegex(
-            ValueError,
-            "label-set-uuid is required",
-        ):
-            parse_label_set_metadata(dataframe)
+def test_parse_label_set_metadata_allows_missing_uuid(self) -> None:
+    """Allow the database to generate an omitted label-set UUID."""
+    dataframe = self.make_metadata_dataframe()
+    self.set_metadata_value(dataframe, "label-set-uuid", None)
+
+    label_set_id, label_set_data = parse_label_set_metadata(dataframe)
+
+    self.assertIsNone(label_set_id)
+    self.assertEqual(label_set_data["name"], "Example label set")
