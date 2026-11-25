@@ -1,7 +1,7 @@
 """Tests for label submission workbook parsing."""
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from uuid import UUID
 
 import pandas as pd
@@ -367,9 +367,10 @@ class LabelSetMetadataParserTests(TestCase):
         ):
             parse_label_set_metadata(dataframe)
 
-    @patch("api.utils.labels_parser._parse_optional_uuid")
+    @patch("api.utils.labels_parser._parse_optional_uuid", return_value=None)
     def test_parse_label_set_metadata_defensively_rejects_missing_uuid(
         self,
+        mock_parse_optional_uuid: Mock,
     ) -> None:
         """Retain the defensive check if UUID parsing returns None."""
         dataframe = build_label_set_dataframe(*self.build_required_rows())
