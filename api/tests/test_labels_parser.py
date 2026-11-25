@@ -1,7 +1,6 @@
 """Tests for label submission workbook parsing."""
 
 from unittest import TestCase
-from unittest.mock import Mock, patch
 from uuid import UUID
 
 import pandas as pd
@@ -367,13 +366,13 @@ class LabelSetMetadataParserTests(TestCase):
         ):
             parse_label_set_metadata(dataframe)
 
+    def test_parse_label_set_metadata_allows_missing_uuid(self) -> None:
+        """Allow the database to generate an omitted label-set UUID."""
+        rows = self.build_required_rows()
+        rows[9] = ["label-set-uuid", ""]
+        dataframe = build_label_set_dataframe(*rows)
 
-def test_parse_label_set_metadata_allows_missing_uuid(self) -> None:
-    """Allow the database to generate an omitted label-set UUID."""
-    dataframe = self.make_metadata_dataframe()
-    self.set_metadata_value(dataframe, "label-set-uuid", None)
+        label_set_id, payload = parse_label_set_metadata(dataframe)
 
-    label_set_id, label_set_data = parse_label_set_metadata(dataframe)
-
-    self.assertIsNone(label_set_id)
-    self.assertEqual(label_set_data["name"], "Example label set")
+        self.assertIsNone(label_set_id)
+        self.assertEqual(payload["name"], "Test label set")

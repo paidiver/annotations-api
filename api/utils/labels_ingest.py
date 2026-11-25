@@ -53,11 +53,7 @@ def ingest_label_data(
 
     label_set_serializer = LabelSetSerializer(data=label_set_data)
     label_set_serializer.is_valid(raise_exception=True)
-    label_set = (
-        label_set_serializer.save(id=label_set_id)
-        if label_set_id is not None
-        else label_set_serializer.save()
-    )
+    label_set = label_set_serializer.save(id=label_set_id) if label_set_id is not None else label_set_serializer.save()
 
     created_labels = []
 

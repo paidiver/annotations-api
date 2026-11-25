@@ -158,7 +158,7 @@ class UploadLabelsViewTests(AuthenticatedAPITestCase):
             self.labels_data,
         )
 
-        @patch("api.views.ingest_labels.ingest_label_data")
+    @patch("api.views.ingest_labels.ingest_label_data")
     @patch("api.views.ingest_labels.parse_labels")
     @patch("api.views.ingest_labels.parse_label_set_metadata")
     def test_upload_labels_allows_missing_label_set_uuid(
