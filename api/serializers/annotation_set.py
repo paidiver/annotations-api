@@ -11,6 +11,7 @@ from api.serializers.fields import (
     LicenseSerializer,
     PISerializer,
     ProjectSerializer,
+    RelatedMaterialSerializer,
 )
 
 from .base import (
@@ -26,6 +27,7 @@ FK_PAIRS = [
     ("pi", "pi_id"),
     ("license", "license_id"),
     ("creators", "creators_ids"),
+    ("related_materials", "related_material_ids"),
 ]
 
 
@@ -112,6 +114,12 @@ class AnnotationSetSerializer(BaseSerializer):
     related_material_ids = serializers.PrimaryKeyRelatedField(
         source="related_materials", many=True, queryset=RelatedMaterial.objects.all(), required=False
     )
+    related_materials = CreateOnlyRelatedListField(
+        create_serializer_class=RelatedMaterialSerializer,
+        write_only=True,
+        required=False,
+        source="_related_materials_deferred",
+    )
 
     class Meta:
         """Serializer for the AnnotationSet model."""
@@ -139,6 +147,7 @@ class AnnotationSetSerializer(BaseSerializer):
             "connected_set_ids",
             "machine_scope",
             "related_material_ids",
+            "related_materials",
             "quantitative_or_qualitative",
             "quantification_type",
             "biological_metrics",
@@ -180,6 +189,10 @@ class AnnotationSetSerializer(BaseSerializer):
             The created AnnotationSet instance.
         """
         creators_deferred = validated_data.pop("_creators_deferred", None)
+        related_materials_deferred = validated_data.pop(
+            "_related_materials_deferred",
+            None,
+        )
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -187,6 +200,9 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 
@@ -202,6 +218,10 @@ class AnnotationSetSerializer(BaseSerializer):
             The updated AnnotationSet instance.
         """
         creators_deferred = validated_data.pop("_creators_deferred", None)
+        related_materials_deferred = validated_data.pop(
+            "_related_materials_deferred",
+            None,
+        )
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -209,6 +229,9 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 

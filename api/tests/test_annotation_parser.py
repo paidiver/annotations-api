@@ -1,27 +1,15 @@
 """Unit tests for annotation parsing functions in api/util/annotation.py."""
 
-from unittest import SkipTest
-
-from django.conf import settings
-
-if not settings.ENABLE_ANNOTATION_INGEST:
-    raise SkipTest("Legacy annotation ingest is disabled")
-
-import os
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from uuid import UUID
 
-import numpy as np
 import pandas as pd
-from django.test import TransactionTestCase
 
-from api.utils.annotations_ingest import ingest_annotation_data
 from api.utils.annotations_parser import (
-    _empty_to_none,
-    _parse_coordinates,
+    SpreadsheetValue,
     parse_annotation_data,
+    parse_annotation_models,
     parse_annotation_set_metadata,
-    parse_label_set,
 )
 
 
@@ -40,300 +28,588 @@ class TestAnnotationParsers(TestCase):
         "annotation-abstract",
     ]
 
-    @patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys)
-    @patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3)
-    def test_parse_annotation_set_metadata_success(self) -> None:
-        """Test parsing metadata with merged-cell style and required fields."""
-        data = [
-            ["annotation-set-name", np.nan, "Trial Data"],
-            ["annotation-project", "name", "Trial Data"],
-            [np.nan, "uri", "http://example.com"],
-            ["annotation-license", "name", "MIT"],
-            ["annotation-image-set", "name", "Set A"],
-            ["annotation-image-set", "uuid", "0000-0000"],
-            ["annotation-abstract", np.nan, "Trial Data"],
-            ["annotation-pi", "name", "Test User"],
-            [np.nan, "uri", "user@example.com"],
-        ]
-        df = pd.DataFrame(data)
 
-        result = parse_annotation_set_metadata(df)
+ANNOTATION_SET_ID = UUID("733b90be-1539-4ba2-8aeb-41a4aa2d1507")
+IMAGE_SET_ID = UUID("36a6eb08-cd1d-4cb4-a24b-f6ff7a380ac3")
+LABEL_SET_ID = UUID("1b6bbe2c-6ea2-4d36-927a-7544f2156336")
+CONNECTED_SET_ID = UUID("72569b9f-d527-4381-9b69-c10615adc6e1")
+ANNOTATION_ID = UUID("b52d0f14-cc91-4059-9538-e02cc48e7824")
+IMAGE_ID = UUID("81f3f807-3bed-4b45-8d28-8d413f746af9")
 
-        self.assertEqual(result["annotation-set-name"], "Trial Data")
-        self.assertEqual(result["annotation-license-name"], "MIT")
-        self.assertEqual(result["annotation-image-set-name"], "Set A")
-        self.assertEqual(result["annotation-pi-uri"], "user@example.com")
 
-    @patch("api.utils.annotations_parser.ANNOTATION_METADATA_KEYS", mock_keys)
-    @patch("api.utils.annotations_parser.ANNOTATION_SET_COL_SIZE", 3)
-    def test_parse_annotation_set_metadata_skips_until_main_key(self) -> None:
-        """Rows before the first main key should be ignored."""
-        data = [
-            [np.nan, "name", "ignored"],
-            ["annotation-set", "name", "Trial Data"],
-            ["annotation-license", "name", "MIT"],
-            ["annotation-image-set", "name", "Set A"],
-            ["annotation-image-set", "uuid", "0000-0000"],
-        ]
-        df = pd.DataFrame(data)
-
-        result = parse_annotation_set_metadata(df)
-
-        self.assertEqual(result["annotation-set-name"], "Trial Data")
-        self.assertNotIn("-name", result)
-
-    def test_parse_label_set_raises_when_header_value_missing(self) -> None:
-        """Label parser should fail if the marker row is absent."""
-        df = pd.DataFrame([["Header", "foo"], ["Another", "bar"]])
-        with self.assertRaises(ValueError):
-            parse_label_set(df)
-
-    @patch("api.utils.annotations_parser.LABEL_SET_COL_SIZE", 7)
-    def test_parse_label_set(self) -> None:
-        """Test parsing label set."""
-        data = [
+def make_annotation_set_dataframe() -> pd.DataFrame:
+    """Create annotation-set metadata using the v3 worksheet structure."""
+    return pd.DataFrame(
+        [
+            ["Attribute name", "Value"],
+            ["annotation-set-template-version", "3"],
+            ["annotation-set-name", "Test annotations"],
+            ["annotation-set-project", "Test project"],
+            [None, "https://example.com/projects/test"],
+            ["annotation-set-context", "Test survey"],
+            [None, "https://example.com/surveys/test"],
+            ["annotation-set-abstract", "Test annotation-set abstract"],
+            ["annotation-set-objective", "Test annotation-set objective"],
+            ["annotation-set-creators", "Alice Example, Bob Example"],
             [
-                "Field",
-                "label_name",
-                "parent_label_name",
-                "lowest_taxonomic_name",
-                "lowest_AphiaID",
-                "label_name_is_lowest",
-                "identificationQualifier",
-            ],  # noqa: E501
-            ["Expected value", "Text", "Text", "Text", "Integer", "Yes, No", "Text"],
-            [
-                "Explanation",
-                "name of label",
-                "name of parent",
-                "Most detailed",
-                "AphiaID",
-                "If No...",
-                "Open nomenclature",
-            ],  # noqa: E501
-            ["Value", "antedon", "Echinodermata", "Antedon", 123349, "Yes", "sp.indet."],
-            [np.nan, "anthozoa_34", "Cnidaria", "Anthozoa", 1292, "No", "class indet.34"],
-            [np.nan, "coarse", "habitat", np.nan, np.nan, np.nan, np.nan],
-            [np.nan, " ", " ", " ", " ", " ", " "],
-        ]
-
-        df = pd.DataFrame(data)
-
-        result = parse_label_set(df)
-
-        self.assertEqual(len(result), 3)
-
-        self.assertEqual(result[0]["name"], "antedon")
-        self.assertEqual(result[0]["name_is_lowest"], True)
-        self.assertEqual(result[0]["lowest_aphia_id"], "123349")
-        self.assertEqual(result[0]["identification_qualifier"], "sp.indet.")
-
-        self.assertEqual(result[1]["name"], "anthozoa_34")
-        self.assertEqual(result[1]["name_is_lowest"], False)
-
-        self.assertEqual(result[2]["name"], "coarse")
-        self.assertEqual(result[2]["parent_label_name"], "habitat")
-
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 3)
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0)
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9)
-    @patch("api.utils.annotations_parser._parse_coordinates")
-    def test_parse_annotation_data(self, mock_parse_coords: Mock) -> None:
-        """Test parsing the main annotation data sheet based on image structure."""
-        mock_parse_coords.return_value = [1427, 8163]
-
-        data = [
-            [
-                "image-uuid",
-                "annotation-platform",
-                "image-filename",
-                "annotation-human-creator",
-                "annotation-creation-datetime",
-                "annotation-label-name",
-                "annotation-shape-name",
-                "annotation-coordinates",
-                "annotation-dimension-pixels",
+                None,
+                "https://orcid.org/0000-0001-0000-0001, " "https://orcid.org/0000-0002-0000-0002",
             ],
-            ["", "", "", "", "", "", "", "", ""],  # Grey info rows
-            ["", "", "", "", "", "", "", "", ""],  # Grey info rows
+            ["annotation-set-pi", "Pat Example"],
+            [None, "https://orcid.org/0000-0003-0000-0003"],
+            ["annotation-set-license", "CC-BY"],
+            [None, "https://creativecommons.org/licenses/by/4.0/"],
+            ["annotation-set-copyright", "Test copyright"],
+            ["annotation-set-uuid", str(ANNOTATION_SET_ID)],
+            ["annotation-set-handle", "https://example.com/annotation-sets/test"],
+            ["annotation-set-image-set-name", "Test image set"],
+            ["annotation-set-image-set-UUIDs", str(IMAGE_SET_ID)],
             [
-                "0c3bc9cd",
-                "ImagePro",
-                "M58_1044.jpg",
-                "Noelie Benoist",
-                "31122012",
-                "reteporella",
-                "rectangle",
-                "1427,8163",
-                5850,
+                "annotation-set-image-set-handles",
+                "https://example.com/image-sets/test",
             ],
+            ["annotation-set-label-set-names", "Test label set"],
+            ["annotation-set-label-set-UUIDs", str(LABEL_SET_ID)],
+            ["annotation-set-connected-set-UUIDs", str(CONNECTED_SET_ID)],
+            ["annotation-set-machine-scope", "Human annotations only"],
             [
-                np.nan,
-                "ImagePro",
-                "M58_1044.jpg",
-                "Noelie Benoist",
-                "31122012",
-                "bryozoa_01",
-                "rectangle",
-                "1731,8308",
-                384.06,
+                "annotation-set-related-material",
+                "https://doi.org/10.1234/example",
             ],
-            [np.nan, "", "", "", "", "", "", "", ""],  # Empty row to test skipping
+            ["annotation-set-quantitative-or-qualitative", "Quantitative"],
+            ["annotation-set-quantification-type", "Count"],
+            ["annotation-set-biological-metrics", "Abundance"],
+            ["annotation-set-biological-stats", "Comparison by survey"],
+            [
+                "annotation-set-OBIS-handles",
+                "https://example.com/obis/test",
+            ],
+            ["annotation-set-funding", "Test funding"],
         ]
+    )
 
-        df = pd.DataFrame(data)
 
-        result = parse_annotation_data(df)
+def set_metadata_value(
+    dataframe: pd.DataFrame,
+    field_name: str,
+    value: SpreadsheetValue,
+) -> None:
+    """Replace a primary metadata value in a test dataframe."""
+    row_index = dataframe.index[dataframe.iloc[:, 0] == field_name][0]
+    dataframe.iloc[row_index, 1] = value
 
-        self.assertEqual(len(result), 2)
 
-        self.assertEqual(result[0]["image_id"], "0c3bc9cd")
-        self.assertEqual(result[0]["image_filename"], "M58_1044.jpg")
-        self.assertEqual(result[0]["dimension_pixels"], 5850.0)
+def set_paired_metadata_value(
+    dataframe: pd.DataFrame,
+    field_name: str,
+    value: SpreadsheetValue,
+) -> None:
+    """Replace the paired URI row immediately following a metadata field."""
+    row_index = dataframe.index[dataframe.iloc[:, 0] == field_name][0]
+    dataframe.iloc[row_index + 1, 1] = value
 
-        self.assertEqual(result[1]["image_id"], "")
-        self.assertEqual(result[1]["label_name"], "bryozoa_01")
-        self.assertEqual(result[1]["dimension_pixels"], 384.06)
 
-        self.assertTrue(mock_parse_coords.called)
+class AnnotationSetMetadataParserTests(TestCase):
+    """Tests for parsing v3 annotation-set metadata."""
 
-    def test_full_template_parsing(self) -> None:
-        """Verify that the parsers work with the actual Excel file structure without mocking constants."""
-        test_file_path = os.path.join(
-            settings.BASE_DIR, "api", "tests", "test_data", "annotation_metadata_template_v1.xlsx"
+    def test_returns_serializer_payload_and_references(self) -> None:
+        """Parse metadata into its UUID, serializer payload and references."""
+        dataframe = make_annotation_set_dataframe()
+
+        annotation_set_id, payload, references = parse_annotation_set_metadata(dataframe)
+
+        self.assertEqual(annotation_set_id, ANNOTATION_SET_ID)
+        self.assertEqual(payload["name"], "Test annotations")
+        self.assertEqual(payload["project"]["name"], "Test project")
+        self.assertEqual(
+            payload["project"]["uri"],
+            "https://example.com/projects/test",
         )
-        if not os.path.exists(test_file_path):
-            self.skipTest(f"Test file not found at {test_file_path}")
-
-        # Test Annotation Set Metadata Tab
-        df_metadata = pd.read_excel(test_file_path, sheet_name="Annotation set metadata")
-        metadata_result = parse_annotation_set_metadata(df_metadata)
-
-        self.assertIn("annotation-set-name", metadata_result)
-        self.assertIn("annotation-license-name", metadata_result)
-        self.assertIn("annotation-image-set-name", metadata_result)
-        self.assertEqual(metadata_result["annotation-set-version"], "1")
-
-        # Test Label Set Tab
-        df_labels = pd.read_excel(test_file_path, sheet_name="Label set")
-        label_result = parse_label_set(df_labels)
-
-        self.assertTrue(len(label_result) > 0)
-        # Check first real label in your template (e.g., 'antedon')
-        self.assertEqual(label_result[0]["name"], "antedon")
-        self.assertEqual(label_result[0]["parent_label_name"], "Echinodermata")
-
-        # Test Annotation Data Tab
-        df_annotations = pd.read_excel(test_file_path, sheet_name="Annotation data")
-        annotation_result = parse_annotation_data(df_annotations)
-
-        self.assertTrue(len(annotation_result) > 0)
-
-        first_anno = annotation_result[0]
-        self.assertEqual(first_anno["image_id"], "1234")
-        self.assertEqual(first_anno["label_name"], "reteporella")
-        self.assertEqual(first_anno["shape"], "rectangle")
-
-
-class TestParseCoordinates(TestCase):
-    """Test for parsing coordinates."""
-
-    def test_parse_comma_separated_string(self) -> None:
-        """Test standard 'x, y' string format."""
-        input_val = "1427.5, 8163.2"
-        expected = [[1427.5, 8163.2]]
-        self.assertEqual(_parse_coordinates(input_val), expected)
-
-    def test_parse_json_list_format(self) -> None:
-        """Test if it handles stringified JSON lists (common in some exports)."""
-        input_val = "[10, 20, 30, 40]"
-        expected = [10, 20, 30, 40]
-        self.assertEqual(_parse_coordinates(input_val), expected)
-
-    def test_parse_empty_or_nan(self) -> None:
-        """Test that empty inputs return an empty list."""
-        self.assertEqual(_parse_coordinates(""), [])
-        self.assertEqual(_parse_coordinates(None), [])
-
-    def test_parse_invalid_coordinate_string_returns_empty_list(self) -> None:
-        """Malformed coordinate strings should be safely ignored."""
-        self.assertEqual(_parse_coordinates("not-a-number,still-bad"), [])
-
-
-class TestParserHelpers(TestCase):
-    """Tests for helper functions in annotations_parser."""
-
-    def test_empty_to_none_handles_none_and_blank(self) -> None:
-        """_empty_to_none should normalize None/blank input."""
-        self.assertIsNone(_empty_to_none(None))
-        self.assertIsNone(_empty_to_none("  "))
-        self.assertEqual(_empty_to_none("value"), "value")
-
-
-class _MutableStringValue:
-    """Value whose string representation changes over consecutive calls."""
-
-    def __init__(self, values: list[str]) -> None:
-        self.values = values
-        self.index = 0
-
-    def __str__(self) -> str:
-        value = self.values[min(self.index, len(self.values) - 1)]
-        self.index += 1
-        return value
-
-
-class TestAnnotationDataEdgeCases(TestCase):
-    """Additional edge tests for parse_annotation_data."""
-
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_ROW", 0)
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_START_COL", 0)
-    @patch("api.utils.annotations_parser.ANNOTATION_DATA_END_COL", 9)
-    def test_parse_annotation_data_raises_for_missing_identifier_row(self) -> None:
-        """Cover validation branch where both image uuid and filename are treated as missing."""
-        tricky_filename = _MutableStringValue(["", "visible_filename"])
-        data = [
+        self.assertEqual(
+            payload["creators"],
             [
-                "",
-                "ImagePro",
-                tricky_filename,
-                "Noelie Benoist",
-                "31122012",
-                "reteporella",
-                "rectangle",
-                "1427,8163",
-                5850,
+                {
+                    "name": "Alice Example",
+                    "uri": "https://orcid.org/0000-0001-0000-0001",
+                },
+                {
+                    "name": "Bob Example",
+                    "uri": "https://orcid.org/0000-0002-0000-0002",
+                },
             ],
+        )
+        self.assertEqual(payload["quantitative_or_qualitative"], "quantitative")
+        self.assertEqual(payload["quantification_type"], "count")
+        self.assertEqual(
+            payload["connected_set_ids"],
+            [CONNECTED_SET_ID],
+        )
+        self.assertEqual(
+            payload["related_materials"],
+            [{"uri": "https://doi.org/10.1234/example"}],
+        )
+
+        self.assertEqual(references["image_set_names"], ["Test image set"])
+        self.assertEqual(references["image_set_ids"], [IMAGE_SET_ID])
+        self.assertEqual(references["label_set_names"], ["Test label set"])
+        self.assertEqual(references["label_set_ids"], [LABEL_SET_ID])
+
+    def test_allows_image_set_uuid_to_be_omitted(self) -> None:
+        """Allow image sets to be resolved by their required names."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(
+            dataframe,
+            "annotation-set-image-set-UUIDs",
+            None,
+        )
+
+        _, _, references = parse_annotation_set_metadata(dataframe)
+
+        self.assertEqual(references["image_set_names"], ["Test image set"])
+        self.assertEqual(references["image_set_ids"], [])
+
+    def test_rejects_missing_required_metadata(self) -> None:
+        """Reject a missing required annotation-set field."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(dataframe, "annotation-set-name", None)
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-set-name",
+        ):
+            parse_annotation_set_metadata(dataframe)
+
+    def test_rejects_invalid_annotation_set_uuid(self) -> None:
+        """Reject an invalid annotation-set UUID."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(
+            dataframe,
+            "annotation-set-uuid",
+            "not-a-uuid",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-set-uuid must be a valid UUID",
+        ):
+            parse_annotation_set_metadata(dataframe)
+
+    def test_rejects_mismatched_creator_uris(self) -> None:
+        """Require one URI per creator when creator URIs are supplied."""
+        dataframe = make_annotation_set_dataframe()
+        set_paired_metadata_value(
+            dataframe,
+            "annotation-set-creators",
+            "https://orcid.org/0000-0001-0000-0001",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "creator URIs must match",
+        ):
+            parse_annotation_set_metadata(dataframe)
+
+    def test_rejects_mismatched_label_set_references(self) -> None:
+        """Require one label-set UUID for every label-set name."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(
+            dataframe,
+            "annotation-set-label-set-names",
+            "First label set, Second label set",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "label-set UUIDs must match",
+        ):
+            parse_annotation_set_metadata(dataframe)
+
+    def test_rejects_multiple_pi_uris(self) -> None:
+        """Reject more than one URI for the annotation-set PI."""
+        dataframe = make_annotation_set_dataframe()
+        set_paired_metadata_value(
+            dataframe,
+            "annotation-set-pi",
+            "https://example.com/pi/one, https://example.com/pi/two",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "pi must have no more than one URI",
+        ):
+            parse_annotation_set_metadata(dataframe)
+
+
+def make_annotation_model_row() -> list[SpreadsheetValue]:
+    """Create one valid annotation-model worksheet row."""
+    return [
+        None,
+        "detector-1",
+        "Test detector",
+        "1.0",
+        "Detection",
+        "https://example.com/models/detector-1",
+        "a" * 64,
+        "Test model description",
+        "objectness",
+        0.75,
+        str(LABEL_SET_ID),
+        "https://example.com/training/images",
+        "https://example.com/training/annotations",
+        "https://example.com/validation/images",
+        "https://example.com/validation/annotations",
+    ]
+
+
+def make_annotation_models_dataframe(
+    model_rows: list[list[SpreadsheetValue]] | None = None,
+) -> pd.DataFrame:
+    """Create a v3 annotation-model worksheet."""
+    header = [
+        "Attribute name",
+        "annotation-model-id",
+        "annotation-model-name",
+        "annotation-model-version",
+        "annotation-model-task",
+        "annotation-model-handle",
+        "annotation-model-weights-sha256",
+        "annotation-model-description",
+        "annotation-model-score-type",
+        "annotation-model-confidence-threshold",
+        "annotation-model-label-set-uuid",
+        "annotation-model-training-image-set",
+        "annotation-model-training-annotation-set",
+        "annotation-model-validation-image-set",
+        "annotation-model-validation-annotation-set",
+    ]
+
+    return pd.DataFrame(
+        [
+            header,
+            ["Allowed values", *([None] * 14)],
+            ["Description", *([None] * 14)],
+            ["Usage", *([None] * 14)],
+            *(model_rows or []),
         ]
-
-        df = pd.DataFrame(data)
-        with self.assertRaises(ValueError):
-            parse_annotation_data(df)
+    )
 
 
-class TestIngestAnnotationData(TransactionTestCase):
-    """Test class for testing data ingestion."""
+class AnnotationModelParserTests(TestCase):
+    """Tests for parsing annotation-set model records."""
 
-    @patch("api.utils.annotations_ingest.insert_annotations_set")
-    @patch("api.utils.annotations_ingest.insert_label_data")
-    @patch("api.utils.annotations_ingest.insert_annotations_data")
-    def test_ingest_annotation_data_success(
-        self, mock_insert_annot: Mock, mock_insert_label: Mock, mock_insert_set: Mock
-    ) -> None:
-        """Test the orchestration of the ingestion process."""
-        mock_insert_set.return_value = {"id": 1, "name": "Test Set"}
-        mock_insert_label.return_value = [{"id": 10, "name": "Coral"}]
-        mock_insert_annot.return_value = [{"id": 100, "image_id": "ABC"}]
+    def test_returns_serializer_payloads(self) -> None:
+        """Parse valid model rows into serializer payloads."""
+        dataframe = make_annotation_models_dataframe([make_annotation_model_row()])
 
-        annotation_set_df = {"name": "Test Set"}
-        label_list = [{"name": "Coral"}]
-        annot_list = [{"image_id": "ABC"}]
+        result = parse_annotation_models(dataframe)
 
-        result = ingest_annotation_data(annotation_set_df, label_list, annot_list)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["model_id"], "detector-1")
+        self.assertEqual(result[0]["name"], "Test detector")
+        self.assertEqual(result[0]["version"], "1.0")
+        self.assertEqual(result[0]["task"], "detection")
+        self.assertEqual(result[0]["confidence_threshold"], 0.75)
+        self.assertEqual(result[0]["label_set_id"], LABEL_SET_ID)
+        self.assertEqual(result[0]["weights_sha256"], "a" * 64)
 
-        mock_insert_set.assert_called_once_with(annotation_set_df)
-        mock_insert_label.assert_called_once_with(label_list, 1)
-        mock_insert_annot.assert_called_once_with(annot_list, 1)
+    def test_returns_empty_list_when_no_models_are_supplied(self) -> None:
+        """Allow annotation sets that do not use machine models."""
+        dataframe = make_annotation_models_dataframe()
 
-        self.assertEqual(result["annotation_set"]["id"], 1)
-        self.assertEqual(len(result["label_set"]), 1)
+        self.assertEqual(parse_annotation_models(dataframe), [])
+
+    def test_rejects_missing_required_model_field(self) -> None:
+        """Reject a populated model row missing a required value."""
+        row = make_annotation_model_row()
+        row[2] = None
+        dataframe = make_annotation_models_dataframe([row])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-model-name",
+        ):
+            parse_annotation_models(dataframe)
+
+    def test_rejects_duplicate_model_ids(self) -> None:
+        """Reject duplicate model identifiers within an annotation set."""
+        first_row = make_annotation_model_row()
+        second_row = make_annotation_model_row()
+        second_row[2] = "Another detector"
+
+        dataframe = make_annotation_models_dataframe([first_row, second_row])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "duplicate annotation-model-id 'detector-1'",
+        ):
+            parse_annotation_models(dataframe)
+
+    def test_rejects_non_numeric_confidence_threshold(self) -> None:
+        """Reject a confidence threshold that is not numeric."""
+        row = make_annotation_model_row()
+        row[9] = "high"
+        dataframe = make_annotation_models_dataframe([row])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "confidence-threshold must be a number",
+        ):
+            parse_annotation_models(dataframe)
+
+    def test_rejects_confidence_threshold_outside_range(self) -> None:
+        """Reject a confidence threshold outside zero through one."""
+        row = make_annotation_model_row()
+        row[9] = 1.5
+        dataframe = make_annotation_models_dataframe([row])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "confidence-threshold must be between 0 and 1",
+        ):
+            parse_annotation_models(dataframe)
+
+    def test_rejects_invalid_label_set_uuid(self) -> None:
+        """Reject a malformed model label-set UUID."""
+        row = make_annotation_model_row()
+        row[10] = "not-a-uuid"
+        dataframe = make_annotation_models_dataframe([row])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-model-label-set-uuid must be a valid UUID",
+        ):
+            parse_annotation_models(dataframe)
+
+
+def make_annotation_row() -> list[SpreadsheetValue]:
+    """Create one valid human-created annotation row."""
+    return [
+        None,
+        str(ANNOTATION_ID),
+        "test-image.jpg",
+        str(IMAGE_ID),
+        "Human",
+        "Alice Example",
+        "https://orcid.org/0000-0001-0000-0001",
+        "2026-11-23T10:00:00Z",
+        "test-fish",
+        "Line",
+        "[100, 200, 150, 250]",
+        12.5,
+        "None",
+        None,
+        None,
+        "Test annotation",
+        None,
+        None,
+        None,
+        None,
+        None,
+    ]
+
+
+def make_annotations_dataframe(
+    annotation_rows: list[list[SpreadsheetValue]] | None = None,
+) -> pd.DataFrame:
+    """Create a v3 annotation-attributes worksheet."""
+    header = [
+        "Attribute name",
+        "annotation-uuid",
+        "image-filename",
+        "image-UUID",
+        "annotation-human-or-machine",
+        "annotation-creator",
+        None,
+        "annotation-creation-datetime",
+        "annotation-label-name",
+        "annotation-shape-name",
+        "annotation-coordinates",
+        "annotation-measurement",
+        "annotation-human-reviewer",
+        None,
+        "annotation-machine-training-validation",
+        "annotation-additional-info",
+        "annotation-detection-model",
+        "annotation-classification-model",
+        "annotation-detection-confidence",
+        "annotation-classification-confidence",
+        "annotation-mask",
+    ]
+
+    return pd.DataFrame(
+        [
+            header,
+            ["Allowed values", *([None] * 20)],
+            ["Description", *([None] * 20)],
+            ["Usage", *([None] * 20)],
+            *(annotation_rows or []),
+        ]
+    )
+
+
+class AnnotationDataParserTests(TestCase):
+    """Tests for parsing v3 annotation records."""
+
+    def test_returns_annotation_payloads(self) -> None:
+        """Parse a valid human-created annotation."""
+        dataframe = make_annotations_dataframe([make_annotation_row()])
+
+        result = parse_annotation_data(dataframe)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["id"], ANNOTATION_ID)
+        self.assertEqual(result[0]["image_id"], IMAGE_ID)
+        self.assertEqual(result[0]["image_filename"], "test-image.jpg")
+        self.assertEqual(result[0]["human_or_machine"], "human")
+        self.assertEqual(result[0]["label_name"], "test-fish")
+        self.assertEqual(result[0]["shape"], "line")
+        self.assertEqual(
+            result[0]["coordinates"],
+            [100, 200, 150, 250],
+        )
+        self.assertEqual(result[0]["dimension_pixels"], 12.5)
+        self.assertEqual(
+            result[0]["creator"],
+            {
+                "name": "Alice Example",
+                "uri": "https://orcid.org/0000-0001-0000-0001",
+            },
+        )
+        self.assertIsNone(result[0]["human_reviewer"])
+
+    def test_parses_algorithm_annotation(self) -> None:
+        """Allow an algorithm annotation without a human creator."""
+        row = make_annotation_row()
+        row[4] = "Algorithm"
+        row[5] = None
+        row[6] = None
+        row[16] = "detector-1"
+        row[18] = 0.8
+
+        result = parse_annotation_data(make_annotations_dataframe([row]))
+
+        self.assertIsNone(result[0]["creator"])
+        self.assertEqual(result[0]["detection_model_ref"], "detector-1")
+        self.assertEqual(result[0]["detection_confidence"], 0.8)
+
+    def test_allows_image_filename_without_uuid(self) -> None:
+        """Allow ingestion to resolve an image by filename."""
+        row = make_annotation_row()
+        row[3] = None
+
+        result = parse_annotation_data(make_annotations_dataframe([row]))
+
+        self.assertIsNone(result[0]["image_id"])
+        self.assertEqual(result[0]["image_filename"], "test-image.jpg")
+
+    def test_rejects_empty_annotation_worksheet(self) -> None:
+        """Require at least one annotation record."""
+        dataframe = make_annotations_dataframe()
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "No annotations were found",
+        ):
+            parse_annotation_data(dataframe)
+
+    def test_rejects_missing_required_annotation_field(self) -> None:
+        """Reject a populated row missing a required value."""
+        row = make_annotation_row()
+        row[8] = None
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-label-name",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_rejects_missing_image_identifier(self) -> None:
+        """Require an image UUID or filename."""
+        row = make_annotation_row()
+        row[2] = None
+        row[3] = None
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "either image-UUID or image-filename is required",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_rejects_duplicate_annotation_uuids(self) -> None:
+        """Reject repeated annotation UUIDs within a workbook."""
+        first_row = make_annotation_row()
+        second_row = make_annotation_row()
+        second_row[8] = "another-label"
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "duplicate annotation-uuid",
+        ):
+            parse_annotation_data(make_annotations_dataframe([first_row, second_row]))
+
+    def test_requires_creator_for_human_annotation(self) -> None:
+        """Require a creator for human and combination annotations."""
+        row = make_annotation_row()
+        row[5] = None
+        row[6] = None
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-creator is required",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_requires_model_for_algorithm_annotation(self) -> None:
+        """Require a referenced model for algorithm annotations."""
+        row = make_annotation_row()
+        row[4] = "Algorithm"
+        row[5] = None
+        row[6] = None
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "requires a detection or classification model",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_rejects_invalid_coordinates(self) -> None:
+        """Reject coordinates that are not numeric."""
+        row = make_annotation_row()
+        row[10] = '[100, "not-a-number"]'
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-coordinates must be a numeric array",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_requires_mask_for_mask_shape(self) -> None:
+        """Require mask data when the annotation shape is mask."""
+        row = make_annotation_row()
+        row[9] = "Mask"
+        row[10] = None
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "annotation-mask is required",
+        ):
+            parse_annotation_data(make_annotations_dataframe([row]))
+
+    def test_parses_mask_json(self) -> None:
+        """Parse a COCO RLE mask JSON object."""
+        row = make_annotation_row()
+        row[9] = "Mask"
+        row[10] = None
+        row[20] = '{"encoding": "rle", "width": 100, ' '"height": 50, "counts": "test"}'
+
+        result = parse_annotation_data(make_annotations_dataframe([row]))
+
+        self.assertEqual(
+            result[0]["mask"],
+            {
+                "encoding": "rle",
+                "width": 100,
+                "height": 50,
+                "counts": "test",
+            },
+        )
