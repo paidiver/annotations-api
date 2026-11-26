@@ -26,6 +26,8 @@ class AnnotationSerializer(serializers.ModelSerializer):
     image_id = serializers.PrimaryKeyRelatedField(
         source="image",
         queryset=Image.objects.all(),
+        required=False,
+        allow_null=True,
     )
     annotation_set_id = serializers.PrimaryKeyRelatedField(
         source="annotation_set",
@@ -53,6 +55,7 @@ class AnnotationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "image_id",
+            "image_filename",
             "annotation_set_id",
             "label_id",
             "creator_id",
@@ -85,6 +88,11 @@ class AnnotationSerializer(serializers.ModelSerializer):
         """Validate label, model, and confidence relationships."""
         attrs = super().validate(attrs)
         instance = self.instance
+        image = attrs.get("image", getattr(instance, "image", None))
+        if image:
+            attrs["image_filename"] = ""
+        elif not attrs.get("image_filename", getattr(instance, "image_filename", "")):
+            raise serializers.ValidationError({"image_filename": "Provide an image ID or an image filename."})
         annotation_set = attrs.get("annotation_set", getattr(instance, "annotation_set", None))
         label = attrs.get("label", getattr(instance, "label", None))
         detection_model = attrs.get("detection_model", getattr(instance, "detection_model", None))
@@ -111,6 +119,13 @@ class AnnotationSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
+
+    def to_representation(self, instance: Annotation) -> dict:
+        """Return the linked filename or the saved external filename."""
+        representation = super().to_representation(instance)
+        if instance.image_id is not None:
+            representation["image_filename"] = instance.image.filename
+        return representation
 
 
 class FileUploadSerializer(serializers.Serializer):

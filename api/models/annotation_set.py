@@ -150,19 +150,23 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         blank=True,
         help_text="Papers, websites, software, or documentation associated with the annotation set.",
     )
-    quantitative_or_qualitative = models.CharField(
-        max_length=32,
-        choices=enum_choices(QualitativeOrQuantitativeEnum),
+    quantitative_or_qualitative = ArrayField(
+        base_field=models.CharField(
+            max_length=32,
+            choices=enum_choices(QualitativeOrQuantitativeEnum),
+        ),
         null=True,
         blank=True,
         help_text="Whether observations are qualitative, semi-quantitative, or quantitative.",
     )
-    quantification_type = models.CharField(
-        max_length=255,
-        choices=enum_choices(QuantificationTypeEnum),
+    quantification_type = ArrayField(
+        base_field=models.CharField(
+            max_length=255,
+            choices=enum_choices(QuantificationTypeEnum),
+        ),
         null=True,
         blank=True,
-        help_text="The planned type of quantification, such as count, measurement, or rate.",
+        help_text="Planned types of quantification, such as count, measurement, or rate.",
     )
     biological_metrics = models.TextField(null=True, blank=True, help_text="Planned derived biological metrics.")
     biological_stats = models.TextField(
@@ -182,6 +186,18 @@ class AnnotationSet(CommonFieldsAll, DefaultColumns):
         related_name="annotation_sets",
         help_text="Relationship to image_sets included in this annotation set.",
         blank=True,
+    )
+    image_set_names = ArrayField(
+        base_field=models.CharField(max_length=255),
+        blank=True,
+        default=list,
+        help_text="Names of external image sets when no database image-set relation is available.",
+    )
+    image_set_handles = ArrayField(
+        base_field=models.CharField(max_length=2048),
+        blank=True,
+        default=list,
+        help_text="Handles of external image sets when no database image-set relation is available.",
     )
 
     class Meta:

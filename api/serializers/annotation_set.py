@@ -11,6 +11,7 @@ from api.serializers.fields import (
     LicenseSerializer,
     PISerializer,
     ProjectSerializer,
+    RelatedMaterialSerializer,
 )
 
 from .base import (
@@ -26,6 +27,7 @@ FK_PAIRS = [
     ("pi", "pi_id"),
     ("license", "license_id"),
     ("creators", "creators_ids"),
+    ("related_materials", "related_material_ids"),
 ]
 
 
@@ -112,6 +114,12 @@ class AnnotationSetSerializer(BaseSerializer):
     related_material_ids = serializers.PrimaryKeyRelatedField(
         source="related_materials", many=True, queryset=RelatedMaterial.objects.all(), required=False
     )
+    related_materials = CreateOnlyRelatedListField(
+        create_serializer_class=RelatedMaterialSerializer,
+        write_only=True,
+        required=False,
+        source="_related_materials_deferred",
+    )
 
     class Meta:
         """Serializer for the AnnotationSet model."""
@@ -135,10 +143,13 @@ class AnnotationSetSerializer(BaseSerializer):
             "creators_ids",
             "creators",
             "image_set_ids",
+            "image_set_names",
+            "image_set_handles",
             "label_set_ids",
             "connected_set_ids",
             "machine_scope",
             "related_material_ids",
+            "related_materials",
             "quantitative_or_qualitative",
             "quantification_type",
             "biological_metrics",
@@ -146,6 +157,15 @@ class AnnotationSetSerializer(BaseSerializer):
             "obis_handles",
             "funding",
         ]
+
+    def to_representation(self, instance: AnnotationSet) -> dict:
+        """Return linked image-set details when relations exist, otherwise saved external references."""
+        representation = super().to_representation(instance)
+        image_sets = list(instance.image_sets.all())
+        if image_sets:
+            representation["image_set_names"] = [image_set.name for image_set in image_sets]
+            representation["image_set_handles"] = [image_set.handle for image_set in image_sets if image_set.handle]
+        return representation
 
     def validate(self, attrs: dict) -> dict:
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
@@ -180,6 +200,14 @@ class AnnotationSetSerializer(BaseSerializer):
             The created AnnotationSet instance.
         """
         creators_deferred = validated_data.pop("_creators_deferred", None)
+        related_materials_deferred = validated_data.pop(
+            "_related_materials_deferred",
+            None,
+        )
+
+        if validated_data.get("image_sets"):
+            validated_data["image_set_names"] = []
+            validated_data["image_set_handles"] = []
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -187,6 +215,9 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 
@@ -202,6 +233,15 @@ class AnnotationSetSerializer(BaseSerializer):
             The updated AnnotationSet instance.
         """
         creators_deferred = validated_data.pop("_creators_deferred", None)
+        related_materials_deferred = validated_data.pop(
+            "_related_materials_deferred",
+            None,
+        )
+
+        image_sets = validated_data.get("image_sets", instance.image_sets.all())
+        if image_sets:
+            validated_data["image_set_names"] = []
+            validated_data["image_set_handles"] = []
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
@@ -209,6 +249,9 @@ class AnnotationSetSerializer(BaseSerializer):
 
         if creators_deferred is not None:
             instance.creators.set(self._materialize_deferred_list(creators_deferred))
+
+        if related_materials_deferred is not None:
+            instance.related_materials.set(self._materialize_deferred_list(related_materials_deferred))
 
         return instance
 
