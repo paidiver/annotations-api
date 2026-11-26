@@ -124,8 +124,10 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="14" name="funding" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="15" name="machine_scope" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="16" name="obis_handles" nullable="true" remarks="" size="2048" type="_varchar" typeCode="2003"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="quantification_type" nullable="true" remarks="" size="255" type="varchar" typeCode="12"/>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="quantitative_or_qualitative" nullable="true" remarks="" size="32" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="17" name="quantification_type" nullable="true" remarks="" size="255" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="18" name="quantitative_or_qualitative" nullable="true" remarks="" size="32" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="19" name="image_set_names" nullable="false" remarks="" size="255" type="_varchar" typeCode="2003"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="image_set_handles" nullable="false" remarks="" size="2048" type="_varchar" typeCode="2003"/>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="annotation_sets_pkey" unique="true">
             <column ascending="true" name="id"/>
@@ -229,7 +231,7 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="7" name="annotation_set_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotations_annotation_set_id_0c704769_fk_annotation_sets_id" implied="false" onDeleteCascade="false" schema="public" table="annotation_sets"/>
          </column>
-         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="image_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="8" name="image_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotations_image_id_dbc46831_fk_images_id" implied="false" onDeleteCascade="false" schema="public" table="images"/>
          </column>
          <column autoUpdated="false" defaultValue="null" digits="0" id="9" name="additional_info" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
@@ -254,6 +256,7 @@
          <column autoUpdated="false" defaultValue="null" digits="0" id="20" name="creator_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
             <parent column="id" foreignKey="annotations_creator_id_7f9b438a_fk_creators_id" implied="false" onDeleteCascade="false" schema="public" table="creators"/>
          </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="21" name="image_filename" nullable="false" remarks="" size="255" type="varchar" typeCode="12"/>
          <primaryKey column="id" sequenceNumberInPK="1"/>
          <index name="annotations_pkey" unique="true">
             <column ascending="true" name="id"/>

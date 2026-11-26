@@ -217,8 +217,10 @@ CREATE TABLE public.annotation_sets (
     funding text,
     machine_scope text,
     obis_handles character varying(2048)[],
-    quantification_type character varying(255),
-    quantitative_or_qualitative character varying(32)
+    quantification_type character varying(255)[],
+    quantitative_or_qualitative character varying(32)[],
+    image_set_names character varying(255)[] NOT NULL,
+    image_set_handles character varying(2048)[] NOT NULL
 );
 
 
@@ -310,7 +312,7 @@ CREATE TABLE public.annotations (
     coordinates jsonb,
     dimension_pixels double precision,
     annotation_set_id uuid NOT NULL,
-    image_id uuid NOT NULL,
+    image_id uuid,
     additional_info text,
     classification_confidence double precision,
     creation_datetime timestamp with time zone,
@@ -323,6 +325,7 @@ CREATE TABLE public.annotations (
     classification_model_id uuid,
     detection_model_id uuid,
     creator_id uuid,
+    image_filename character varying(255) NOT NULL,
     CONSTRAINT annotation_classification_confidence_0_1 CHECK (((classification_confidence IS NULL) OR ((classification_confidence >= (0.0)::double precision) AND (classification_confidence <= (1.0)::double precision)))),
     CONSTRAINT annotation_detection_confidence_0_1 CHECK (((detection_confidence IS NULL) OR ((detection_confidence >= (0.0)::double precision) AND (detection_confidence <= (1.0)::double precision))))
 );
