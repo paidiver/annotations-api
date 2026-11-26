@@ -472,7 +472,8 @@ class AnnotationSearchViewSet(GenericViewSet):
             QuerySet: A projected queryset with unique image export fields.
         """
         return (
-            filtered_queryset.filter(annotation__image__isnull=False).values(
+            filtered_queryset.filter(annotation__image__isnull=False)
+            .values(
                 image_filename=F("annotation__image__filename"),
                 image_datetime=F("annotation__image__date_time"),
                 image_longitude=F("annotation__image__longitude"),
@@ -536,7 +537,8 @@ class AnnotationSearchViewSet(GenericViewSet):
             QuerySet: A projected queryset with unique image set export fields.
         """
         return (
-            filtered_queryset.filter(annotation__image__isnull=False).values(
+            filtered_queryset.filter(annotation__image__isnull=False)
+            .values(
                 image_set_name=F("annotation__image__image_set__name"),
                 image_project_name=F("annotation__image__image_set__project__name"),
                 image_project_uri=F("annotation__image__image_set__project__uri"),
@@ -872,10 +874,16 @@ class AnnotationSearchViewSet(GenericViewSet):
         """
         return {
             "n_annotations": queryset.count(),
-            "n_images": queryset.filter(annotation__image__isnull=False).values("annotation__image__id").distinct().count(),
+            "n_images": queryset.filter(annotation__image__isnull=False)
+            .values("annotation__image__id")
+            .distinct()
+            .count(),
             "n_annotation_sets": queryset.values("annotation__annotation_set__id").distinct().count(),
             "n_image_sets": (
-                queryset.filter(annotation__image__isnull=False).values("annotation__image__image_set__id").distinct().count()
+                queryset.filter(annotation__image__isnull=False)
+                .values("annotation__image__image_set__id")
+                .distinct()
+                .count()
             ),
         }
 
@@ -890,7 +898,8 @@ class AnnotationSearchViewSet(GenericViewSet):
             dict: A dictionary containing unique image set, annotation set and Aphia ID info.
         """
         image_sets = list(
-            queryset.filter(annotation__image__isnull=False).values(
+            queryset.filter(annotation__image__isnull=False)
+            .values(
                 uuid=F("annotation__image__image_set__id"),
                 name=F("annotation__image__image_set__name"),
             )
