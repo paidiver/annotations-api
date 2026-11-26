@@ -19,10 +19,13 @@ class Annotation(DefaultColumns):
 
     image = models.ForeignKey(
         "Image",
+        null=True,
+        blank=True,
         on_delete=models.CASCADE,
         related_name="annotations",
         help_text="A unique identifier to the image this annotation belongs to",
     )
+    image_filename = models.CharField(max_length=255, blank=True, default="")
 
     annotation_platform = models.CharField(
         max_length=255,

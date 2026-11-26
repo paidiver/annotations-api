@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 from django.db.models import F, Q, QuerySet
+from django.db.models.functions import Coalesce
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
@@ -419,7 +420,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             annotation_set_name=F("annotation__annotation_set__name"),
             image_set_name=F("annotation__image__image_set__name"),
             image_set_uuid=F("annotation__image__image_set__id"),
-            image_filename=F("annotation__image__filename"),
+            image_filename=Coalesce("annotation__image__filename", "annotation__image_filename"),
             image_handle=F("annotation__image__handle"),
             image_latitude=F("annotation__image__latitude"),
             image_longitude=F("annotation__image__longitude"),
@@ -447,7 +448,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             image_handle=F("annotation__image__handle"),
             image_uuid=F("annotation__image__id"),
             annotation_platform=F("annotation__annotation_platform"),
-            image_filename=F("annotation__image__filename"),
+            image_filename=Coalesce("annotation__image__filename", "annotation__image_filename"),
             annotation_human_creator=F("annotator__name"),
             annotation_creation_datetime=F("creation_datetime"),
             annotation_label_name=F("label__name"),
@@ -471,7 +472,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             QuerySet: A projected queryset with unique image export fields.
         """
         return (
-            filtered_queryset.values(
+            filtered_queryset.filter(annotation__image__isnull=False).values(
                 image_filename=F("annotation__image__filename"),
                 image_datetime=F("annotation__image__date_time"),
                 image_longitude=F("annotation__image__longitude"),
@@ -535,7 +536,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             QuerySet: A projected queryset with unique image set export fields.
         """
         return (
-            filtered_queryset.values(
+            filtered_queryset.filter(annotation__image__isnull=False).values(
                 image_set_name=F("annotation__image__image_set__name"),
                 image_project_name=F("annotation__image__image_set__project__name"),
                 image_project_uri=F("annotation__image__image_set__project__uri"),
@@ -871,9 +872,11 @@ class AnnotationSearchViewSet(GenericViewSet):
         """
         return {
             "n_annotations": queryset.count(),
-            "n_images": queryset.values("annotation__image__id").distinct().count(),
+            "n_images": queryset.filter(annotation__image__isnull=False).values("annotation__image__id").distinct().count(),
             "n_annotation_sets": queryset.values("annotation__annotation_set__id").distinct().count(),
-            "n_image_sets": queryset.values("annotation__image__image_set__id").distinct().count(),
+            "n_image_sets": (
+                queryset.filter(annotation__image__isnull=False).values("annotation__image__image_set__id").distinct().count()
+            ),
         }
 
     def _build_info(self, queryset: QuerySet, aphia_ids_info: dict) -> dict:
@@ -887,7 +890,7 @@ class AnnotationSearchViewSet(GenericViewSet):
             dict: A dictionary containing unique image set, annotation set and Aphia ID info.
         """
         image_sets = list(
-            queryset.values(
+            queryset.filter(annotation__image__isnull=False).values(
                 uuid=F("annotation__image__image_set__id"),
                 name=F("annotation__image__image_set__name"),
             )

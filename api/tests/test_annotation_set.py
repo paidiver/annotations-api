@@ -63,6 +63,8 @@ class AnnotationSetViewSetTests(AuthenticatedAPITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data["id"], str(annotation_set.pk))
         self.assertEqual(resp.data["name"], "Set A")
+        self.assertEqual(resp.data["image_set_names"], [self.image_set.name])
+        self.assertEqual(resp.data["image_set_handles"], [])
 
     def test_create_annotation_set_with_nested_creators(self) -> None:
         """Test creating an AnnotationSet with nested creators."""

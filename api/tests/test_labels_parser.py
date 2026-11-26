@@ -299,8 +299,8 @@ class LabelSetMetadataParserTests(TestCase):
         self.assertEqual(
             payload["creators"],
             [
-                {"name": "Alice Example", "uri": None},
-                {"name": "Bob Example", "uri": None},
+                {"name": "Alice Example"},
+                {"name": "Bob Example"},
             ],
         )
         self.assertNotIn("project", payload)

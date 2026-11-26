@@ -143,6 +143,8 @@ class AnnotationSetSerializer(BaseSerializer):
             "creators_ids",
             "creators",
             "image_set_ids",
+            "image_set_names",
+            "image_set_handles",
             "label_set_ids",
             "connected_set_ids",
             "machine_scope",
@@ -155,6 +157,15 @@ class AnnotationSetSerializer(BaseSerializer):
             "obis_handles",
             "funding",
         ]
+
+    def to_representation(self, instance: AnnotationSet) -> dict:
+        """Return linked image-set details when relations exist, otherwise saved external references."""
+        representation = super().to_representation(instance)
+        image_sets = list(instance.image_sets.all())
+        if image_sets:
+            representation["image_set_names"] = [image_set.name for image_set in image_sets]
+            representation["image_set_handles"] = [image_set.handle for image_set in image_sets if image_set.handle]
+        return representation
 
     def validate(self, attrs: dict) -> dict:
         """Perform cross-field validation to enforce constraints that can't be captured by field-level validation alone.
@@ -194,6 +205,10 @@ class AnnotationSetSerializer(BaseSerializer):
             None,
         )
 
+        if validated_data.get("image_sets"):
+            validated_data["image_set_names"] = []
+            validated_data["image_set_handles"] = []
+
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 
         instance = super().create(validated_data)
@@ -222,6 +237,11 @@ class AnnotationSetSerializer(BaseSerializer):
             "_related_materials_deferred",
             None,
         )
+
+        image_sets = validated_data.get("image_sets", instance.image_sets.all())
+        if image_sets:
+            validated_data["image_set_names"] = []
+            validated_data["image_set_handles"] = []
 
         self._materialize_deferred_related(validated_data, FK_PAIRS)
 

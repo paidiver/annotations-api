@@ -138,8 +138,8 @@ class AnnotationSetMetadataParserTests(TestCase):
                 },
             ],
         )
-        self.assertEqual(payload["quantitative_or_qualitative"], "quantitative")
-        self.assertEqual(payload["quantification_type"], "count")
+        self.assertEqual(payload["quantitative_or_qualitative"], ["quantitative"])
+        self.assertEqual(payload["quantification_type"], ["count"])
         self.assertEqual(
             payload["connected_set_ids"],
             [CONNECTED_SET_ID],
@@ -154,6 +154,25 @@ class AnnotationSetMetadataParserTests(TestCase):
         self.assertEqual(references["label_set_names"], ["Test label set"])
         self.assertEqual(references["label_set_ids"], [LABEL_SET_ID])
 
+    def test_parses_multiple_quantification_choices(self) -> None:
+        """Parse comma-separated quantification choices into arrays."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(
+            dataframe,
+            "annotation-set-quantitative-or-qualitative",
+            "Qualitative, Quantitative",
+        )
+        set_metadata_value(
+            dataframe,
+            "annotation-set-quantification-type",
+            "Presence, Absence, Count",
+        )
+
+        _, payload, _ = parse_annotation_set_metadata(dataframe)
+
+        self.assertEqual(payload["quantitative_or_qualitative"], ["qualitative", "quantitative"])
+        self.assertEqual(payload["quantification_type"], ["presence", "absence", "count"])
+
     def test_allows_image_set_uuid_to_be_omitted(self) -> None:
         """Allow image sets to be resolved by their required names."""
         dataframe = make_annotation_set_dataframe()
@@ -167,6 +186,52 @@ class AnnotationSetMetadataParserTests(TestCase):
 
         self.assertEqual(references["image_set_names"], ["Test image set"])
         self.assertEqual(references["image_set_ids"], [])
+
+    def test_allows_image_set_uuid_without_name(self) -> None:
+        """Allow image sets to be resolved by UUID without a name."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(dataframe, "annotation-set-image-set-name", None)
+        set_metadata_value(dataframe, "annotation-set-image-set-handles", None)
+
+        _, _, references = parse_annotation_set_metadata(dataframe)
+
+        self.assertEqual(references["image_set_names"], [])
+        self.assertEqual(references["image_set_ids"], [IMAGE_SET_ID])
+
+    def test_allows_empty_image_set_references_and_generates_uuid(self) -> None:
+        """Allow empty image-set references and generate a UUID."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(dataframe, "annotation-set-uuid", None)
+        set_metadata_value(dataframe, "annotation-set-image-set-name", None)
+        set_metadata_value(dataframe, "annotation-set-image-set-UUIDs", None)
+        set_metadata_value(dataframe, "annotation-set-image-set-handles", None)
+
+        annotation_set_id, _, references = parse_annotation_set_metadata(dataframe)
+
+        self.assertIsInstance(annotation_set_id, UUID)
+        self.assertNotEqual(annotation_set_id, ANNOTATION_SET_ID)
+        self.assertEqual(references["image_set_names"], [])
+        self.assertEqual(references["image_set_ids"], [])
+
+    def test_allows_image_set_handle_without_name_or_uuid(self) -> None:
+        """Allow an external image-set handle without database identifiers."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(dataframe, "annotation-set-image-set-name", None)
+        set_metadata_value(dataframe, "annotation-set-image-set-UUIDs", None)
+
+        _, _, references = parse_annotation_set_metadata(dataframe)
+
+        self.assertEqual(references["image_set_names"], [])
+        self.assertEqual(references["image_set_ids"], [])
+        self.assertEqual(references["image_set_handles"], ["https://example.com/image-sets/test"])
+
+    def test_rejects_empty_annotation_set_funding(self) -> None:
+        """Require funding metadata for annotation-set ingestion."""
+        dataframe = make_annotation_set_dataframe()
+        set_metadata_value(dataframe, "annotation-set-funding", None)
+
+        with self.assertRaisesRegex(ValueError, "annotation-set-funding"):
+            parse_annotation_set_metadata(dataframe)
 
     def test_rejects_missing_required_metadata(self) -> None:
         """Reject a missing required annotation-set field."""

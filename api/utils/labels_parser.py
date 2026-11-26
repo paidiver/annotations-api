@@ -135,10 +135,10 @@ def _named_uri(
             raise ValueError(f"{field_name} has a URI but no corresponding name.")
         return None
 
-    return {
-        "name": name,
-        "uri": uri,
-    }
+    if uri is None:
+        return {"name": name}
+
+    return {"name": name, "uri": uri}
 
 
 def parse_label_set_metadata(
@@ -164,10 +164,7 @@ def parse_label_set_metadata(
         raise ValueError("The number of label-set creator URIs must match " "the number of creator names.")
 
     creators = [
-        {
-            "name": name,
-            "uri": creator_uris[index] if creator_uris else None,
-        }
+        _named_uri(name, creator_uris[index] if creator_uris else None, "label-set-creators")
         for index, name in enumerate(creator_names)
     ]
 

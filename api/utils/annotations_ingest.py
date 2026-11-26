@@ -63,38 +63,79 @@ def _validate_uuid_collisions(
         )
 
 
-def _resolve_image_sets(references: dict) -> list[ImageSet]:
+def _resolve_image_sets_by_id(identifiers: list[UUID]) -> list[ImageSet]:
+    """Resolve image sets by UUID."""
+    image_sets_by_id = ImageSet.objects.in_bulk(identifiers)
+    missing_ids = [identifier for identifier in identifiers if identifier not in image_sets_by_id]
+    if missing_ids:
+        raise serializers.ValidationError(
+            {
+                "annotation-set-image-set-UUIDs": [
+                    f"Image set {identifier} could not be found." for identifier in missing_ids
+                ]
+            }
+        )
+
+    return [image_sets_by_id[identifier] for identifier in identifiers]
+
+
+def _resolve_image_sets_by_name(names: list[str]) -> list[ImageSet]:
+    """Resolve known image sets by name, leaving external names unlinked."""
+    resolved = []
+
+    for name in names:
+        matches = list(ImageSet.objects.filter(name=name)[:2])
+        if len(matches) > 1:
+            raise serializers.ValidationError(
+                {"annotation-set-image-set-name": [f"More than one image set is named {name!r}."]}
+            )
+        if not matches:
+            return []
+
+        resolved.append(matches[0])
+
+    return resolved
+
+
+def _infer_image_sets_from_annotations(annotations_data: list[dict]) -> list[ImageSet]:
+    """Infer image sets from the image UUIDs in annotations."""
+    image_ids = {annotation.get("image_id") for annotation in annotations_data if annotation.get("image_id")}
+    if not image_ids:
+        return []
+
+    images_by_id = {image.id: image for image in Image.objects.filter(pk__in=image_ids).select_related("image_set")}
+    missing_image_ids = sorted(image_ids - images_by_id.keys(), key=str)
+    if missing_image_ids:
+        raise serializers.ValidationError(
+            {"image-UUID": [f"Image {image_id} could not be found." for image_id in missing_image_ids]}
+        )
+
+    image_sets_by_id = {image.image_set_id: image.image_set for image in images_by_id.values()}
+    return [image_sets_by_id[image_set_id] for image_set_id in sorted(image_sets_by_id, key=str)]
+
+
+def _resolve_image_sets(
+    references: dict,
+    annotations_data: list[dict],
+) -> list[ImageSet]:
     """Resolve and validate image sets referenced by workbook metadata."""
     names = references["image_set_names"]
     identifiers = references["image_set_ids"]
     handles = references["image_set_handles"]
 
-    resolved = []
+    if identifiers:
+        resolved = _resolve_image_sets_by_id(identifiers)
+    elif names:
+        resolved = _resolve_image_sets_by_name(names)
+    else:
+        resolved = _infer_image_sets_from_annotations(annotations_data)
 
-    for index, name in enumerate(names):
-        image_set = None
-
-        if identifiers:
-            image_set = ImageSet.objects.filter(pk=identifiers[index]).first()
-        else:
-            matches = list(ImageSet.objects.filter(name=name)[:2])
-            if len(matches) > 1:
-                raise serializers.ValidationError(
-                    {"annotation-set-image-set-name": [f"More than one image set is named {name!r}."]}
-                )
-            if matches:
-                image_set = matches[0]
-
-        if image_set is None:
-            raise serializers.ValidationError(
-                {"annotation-set-image-set-name": [f"Image set {name!r} could not be found."]}
-            )
-
-        if image_set.name != name:
+    for index, image_set in enumerate(resolved):
+        if names and image_set.name != names[index]:
             raise serializers.ValidationError(
                 {
                     "annotation-set-image-set-name": [
-                        f"Image-set UUID {image_set.id} belongs to " f"{image_set.name!r}, not {name!r}."
+                        f"Image-set UUID {image_set.id} belongs to " f"{image_set.name!r}, not {names[index]!r}."
                     ]
                 }
             )
@@ -103,12 +144,10 @@ def _resolve_image_sets(references: dict) -> list[ImageSet]:
             raise serializers.ValidationError(
                 {
                     "annotation-set-image-set-handles": [
-                        f"The handle supplied for image set {name!r} " "does not match the stored image set."
+                        f"The handle supplied for image set {image_set.name!r} does not match the stored image set."
                     ]
                 }
             )
-
-        resolved.append(image_set)
 
     return resolved
 
@@ -154,21 +193,20 @@ def _resolve_creator(data: dict | None) -> Creator | None:
 def _resolve_image(
     annotation_data: dict,
     image_sets: list[ImageSet],
-) -> Image:
-    """Resolve an annotation image within the linked image sets."""
+) -> Image | None:
+    """Resolve by UUID or by filename within linked image sets."""
     image_set_ids = [image_set.id for image_set in image_sets]
     image_id = annotation_data.get("image_id")
     filename = annotation_data.get("image_filename")
 
-    queryset = Image.objects.filter(image_set_id__in=image_set_ids)
+    queryset = Image.objects.filter(image_set_id__in=image_set_ids) if image_set_ids else Image.objects.all()
+    image_scope = "the annotation set's linked image sets" if image_set_ids else "the database"
 
     if image_id is not None:
         image = queryset.filter(pk=image_id).first()
 
         if image is None:
-            raise serializers.ValidationError(
-                {"image-UUID": [f"Image {image_id} was not found in the " "annotation set's linked image sets."]}
-            )
+            raise serializers.ValidationError({"image-UUID": [f"Image {image_id} was not found in {image_scope}."]})
 
         if filename is not None and image.filename != filename:
             raise serializers.ValidationError(
@@ -177,20 +215,17 @@ def _resolve_image(
 
         return image
 
+    if not image_set_ids:
+        return None
+
     matches = list(queryset.filter(filename=filename)[:2])
 
     if not matches:
-        raise serializers.ValidationError(
-            {"image-filename": [f"Image {filename!r} was not found in the " "annotation set's linked image sets."]}
-        )
+        raise serializers.ValidationError({"image-filename": [f"Image {filename!r} was not found in {image_scope}."]})
 
     if len(matches) > 1:
         raise serializers.ValidationError(
-            {
-                "image-filename": [
-                    f"Image filename {filename!r} is ambiguous across " "the linked image sets; supply image-UUID."
-                ]
-            }
+            {"image-filename": [f"Image filename {filename!r} is ambiguous across {image_scope}; supply image-UUID."]}
         )
 
     return matches[0]
@@ -296,8 +331,8 @@ def _create_annotations(
             "annotation-classification-model",
         )
 
-        annotation_data.pop("image_filename", None)
-        annotation_data["image_id"] = image.id
+        annotation_data["image_filename"] = "" if image else annotation_data.get("image_filename") or ""
+        annotation_data["image_id"] = image.id if image else None
         annotation_data["annotation_set_id"] = annotation_set.id
         annotation_data["label_id"] = label.id
         annotation_data["creator_id"] = creator.id if creator is not None else None
@@ -330,11 +365,13 @@ def ingest_annotation_data(
         annotations_data,
     )
 
-    image_sets = _resolve_image_sets(references)
+    image_sets = _resolve_image_sets(references, annotations_data)
     label_sets = _resolve_label_sets(references)
 
     annotation_set_payload = annotation_set_data.copy()
     annotation_set_payload["image_set_ids"] = [image_set.id for image_set in image_sets]
+    annotation_set_payload["image_set_names"] = references["image_set_names"] if not image_sets else []
+    annotation_set_payload["image_set_handles"] = references["image_set_handles"] if not image_sets else []
     annotation_set_payload["label_set_ids"] = [label_set.id for label_set in label_sets]
 
     annotation_set_serializer = AnnotationSetSerializer(data=annotation_set_payload)

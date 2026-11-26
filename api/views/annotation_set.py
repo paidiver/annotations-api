@@ -11,7 +11,7 @@ from api.serializers import AnnotationSetModelSerializer, AnnotationSetSerialize
 class AnnotationSetViewSet(viewsets.ModelViewSet):
     """ViewSet for the AnnotationSet model."""
 
-    queryset = AnnotationSet.objects.all().order_by("id")
+    queryset = AnnotationSet.objects.all().prefetch_related("image_sets").order_by("id")
     serializer_class = AnnotationSetSerializer
 
 

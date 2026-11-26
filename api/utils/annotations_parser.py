@@ -1,7 +1,7 @@
 """Parser functions for annotation-set submission workbooks."""
 
 import json
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pandas as pd
 
@@ -20,11 +20,9 @@ REQUIRED_ANNOTATION_SET_FIELDS = {
     "annotation-set-creators",
     "annotation-set-pi",
     "annotation-set-license",
-    "annotation-set-uuid",
-    "annotation-set-image-set-name",
+    "annotation-set-funding",
     "annotation-set-label-set-names",
     "annotation-set-label-set-uuids",
-    "annotation-set-funding",
 }
 
 ANNOTATION_MODEL_DATA_START_ROW = 4
@@ -56,6 +54,12 @@ def _normalise_metadata_key(value: SpreadsheetValue) -> str | None:
 def _normalise_enum_value(value: str | None) -> str | None:
     """Normalise an optional case-insensitive enum value."""
     return value.lower() if value is not None else None
+
+
+def _normalise_enum_values(value: SpreadsheetValue) -> list[str] | None:
+    """Normalise a comma-separated list of optional enum values."""
+    values = _split_comma_separated(value)
+    return [item.lower() for item in values] or None
 
 
 def _split_comma_separated(value: SpreadsheetValue) -> list[str]:
@@ -131,10 +135,10 @@ def _named_uri(
             raise ValueError(f"{field_name} has a URI but no corresponding name.")
         return None
 
-    return {
-        "name": name,
-        "uri": uri,
-    }
+    if uri is None:
+        return {"name": name}
+
+    return {"name": name, "uri": uri}
 
 
 def _extract_annotation_set_values(
@@ -181,7 +185,7 @@ def _validate_matching_references(
     if identifiers_required and not identifiers:
         raise ValueError(f"{field_name} UUIDs are required.")
 
-    if identifiers and len(names) != len(identifiers):
+    if identifiers and (identifiers_required or names) and len(names) != len(identifiers):
         raise ValueError(f"The number of {field_name} UUIDs must match " f"the number of names.")
 
 
@@ -195,13 +199,14 @@ def parse_annotation_set_metadata(
     if missing_fields:
         raise ValueError("Missing required annotation-set metadata: " + ", ".join(sorted(missing_fields)))
 
-    annotation_set_id = _parse_optional_uuid(
-        values["annotation-set-uuid"],
-        row_numbers["annotation-set-uuid"],
-        "annotation-set-uuid",
+    annotation_set_id = (
+        _parse_optional_uuid(
+            values.get("annotation-set-uuid"),
+            row_numbers.get("annotation-set-uuid", 1),
+            "annotation-set-uuid",
+        )
+        or uuid4()
     )
-    if annotation_set_id is None:
-        raise ValueError("annotation-set-uuid is required.")
 
     creator_names = _split_comma_separated(values["annotation-set-creators"])
     creator_uris = _split_comma_separated(paired_values.get("annotation-set-creators"))
@@ -210,10 +215,11 @@ def parse_annotation_set_metadata(
         raise ValueError("The number of annotation-set creator URIs must match " "the number of creator names.")
 
     creators = [
-        {
-            "name": name,
-            "uri": creator_uris[index] if creator_uris else None,
-        }
+        _named_uri(
+            name,
+            creator_uris[index] if creator_uris else None,
+            "annotation-set-creators",
+        )
         for index, name in enumerate(creator_names)
     ]
 
@@ -257,8 +263,9 @@ def parse_annotation_set_metadata(
         identifiers_required=False,
     )
 
-    if image_set_handles and len(image_set_names) != len(image_set_handles):
-        raise ValueError("The number of annotation-set image-set handles must match " "the number of names.")
+    image_set_reference_count = len(image_set_names) or len(image_set_ids)
+    if image_set_handles and image_set_reference_count and image_set_reference_count != len(image_set_handles):
+        raise ValueError("The number of annotation-set image-set handles must match " "the number of names or UUIDs.")
 
     label_set_names = _split_comma_separated(values.get("annotation-set-label-set-names"))
     label_set_ids = _parse_uuid_list(
@@ -302,8 +309,8 @@ def parse_annotation_set_metadata(
         "connected_set_ids": connected_set_ids or None,
         "machine_scope": values.get("annotation-set-machine-scope"),
         "related_materials": related_materials or None,
-        "quantitative_or_qualitative": _normalise_enum_value(values.get("annotation-set-quantitative-or-qualitative")),
-        "quantification_type": _normalise_enum_value(values.get("annotation-set-quantification-type")),
+        "quantitative_or_qualitative": _normalise_enum_values(values.get("annotation-set-quantitative-or-qualitative")),
+        "quantification_type": _normalise_enum_values(values.get("annotation-set-quantification-type")),
         "biological_metrics": values.get("annotation-set-biological-metrics"),
         "biological_stats": values.get("annotation-set-biological-stats"),
         "obis_handles": obis_handles or None,

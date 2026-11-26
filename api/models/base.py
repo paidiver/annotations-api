@@ -42,6 +42,7 @@ class AliasedShapesEnumField(models.CharField):
         "bounding_box": "rectangle",
         "bounding-box": "rectangle",
         "whole_image": "whole-image",
+        "whole image": "whole-image",
     }
 
     def normaliseAnnotationShapeValue(self, value: str) -> str:
@@ -88,7 +89,8 @@ class MachineTrainingValidationEnum(CaseInsensitiveEnum):
 class QuantificationTypeEnum(CaseInsensitiveEnum):
     """Enumeration for quantification types in the system."""
 
-    presence_absence = "presence/absence"
+    presence = "presence"
+    absence = "absence"
     count = "count"
     linear_measurement = "linear measurement"
     area_measurement = "area measurement"

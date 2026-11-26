@@ -114,11 +114,17 @@ class IngestAnnotationDataTests(TransactionTestCase):
             list(annotation_set.image_sets.all()),
             [self.image_set],
         )
+        self.assertEqual(annotation_set.image_set_names, [])
+        self.assertEqual(annotation_set.image_set_handles, [])
+        self.assertEqual(result["annotation_set"]["image_set_names"], [self.image_set.name])
+        self.assertEqual(result["annotation_set"]["image_set_handles"], [self.image_set.handle])
         self.assertEqual(
             list(annotation_set.label_sets.all()),
             [self.label_set],
         )
         self.assertEqual(annotation.image, self.image)
+        self.assertEqual(annotation.image_filename, "")
+        self.assertEqual(result["annotations"][0]["image_filename"], self.image.filename)
         self.assertEqual(annotation.label, self.label)
         self.assertEqual(annotation.creator.name, "Alice Example")
         self.assertEqual(annotation.shape, "single-pixel")
@@ -189,6 +195,77 @@ class IngestAnnotationDataTests(TransactionTestCase):
 
         annotation = Annotation.objects.get(pk=self.annotation_id)
         self.assertEqual(annotation.image, self.image)
+
+    def test_resolves_image_set_by_uuid_without_name(self) -> None:
+        """Resolve an image set from its UUID when its name is omitted."""
+        references = self.references.copy()
+        references["image_set_names"] = []
+        references["image_set_handles"] = []
+
+        ingest_annotation_data(
+            self.annotation_set_id,
+            self.annotation_set_data,
+            references,
+            [],
+            self.annotations_data,
+        )
+
+        annotation_set = AnnotationSet.objects.get(pk=self.annotation_set_id)
+        self.assertEqual(list(annotation_set.image_sets.all()), [self.image_set])
+
+    def test_infers_image_sets_from_annotation_image_uuids(self) -> None:
+        """Link image sets inferred from annotation image UUIDs when metadata is empty."""
+        references = self.references.copy()
+        references["image_set_names"] = []
+        references["image_set_ids"] = []
+        references["image_set_handles"] = []
+
+        ingest_annotation_data(
+            self.annotation_set_id,
+            self.annotation_set_data,
+            references,
+            [],
+            self.annotations_data,
+        )
+
+        annotation_set = AnnotationSet.objects.get(pk=self.annotation_set_id)
+        self.assertEqual(list(annotation_set.image_sets.all()), [self.image_set])
+
+    def test_ingests_without_image_set_relation_using_image_filename(self) -> None:
+        """Keep the external filename even if a database image shares it."""
+        references = self.references.copy()
+        references["image_set_names"] = []
+        references["image_set_ids"] = []
+        references["image_set_handles"] = ["https://example.com/external-image-set"]
+        annotation_data = make_annotation_data(
+            self.annotation_id,
+            None,
+            self.image.filename,
+            self.label.name,
+        )
+
+        result = ingest_annotation_data(
+            self.annotation_set_id,
+            self.annotation_set_data,
+            references,
+            [],
+            [annotation_data],
+        )
+
+        annotation_set = AnnotationSet.objects.get(pk=self.annotation_set_id)
+        annotation = Annotation.objects.get(pk=self.annotation_id)
+        self.assertFalse(annotation_set.image_sets.exists())
+        self.assertEqual(annotation_set.image_set_names, [])
+        self.assertEqual(annotation_set.image_set_handles, ["https://example.com/external-image-set"])
+        self.assertEqual(result["annotation_set"]["image_set_names"], [])
+        self.assertEqual(
+            result["annotation_set"]["image_set_handles"],
+            ["https://example.com/external-image-set"],
+        )
+        self.assertIsNone(annotation.image_id)
+        self.assertEqual(annotation.image_filename, self.image.filename)
+        self.assertIsNone(result["annotations"][0]["image_id"])
+        self.assertEqual(result["annotations"][0]["image_filename"], self.image.filename)
 
     def test_rejects_existing_annotation_set_uuid(self) -> None:
         """Reject an annotation-set UUID already in the database."""

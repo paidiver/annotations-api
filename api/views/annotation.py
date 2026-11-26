@@ -22,7 +22,7 @@ from api.utils.annotations_parser import (
 class AnnotationViewSet(viewsets.ModelViewSet):
     """ViewSet for the Annotation model."""
 
-    queryset = Annotation.objects.all().order_by("id")
+    queryset = Annotation.objects.select_related("image").order_by("id")
     serializer_class = AnnotationSerializer
 
 
